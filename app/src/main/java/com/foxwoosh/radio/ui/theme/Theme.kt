@@ -28,7 +28,7 @@ private val LightColorPalette = lightColors(
 )
 
 @Composable
-fun FoxyradioTheme(darkTheme: Boolean = isSystemInDarkTheme(), content: @Composable () -> Unit) {
+fun FoxyRadioTheme(darkTheme: Boolean = isSystemInDarkTheme(), content: @Composable () -> Unit) {
     val colors = if (darkTheme) {
         DarkColorPalette
     } else {

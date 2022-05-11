@@ -17,8 +17,25 @@ android {
         vectorDrawables.useSupportLibrary = false
     }
 
+    signingConfigs {
+        create("main") {
+            storeFile = rootProject.file("release-keystore.jks")
+            storePassword = "XXXXXXXXXXXXXXX"
+            keyAlias = "XXXXXXXXXXXXXXX"
+            keyPassword = "XXXXXXXXXXXXXXX"
+        }
+    }
+
     buildTypes {
         getByName("release") {
+            isMinifyEnabled = true
+            proguardFiles(
+                getDefaultProguardFile("proguard-android-optimize.txt"),
+                "proguard-rules.pro"
+            )
+            signingConfig = signingConfigs.getByName("main")
+        }
+        getByName("debug") {
             isMinifyEnabled = false
             proguardFiles(
                 getDefaultProguardFile("proguard-android-optimize.txt"),
@@ -26,6 +43,7 @@ android {
             )
         }
     }
+
     compileOptions {
         sourceCompatibility = JavaVersion.VERSION_11
         targetCompatibility = JavaVersion.VERSION_11
