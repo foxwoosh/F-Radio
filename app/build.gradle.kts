@@ -55,7 +55,7 @@ android {
         compose = true
     }
     composeOptions {
-        kotlinCompilerExtensionVersion = rootProject.go("compose_version")
+        kotlinCompilerExtensionVersion = rootProject.getExt("compose_version")
     }
     packagingOptions {
         resources {
@@ -72,12 +72,15 @@ dependencies {
     implementation("androidx.compose.ui:ui-tooling-preview:1.1.1")
     implementation("androidx.lifecycle:lifecycle-runtime-ktx:2.4.1")
     implementation("androidx.activity:activity-compose:1.4.0")
+    implementation("androidx.palette:palette:1.0.0")
+
+
 //    testImplementation "junit:junit:4.13.2"
 //    androidTestImplementation "androidx.test.ext:junit:1.1.3"
 //    androidTestImplementation "androidx.test.espresso:espresso-core:3.4.0"
 //    androidTestImplementation "androidx.compose.ui:ui-test-junit4:$compose_version"
-    debugImplementation("androidx.compose.ui:ui-tooling:${rootProject.go<String>("compose_version")}")
-    debugImplementation("androidx.compose.ui:ui-test-manifest:${rootProject.go<String>("compose_version")}")
+    debugImplementation("androidx.compose.ui:ui-tooling:${rootProject.getExt<String>("compose_version")}")
+    debugImplementation("androidx.compose.ui:ui-test-manifest:${rootProject.getExt<String>("compose_version")}")
 }
 
-fun <T> Project.go(name: String) = extra.get(name) as T // пошел нахуй
+fun <T> Project.getExt(name: String) = extra.get(name) as T
