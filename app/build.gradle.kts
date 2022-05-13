@@ -1,6 +1,12 @@
+
+
 plugins {
     id("com.android.application")
     kotlin("android")
+    kotlin("kapt")
+    id("dagger.hilt.android.plugin")
+//    id("com.google.protobuf") version "0.8.17"
+    kotlin("plugin.serialization")
 }
 
 android {
@@ -64,8 +70,11 @@ android {
     }
 }
 
-dependencies {
+val composeVersion = rootProject.getExt<String>("compose_version")
+val datastoreVersion = rootProject.getExt<String>("datastore_version")
+val hiltVersion = rootProject.getExt<String>("hilt_version")
 
+dependencies {
     implementation("androidx.core:core-ktx:1.7.0")
     implementation("androidx.compose.ui:ui:1.1.1")
     implementation("androidx.compose.material:material:1.1.1")
@@ -74,13 +83,46 @@ dependencies {
     implementation("androidx.activity:activity-compose:1.4.0")
     implementation("androidx.palette:palette:1.0.0")
 
+    implementation("com.google.dagger:hilt-android:$hiltVersion")
+    kapt("com.google.dagger:hilt-android-compiler:$hiltVersion")
 
-//    testImplementation "junit:junit:4.13.2"
-//    androidTestImplementation "androidx.test.ext:junit:1.1.3"
-//    androidTestImplementation "androidx.test.espresso:espresso-core:3.4.0"
-//    androidTestImplementation "androidx.compose.ui:ui-test-junit4:$compose_version"
-    debugImplementation("androidx.compose.ui:ui-tooling:${rootProject.getExt<String>("compose_version")}")
-    debugImplementation("androidx.compose.ui:ui-test-manifest:${rootProject.getExt<String>("compose_version")}")
+    implementation("androidx.datastore:datastore:$datastoreVersion")
+    implementation("androidx.datastore:datastore-preferences:$datastoreVersion")
+
+    implementation("com.squareup.retrofit2:retrofit:2.9.0")
+    implementation("com.jakewharton.retrofit:retrofit2-kotlinx-serialization-converter:0.8.0")
+    implementation("org.jetbrains.kotlinx:kotlinx-serialization-json:1.3.3")
+//    implementation("com.squareup.retrofit2:converter-gson:2.9.0")
+
+
+    testImplementation("junit:junit:4.13.2")
+    androidTestImplementation("androidx.test.ext:junit:1.1.3")
+    androidTestImplementation("androidx.test.espresso:espresso-core:3.4.0")
+    androidTestImplementation("androidx.compose.ui:ui-test-junit4:$composeVersion")
+
+    debugImplementation("androidx.compose.ui:ui-tooling:$composeVersion")
+    debugImplementation("androidx.compose.ui:ui-test-manifest:$composeVersion")
 }
+
+kapt {
+    correctErrorTypes = true
+}
+
+//protobuf {
+//    protoc {
+//        artifact = "com.google.protobuf:protoc:3.14.0"
+//    }
+//
+//    plugins {
+//        id("javalite") { artifact = "com.google.protobuf:protoc-gen-javalite:3.0.0" }
+//        id("grpc") { artifact = "io.grpc:protoc-gen-grpc-java:1.24.0" }
+//    }
+//
+//    generateProtoTasks.all().forEach { task ->
+//        task.builtins {
+//            kotlin
+//        }
+//    }
+//}
 
 fun <T> Project.getExt(name: String) = extra.get(name) as T

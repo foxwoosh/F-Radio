@@ -1,6 +1,16 @@
 buildscript {
+    repositories { mavenCentral() }
+
     extra.apply {
         set("compose_version", "1.1.1")
+        set("datastore_version", "1.0.0")
+        set("hilt_version", "2.38.1")
+    }
+
+    dependencies {
+        classpath("com.google.dagger:hilt-android-gradle-plugin:2.38.1")
+        classpath(kotlin("gradle-plugin", version = "1.6.10"))
+        classpath(kotlin("serialization", version = "1.6.10"))
     }
 }
 
