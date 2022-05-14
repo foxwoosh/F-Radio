@@ -1,7 +1,9 @@
 <?xml version="1.0" encoding="utf-8"?>
 <resources>
 
-    <style name="Theme.Foxyradio" parent="android:Theme.Material.Light.NoActionBar">
-        <item name="android:statusBarColor">@android:color/background_dark</item>
+    <style name="AppTheme" parent="android:Theme.Material.Light.NoActionBar">
+        <item name="android:windowBackground">@color/window_background</item>
+        <item name="android:statusBarColor">@color/system_bars_color</item>
+        <item name="android:navigationBarColor">@color/system_bars_color</item>
     </style>
 </resources>

@@ -15,11 +15,12 @@ private val DarkColorPalette = darkColors(
 )
 
 private val LightColorPalette = lightColors(
-    primary = CodGray,
-    onPrimary = Color.White,
+    primary = Color.Yellow,
+    onPrimary = Color.Black,
     onBackground = Color.Green,
-    onSurface = Color.Red,
-    background = Black
+    onSurface = Color.White,
+    background = CodGray,
+    surface = Color.Black
 )
 
 @Composable

@@ -1,10 +1,16 @@
 buildscript {
-    repositories { mavenCentral() }
+    repositories {
+        google()
+        mavenCentral()
+    }
 
     extra.apply {
         set("compose_version", "1.1.1")
         set("datastore_version", "1.0.0")
         set("hilt_version", "2.38.1")
+        set("room_version", "2.4.2")
+        set("coroutines_version", "1.6.1")
+        set("lifecycle_version", "2.4.1")
     }
 
     dependencies {

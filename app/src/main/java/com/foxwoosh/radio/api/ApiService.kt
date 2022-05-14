@@ -2,6 +2,7 @@ package com.foxwoosh.radio.api
 
 import com.foxwoosh.radio.api.responses.CurrentDataResponse
 import com.jakewharton.retrofit2.converter.kotlinx.serialization.asConverterFactory
+import kotlinx.serialization.ExperimentalSerializationApi
 import kotlinx.serialization.json.Json
 import okhttp3.MediaType
 import okhttp3.OkHttpClient
@@ -22,6 +23,7 @@ class ApiService @Inject constructor() {
         .build()
 
     private val json = Json { ignoreUnknownKeys = true }
+
     private val converterFactory = json.asConverterFactory(MediaType.get("application/json"))
 
     val api: Api = Retrofit.Builder()

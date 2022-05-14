@@ -1,12 +1,19 @@
+@file:Suppress("UNCHECKED_CAST")
 
+val composeVersion = rootProject.extra.get("compose_version")
+val datastoreVersion = rootProject.extra.get("datastore_version")
+val hiltVersion = rootProject.extra.get("hilt_version")
+val roomVersion = rootProject.extra.get("room_version")
+val coroutinesVersion = rootProject.extra.get("coroutines_version")
+val lifecycleVersion = rootProject.extra.get("lifecycle_version")
 
 plugins {
     id("com.android.application")
     kotlin("android")
     kotlin("kapt")
-    id("dagger.hilt.android.plugin")
-//    id("com.google.protobuf") version "0.8.17"
     kotlin("plugin.serialization")
+
+    id("dagger.hilt.android.plugin")
 }
 
 android {
@@ -21,6 +28,12 @@ android {
 
         testInstrumentationRunner = "androidx.test.runner.AndroidJUnitRunner"
         vectorDrawables.useSupportLibrary = false
+
+        kapt {
+            arguments {
+                arg("room.schemaLocation", "$projectDir/schemas")
+            }
+        }
     }
 
     signingConfigs {
@@ -54,6 +67,7 @@ android {
         sourceCompatibility = JavaVersion.VERSION_11
         targetCompatibility = JavaVersion.VERSION_11
     }
+
     kotlinOptions {
         jvmTarget = JavaVersion.VERSION_11.toString()
     }
@@ -61,7 +75,7 @@ android {
         compose = true
     }
     composeOptions {
-        kotlinCompilerExtensionVersion = rootProject.getExt("compose_version")
+        kotlinCompilerExtensionVersion = composeVersion.toString()
     }
     packagingOptions {
         resources {
@@ -70,30 +84,36 @@ android {
     }
 }
 
-val composeVersion = rootProject.getExt<String>("compose_version")
-val datastoreVersion = rootProject.getExt<String>("datastore_version")
-val hiltVersion = rootProject.getExt<String>("hilt_version")
-
 dependencies {
     implementation("androidx.core:core-ktx:1.7.0")
-    implementation("androidx.compose.ui:ui:1.1.1")
-    implementation("androidx.compose.material:material:1.1.1")
-    implementation("androidx.compose.ui:ui-tooling-preview:1.1.1")
-    implementation("androidx.lifecycle:lifecycle-runtime-ktx:2.4.1")
+    implementation("androidx.compose.ui:ui:$composeVersion")
+    implementation("androidx.compose.material:material:$composeVersion")
+    implementation("androidx.compose.ui:ui-tooling-preview:$composeVersion")
     implementation("androidx.activity:activity-compose:1.4.0")
     implementation("androidx.palette:palette:1.0.0")
+    implementation("androidx.navigation:navigation-compose:2.4.2")
+
+    implementation("androidx.lifecycle:lifecycle-viewmodel-ktx:$lifecycleVersion")
+    implementation("androidx.lifecycle:lifecycle-viewmodel-compose:$lifecycleVersion")
+    kapt("androidx.lifecycle:lifecycle-compiler:$lifecycleVersion")
+
+    implementation("org.jetbrains.kotlinx:kotlinx-coroutines-android:$coroutinesVersion")
+    implementation("org.jetbrains.kotlinx:kotlinx-coroutines-core:$coroutinesVersion")
 
     implementation("com.google.dagger:hilt-android:$hiltVersion")
     kapt("com.google.dagger:hilt-android-compiler:$hiltVersion")
 
-    implementation("androidx.datastore:datastore:$datastoreVersion")
-    implementation("androidx.datastore:datastore-preferences:$datastoreVersion")
+    implementation("androidx.room:room-runtime:$roomVersion")
+    implementation("androidx.room:room-ktx:$roomVersion")
+    kapt("androidx.room:room-compiler:$roomVersion")
+
+    implementation("com.github.bumptech.glide:glide:4.13.2")
+    implementation("com.github.skydoves:landscapist-glide:1.5.2")
+    kapt("com.github.bumptech.glide:compiler:4.13.2")
 
     implementation("com.squareup.retrofit2:retrofit:2.9.0")
     implementation("com.jakewharton.retrofit:retrofit2-kotlinx-serialization-converter:0.8.0")
     implementation("org.jetbrains.kotlinx:kotlinx-serialization-json:1.3.3")
-//    implementation("com.squareup.retrofit2:converter-gson:2.9.0")
-
 
     testImplementation("junit:junit:4.13.2")
     androidTestImplementation("androidx.test.ext:junit:1.1.3")
@@ -107,22 +127,3 @@ dependencies {
 kapt {
     correctErrorTypes = true
 }
-
-//protobuf {
-//    protoc {
-//        artifact = "com.google.protobuf:protoc:3.14.0"
-//    }
-//
-//    plugins {
-//        id("javalite") { artifact = "com.google.protobuf:protoc-gen-javalite:3.0.0" }
-//        id("grpc") { artifact = "io.grpc:protoc-gen-grpc-java:1.24.0" }
-//    }
-//
-//    generateProtoTasks.all().forEach { task ->
-//        task.builtins {
-//            kotlin
-//        }
-//    }
-//}
-
-fun <T> Project.getExt(name: String) = extra.get(name) as T
