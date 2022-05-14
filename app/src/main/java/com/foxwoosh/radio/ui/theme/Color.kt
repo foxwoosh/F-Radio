@@ -11,4 +11,4 @@ val Alabaster = Color(0xFFFAFAFA)
 val Mercury = Color(0xFFE6E6E6)
 val Tutu = Color(0xFFFFFEFF)
 
-val Test = Color(0xFFFAFAFA)
+val Foxy = Color(0xFFDB6631)

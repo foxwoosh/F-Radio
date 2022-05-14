@@ -1,6 +1,7 @@
 package com.foxwoosh.radio.ui.player
 
 import android.graphics.drawable.Drawable
+import androidx.activity.viewModels
 import androidx.compose.foundation.layout.*
 import androidx.compose.material.MaterialTheme
 import androidx.compose.material.Surface
@@ -13,6 +14,7 @@ import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import androidx.core.graphics.drawable.toBitmap
+import androidx.lifecycle.ViewModelStoreOwner
 import androidx.lifecycle.viewmodel.compose.viewModel
 import androidx.palette.graphics.Palette
 import com.bumptech.glide.load.DataSource
@@ -23,9 +25,8 @@ import com.foxwoosh.radio.ui.theme.FoxyRadioTheme
 import com.skydoves.landscapist.glide.GlideImage
 
 @Composable
-fun Player(
-    viewModel: PlayerViewModel = viewModel()
-) {
+fun Player(owner: ViewModelStoreOwner) {
+    val viewModel = viewModel<PlayerViewModel>(owner)
 
     val state by viewModel.stateFlow.collectAsState()
 
@@ -118,6 +119,6 @@ fun PlayerReady(done: PlayerState.Done) {
 @Composable
 fun Preview() {
     FoxyRadioTheme {
-        Player()
+//        Player()
     }
 }

@@ -11,9 +11,10 @@ import com.foxwoosh.radio.ui.AppDestination
 import com.foxwoosh.radio.ui.login.LoginScreen
 import com.foxwoosh.radio.ui.player.Player
 import com.foxwoosh.radio.ui.theme.FoxyRadioTheme
+import dagger.hilt.android.AndroidEntryPoint
 
+@AndroidEntryPoint
 class MainActivity : ComponentActivity() {
-
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
 
@@ -32,7 +33,7 @@ class MainActivity : ComponentActivity() {
                         }
                     }
                     composable(route = AppDestination.Player.route) {
-                        Player()
+                        Player(this@MainActivity)
                     }
                 }
             }

@@ -5,13 +5,17 @@ import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.foxwoosh.radio.api.ApiService
 import com.foxwoosh.radio.storage.remote.current_data.CurrentDataRemoteStorage
+import com.foxwoosh.radio.storage.remote.current_data.ICurrentDataRemoteStorage
+import dagger.hilt.android.lifecycle.HiltViewModel
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.launch
+import javax.inject.Inject
 
-class PlayerViewModel : ViewModel() {
-
-    val storage = CurrentDataRemoteStorage(ApiService())
+@HiltViewModel
+class PlayerViewModel @Inject constructor(
+    private val storage: ICurrentDataRemoteStorage
+): ViewModel() {
 
     private val mutableStateflow = MutableStateFlow<PlayerState>(PlayerState.Loading)
     val stateFlow = mutableStateflow.asStateFlow()
