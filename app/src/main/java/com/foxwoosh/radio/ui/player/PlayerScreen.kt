@@ -189,52 +189,48 @@ fun PlayerMusicServicesRow(
                     painter = painterResource(id = R.drawable.ic_youtube_music),
                     contentDescription = "Youtube Music",
                     modifier = Modifier
+                        .padding(8.dp)
                         .size(48.dp)
                         .borderlessClickable { musicServiceSelected(musicServices.youtubeMusic) }
                 )
             }
-            Spacer(modifier = Modifier.width(8.dp))
-
             if (!musicServices.youtube.isNullOrEmpty()) {
                 Image(
                     painter = painterResource(id = R.drawable.ic_youtube_play),
                     contentDescription = "Youtube",
                     modifier = Modifier
+                        .padding(8.dp)
                         .size(48.dp)
                         .borderlessClickable { musicServiceSelected(musicServices.youtube) }
                 )
             }
-            Spacer(modifier = Modifier.width(8.dp))
-
             if (!musicServices.spotify.isNullOrEmpty()) {
                 Image(
                     painter = painterResource(id = R.drawable.ic_spotify),
                     contentDescription = "Spotify",
                     modifier = Modifier
+                        .padding(8.dp)
                         .size(48.dp)
                         .borderlessClickable { musicServiceSelected(musicServices.spotify) }
                 )
             }
-            Spacer(modifier = Modifier.width(8.dp))
-
             if (!musicServices.iTunes.isNullOrEmpty()) {
                 Image(
                     painter = painterResource(id = R.drawable.ic_itunes),
                     contentDescription = "iTunes",
                     modifier = Modifier
+                        .padding(8.dp)
                         .size(48.dp)
                         .borderlessClickable { musicServiceSelected(musicServices.iTunes) }
                 )
             }
-            Spacer(modifier = Modifier.width(8.dp))
-
             if (!musicServices.yandexMusic.isNullOrEmpty()) {
                 Image(
                     painter = painterResource(id = R.drawable.ic_yandex_music),
                     contentDescription = "Yandex Music",
                     modifier = Modifier
+                        .padding(8.dp)
                         .size(48.dp)
-                        .padding(4.dp)
                         .borderlessClickable { musicServiceSelected(musicServices.yandexMusic) }
                 )
             }
