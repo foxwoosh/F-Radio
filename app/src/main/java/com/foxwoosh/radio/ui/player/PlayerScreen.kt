@@ -35,6 +35,8 @@ import androidx.lifecycle.ViewModelStoreOwner
 import androidx.lifecycle.viewmodel.compose.viewModel
 import com.foxwoosh.radio.R
 import com.foxwoosh.radio.Utils
+import com.foxwoosh.radio.media_player.MediaPlayerService
+import com.foxwoosh.radio.media_player.MusicServicesData
 import com.foxwoosh.radio.ui.CenteredProgress
 import com.foxwoosh.radio.ui.borderlessClickable
 import com.foxwoosh.radio.ui.theme.FoxyRadioTheme
@@ -47,6 +49,8 @@ fun PlayerScreen(owner: ViewModelStoreOwner) {
 
     val state by viewModel.stateFlow.collectAsState()
     var playerVisible by rememberSaveable { mutableStateOf(false) }
+
+    val context = LocalContext.current
 
     Surface {
         when (state) {
@@ -76,7 +80,7 @@ fun PlayerScreen(owner: ViewModelStoreOwner) {
                         ).value,
                         musicServices = done.musicServices
                     ) {
-                        viewModel.reload()
+                        MediaPlayerService.start(context)
                     }
                 }
 
@@ -95,7 +99,7 @@ fun Player(
     surfaceColor: Color,
     primaryTextColor: Color,
     secondaryTextColor: Color,
-    musicServices: MusicServices = MusicServices(),
+    musicServices: MusicServicesData = MusicServicesData(),
     onReload: () -> Unit
 ) {
     var musicServicesMenuOpened by remember { mutableStateOf(false) }
@@ -178,12 +182,12 @@ fun Player(
 
 @Composable
 fun PlayerMusicServicesRow(
-    musicServices: MusicServices,
+    musicServices: MusicServicesData,
     modifier: Modifier = Modifier,
     musicServiceSelected: (url: String) -> Unit
 ) {
     if (musicServices.hasSomething) {
-        Row(modifier) {
+        Row(modifier.animateContentSize()) {
             if (!musicServices.youtubeMusic.isNullOrEmpty()) {
                 Image(
                     painter = painterResource(id = R.drawable.ic_youtube_music),

@@ -1,6 +1,6 @@
-package com.foxwoosh.radio.ui.player
+package com.foxwoosh.radio.media_player
 
-data class MusicServices(
+data class MusicServicesData(
     val youtubeMusic: String? = null,
     val youtube: String? = null,
     val spotify: String? = null,

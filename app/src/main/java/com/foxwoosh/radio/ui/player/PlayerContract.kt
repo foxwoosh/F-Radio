@@ -2,6 +2,7 @@ package com.foxwoosh.radio.ui.player
 
 import android.graphics.Bitmap
 import androidx.compose.ui.graphics.Color
+import com.foxwoosh.radio.media_player.MusicServicesData
 
 sealed class PlayerState {
     object Loading : PlayerState()
@@ -12,7 +13,7 @@ sealed class PlayerState {
         val surfaceColor: Color,
         val primaryTextColor: Color,
         val secondaryTextColor: Color,
-        val musicServices: MusicServices
+        val musicServices: MusicServicesData
     ) : PlayerState()
 
 }

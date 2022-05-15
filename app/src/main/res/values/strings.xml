@@ -1,3 +1,4 @@
 <resources>
     <string name="app_name">Foxy Radio</string>
+    <string name="notification_channel_audio_player">Audio Player</string>
 </resources>

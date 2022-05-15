@@ -5,6 +5,7 @@ import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import androidx.palette.graphics.Palette
 import com.foxwoosh.radio.image_loader.ImageLoader
+import com.foxwoosh.radio.media_player.MusicServicesData
 import com.foxwoosh.radio.storage.remote.current_data.CurrentDataRemoteStorage
 import dagger.hilt.android.lifecycle.HiltViewModel
 import kotlinx.coroutines.Dispatchers
@@ -37,9 +38,9 @@ class PlayerViewModel @Inject constructor(
 
             val (surfaceColor, primaryTextColor, secondaryTextColor) =
                 palette.darkVibrantSwatch?.let { getColorsFromSwatch(it) }
-                ?: palette.mutedSwatch?.let { getColorsFromSwatch(it) }
-                ?: palette.dominantSwatch?.let { getColorsFromSwatch(it) }
-                ?: Triple(Color.Black, Color.White, Color.White)
+                    ?: palette.mutedSwatch?.let { getColorsFromSwatch(it) }
+                    ?: palette.dominantSwatch?.let { getColorsFromSwatch(it) }
+                    ?: Triple(Color.Black, Color.White, Color.White)
 
             mutableStateflow.emit(
                 PlayerState.Done(
@@ -49,7 +50,7 @@ class PlayerViewModel @Inject constructor(
                     surfaceColor,
                     primaryTextColor,
                     secondaryTextColor,
-                    MusicServices(
+                    MusicServicesData(
                         youtubeMusic = track.youtubeMusicUrl,
                         youtube = track.youtubeUrl,
                         spotify = track.spotifyUrl,
