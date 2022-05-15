@@ -5,7 +5,7 @@ import kotlinx.serialization.Serializable
 
 @Serializable
 data class CurrentTrackResponse(
-    @SerialName("album") val album: String?,
+    @SerialName("album") val album: String? = null,
     @SerialName("artist") val artist: String,
     @SerialName("cover") val cover: String,
     @SerialName("cover_webp") val coverWebp: String,

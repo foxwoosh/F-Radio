@@ -3,6 +3,7 @@ package com.foxwoosh.radio.ui.player
 import android.graphics.Bitmap
 import android.util.Log
 import androidx.compose.animation.Animatable
+import androidx.compose.animation.Crossfade
 import androidx.compose.animation.animateColorAsState
 import androidx.compose.animation.core.tween
 import androidx.compose.foundation.background
@@ -13,6 +14,7 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.layout.ContentScale
+import androidx.compose.ui.platform.LocalConfiguration
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import androidx.lifecycle.ViewModelStoreOwner
@@ -65,13 +67,13 @@ fun PlayerScreen(owner: ViewModelStoreOwner) {
                     viewModel.reload()
                 }
 
+                Log.i("DDLOG", done.imageUrl)
+
                 ExtractColors(imageUrl = done.imageUrl) { b, surface, primary, secondary ->
                     stateSurfaceColor = Color(surface)
                     statePrimaryTextColor = Color(primary)
                     stateSecondaryTextColor = Color(secondary)
                     bitmap = b
-
-                    Log.i("DDLOG", "colors extracted")
                 }
             }
         }
@@ -96,14 +98,20 @@ fun Player(
         verticalArrangement = Arrangement.Center,
         horizontalAlignment = Alignment.CenterHorizontally
     ) {
-        GlideImage(
-            imageModel = bitmap,
-            contentScale = ContentScale.Inside,
-            contentDescription = "Avatar",
-            modifier = Modifier
-                .fillMaxWidth()
-                .size(260.dp)
-        )
+        Crossfade(
+            targetState = bitmap,
+            animationSpec = tween(1000)
+        ) {
+            val cfg = LocalConfiguration.current
+            GlideImage(
+                imageModel = it,
+                contentScale = ContentScale.Fit,
+                contentDescription = "Avatar",
+                modifier = Modifier
+                    .size(cfg.screenWidthDp.dp - 64.dp)
+                    .aspectRatio(1f)
+            )
+        }
 
         Spacer(modifier = Modifier.height(24.dp))
 
