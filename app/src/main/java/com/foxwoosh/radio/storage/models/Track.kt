@@ -1,9 +1,9 @@
 package com.foxwoosh.radio.storage.models
 
-data class TrackData(
+data class Track(
     val id: String,
     val title: String,
     val artist: String,
-    val album: String,
-    val image: String
+    val album: String?,
+    val imageUrl: String
 )

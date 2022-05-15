@@ -1,17 +1,17 @@
 package com.foxwoosh.radio.storage.remote.current_data
 
 import com.foxwoosh.radio.api.ApiService
-import com.foxwoosh.radio.storage.models.TrackData
+import com.foxwoosh.radio.storage.models.Track
 import javax.inject.Inject
 
 class CurrentDataRemoteStorage @Inject constructor(
     private val apiService: ApiService
 ) : ICurrentDataRemoteStorage {
 
-    override suspend fun loadCurrentData(): TrackData {
-        val result = apiService.api.getCurrent(System.currentTimeMillis())
+    override suspend fun loadCurrentData(): Track {
+        val result = apiService.api.getCurrentTrack(System.currentTimeMillis())
 
-        return TrackData(
+        return Track(
             result.id,
             result.title,
             result.artist,

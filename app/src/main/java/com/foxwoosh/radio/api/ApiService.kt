@@ -1,8 +1,8 @@
 package com.foxwoosh.radio.api
 
-import com.foxwoosh.radio.api.responses.CurrentDataResponse
+import com.foxwoosh.radio.api.responses.CheckIDResponse
+import com.foxwoosh.radio.api.responses.CurrentTrackResponse
 import com.jakewharton.retrofit2.converter.kotlinx.serialization.asConverterFactory
-import kotlinx.serialization.ExperimentalSerializationApi
 import kotlinx.serialization.json.Json
 import okhttp3.MediaType
 import okhttp3.OkHttpClient
@@ -22,7 +22,10 @@ class ApiService @Inject constructor() {
         .writeTimeout(30, TimeUnit.SECONDS)
         .build()
 
-    private val json = Json { ignoreUnknownKeys = true }
+    private val json = Json {
+        ignoreUnknownKeys = true
+        isLenient = true
+    }
 
     private val converterFactory = json.asConverterFactory(MediaType.get("application/json"))
 
@@ -35,6 +38,9 @@ class ApiService @Inject constructor() {
 
     interface Api {
         @GET("stations/ultra/current.json")
-        suspend fun getCurrent(@Query("t") time: Long): CurrentDataResponse
+        suspend fun getCurrentTrack(@Query("t") time: Long): CurrentTrackResponse
+
+        @GET("stations/ultra/id.json")
+        suspend fun checkID(@Query("t") time: Long): CheckIDResponse
     }
 }

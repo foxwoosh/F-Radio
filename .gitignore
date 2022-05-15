@@ -84,5 +84,5 @@ lint/outputs/
 lint/tmp/
 # lint/reports/
 /app/.gitignore
-/.idea/
+.idea/
 /release-keystore.jks

@@ -4,8 +4,8 @@ import kotlinx.serialization.SerialName
 import kotlinx.serialization.Serializable
 
 @Serializable
-data class CurrentDataResponse(
-    @SerialName("album") val album: String,
+data class CurrentTrackResponse(
+    @SerialName("album") val album: String?,
     @SerialName("artist") val artist: String,
     @SerialName("cover") val cover: String,
     @SerialName("cover_webp") val coverWebp: String,

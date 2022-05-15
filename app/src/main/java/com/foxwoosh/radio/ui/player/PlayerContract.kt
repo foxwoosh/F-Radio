@@ -5,8 +5,7 @@ sealed class PlayerState {
     data class Done(
         val title: String,
         val artist: String,
-        val album: String,
-        val image: String
+        val imageUrl: String
     ) : PlayerState()
 
 }

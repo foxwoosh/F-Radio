@@ -21,18 +21,19 @@ class PlayerViewModel @Inject constructor(
     val stateFlow = mutableStateflow.asStateFlow()
 
     init {
-        viewModelScope.launch {
-            val track = storage.loadCurrentData()
+        reload()
+    }
 
-            mutableStateflow.emit(
-                PlayerState.Done(
-                    track.title,
-                    track.artist,
-                    track.album,
-                    track.image
-                )
+    fun reload() = viewModelScope.launch {
+        val track = storage.loadCurrentData()
+
+        mutableStateflow.emit(
+            PlayerState.Done(
+                track.title,
+                track.artist,
+                track.imageUrl
             )
-        }
+        )
     }
 
     override fun onCleared() {

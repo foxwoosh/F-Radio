@@ -9,7 +9,7 @@ import androidx.navigation.compose.composable
 import androidx.navigation.compose.rememberNavController
 import com.foxwoosh.radio.ui.AppDestination
 import com.foxwoosh.radio.ui.login.LoginScreen
-import com.foxwoosh.radio.ui.player.Player
+import com.foxwoosh.radio.ui.player.PlayerScreen
 import com.foxwoosh.radio.ui.theme.FoxyRadioTheme
 import dagger.hilt.android.AndroidEntryPoint
 
@@ -25,7 +25,7 @@ class MainActivity : ComponentActivity() {
                 val navController = rememberNavController()
                 NavHost(
                     navController = navController,
-                    startDestination = AppDestination.Login.route
+                    startDestination = AppDestination.Player.route
                 ) {
                     composable(route = AppDestination.Login.route) {
                         LoginScreen {
@@ -33,7 +33,7 @@ class MainActivity : ComponentActivity() {
                         }
                     }
                     composable(route = AppDestination.Player.route) {
-                        Player(this@MainActivity)
+                        PlayerScreen(this@MainActivity)
                     }
                 }
             }
