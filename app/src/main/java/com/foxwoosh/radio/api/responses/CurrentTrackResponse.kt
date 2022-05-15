@@ -18,7 +18,7 @@ data class CurrentTrackResponse(
     @SerialName("time") val time: String,
     @SerialName("title") val title: String,
     @SerialName("uniqueid") val uniqueID: String,
-    @SerialName("itunes_url") val itunesUrl: String?,
+    @SerialName("itunes_url") val iTunesUrl: String?,
     @SerialName("spotify_url") val spotifyUrl: String?,
     @SerialName("yamusic_url") val yandexMusicUrl: String?,
     @SerialName("youtube_url") val youtubeUrl: String?,

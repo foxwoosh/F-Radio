@@ -5,5 +5,10 @@ data class Track(
     val title: String,
     val artist: String,
     val album: String?,
-    val imageUrl: String
+    val imageUrl: String,
+    val youtubeMusicUrl: String?,
+    val youtubeUrl: String?,
+    val spotifyUrl: String?,
+    val iTunesUrl: String?,
+    val yandexMusicUrl: String?
 )
