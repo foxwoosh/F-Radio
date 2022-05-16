@@ -80,7 +80,7 @@ fun PlayerScreen(owner: ViewModelStoreOwner) {
                         ).value,
                         musicServices = done.musicServices
                     ) {
-                        MediaPlayerService.start(context)
+
                     }
                 }
 
@@ -174,8 +174,14 @@ fun Player(
 
         Spacer(modifier = Modifier.height(100.dp))
 
-        OutlinedButton(onClick = onReload) {
-            Text(text = "Reload")
+        Row {
+            OutlinedButton(onClick = { MediaPlayerService.play(context) }) {
+                Text(text = "Play")
+            }
+
+            OutlinedButton(onClick = { MediaPlayerService.stop(context) }) {
+                Text(text = "Stop")
+            }
         }
     }
 }

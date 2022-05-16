@@ -7,8 +7,6 @@ import android.content.Intent
 import android.graphics.drawable.Icon
 import android.media.session.MediaSession
 import android.os.Build
-import androidx.compose.ui.graphics.Color
-import androidx.core.graphics.drawable.toBitmap
 import com.foxwoosh.radio.R
 import com.foxwoosh.radio.notifications.NotificationPublisher
 
@@ -20,7 +18,7 @@ class MediaPlayerNotificationCreator(context: Context) {
             PendingIntent.getBroadcast(
                 context,
                 MediaPlayerService.mediaPlayerRequestCodeStart,
-                Intent(MediaPlayerService.mediaPlayerActionStart),
+                Intent(MediaPlayerService.mediaPlayerActionPlay),
                 PendingIntent.FLAG_CANCEL_CURRENT or PendingIntent.FLAG_IMMUTABLE
             )
         )
@@ -31,31 +29,31 @@ class MediaPlayerNotificationCreator(context: Context) {
             PendingIntent.getBroadcast(
                 context,
                 MediaPlayerService.mediaPlayerRequestCodeStart,
-                Intent(MediaPlayerService.mediaPlayerActionStart),
+                Intent(MediaPlayerService.mediaPlayerActionPlay),
                 PendingIntent.FLAG_CANCEL_CURRENT or PendingIntent.FLAG_IMMUTABLE
             )
         )
     }.build()
 
-    private val pauseAction = if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.M) {
+    private val stopAction = if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.M) {
         Notification.Action.Builder(
-            Icon.createWithResource(context, R.drawable.ic_player_action_pause),
-            "Pause",
+            Icon.createWithResource(context, R.drawable.ic_player_action_stop),
+            "Stop",
             PendingIntent.getBroadcast(
                 context,
-                MediaPlayerService.mediaPlayerRequestCodePause,
-                Intent(MediaPlayerService.mediaPlayerActionPause),
+                MediaPlayerService.mediaPlayerRequestCodeStop,
+                Intent(MediaPlayerService.mediaPlayerActionStop),
                 PendingIntent.FLAG_CANCEL_CURRENT or PendingIntent.FLAG_IMMUTABLE
             )
         )
     } else {
         Notification.Action.Builder(
-            R.drawable.ic_player_action_pause,
-            "Play",
+            R.drawable.ic_player_action_stop,
+            "Stop",
             PendingIntent.getBroadcast(
                 context,
-                MediaPlayerService.mediaPlayerRequestCodePause,
-                Intent(MediaPlayerService.mediaPlayerActionPause),
+                MediaPlayerService.mediaPlayerRequestCodeStop,
+                Intent(MediaPlayerService.mediaPlayerActionStop),
                 PendingIntent.FLAG_CANCEL_CURRENT or PendingIntent.FLAG_IMMUTABLE
             )
         )
@@ -64,7 +62,8 @@ class MediaPlayerNotificationCreator(context: Context) {
     fun getNotification(
         context: Context,
         mediaSessionToken: MediaSession.Token?,
-        playerState: MediaPlayerState
+        playerState: MediaPlayerTrackData,
+        isPlaying: Boolean
     ): Notification {
         val builder = if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
             Notification.Builder(context, NotificationPublisher.playerChannelID)
@@ -73,45 +72,19 @@ class MediaPlayerNotificationCreator(context: Context) {
         }
 
         return builder
-            .setColor(
-                when (playerState) {
-                    MediaPlayerState.Buffering,
-                    MediaPlayerState.Paused -> Color.Black
-                    is MediaPlayerState.Playing -> playerState.surfaceColor
-                }.value.toInt()
-            )
-            .setContentTitle(
-                when (playerState) {
-                    MediaPlayerState.Buffering -> "Buffering..."
-                    MediaPlayerState.Paused -> "Paused..."
-                    is MediaPlayerState.Playing -> playerState.trackTitle
-                }
-            )
+            .setColor(playerState.surfaceColor.value.toInt())
+            .setContentTitle(playerState.title)
             .setSmallIcon(R.drawable.ic_notification_play)
-            .setLargeIcon(
-                when (playerState) {
-                    MediaPlayerState.Buffering,
-                    MediaPlayerState.Paused -> context.getDrawable(R.drawable.ic_snooze)
-                        ?.toBitmap()
-                    is MediaPlayerState.Playing -> playerState.cover
-                }
-            )
-            .setContentText(
-                when (playerState) {
-                    MediaPlayerState.Buffering,
-                    MediaPlayerState.Paused -> ""
-                    is MediaPlayerState.Playing -> playerState.artist
-                }
-            )
+            .setLargeIcon(playerState.cover)
+            .setContentText(playerState.artist)
             .addAction(
-                when (playerState) {
-                    MediaPlayerState.Buffering,
-                    is MediaPlayerState.Playing -> pauseAction
-                    MediaPlayerState.Paused -> playAction
+                when (isPlaying) {
+                    true -> stopAction
+                    false -> playAction
                 }
             )
             .setAutoCancel(false)
-            .setOngoing(playerState is MediaPlayerState.Playing)
+            .setOngoing(isPlaying)
             .setShowWhen(false)
             .setStyle(
                 Notification.MediaStyle().also {

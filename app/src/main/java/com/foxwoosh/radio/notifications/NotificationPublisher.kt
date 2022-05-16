@@ -1,5 +1,6 @@
 package com.foxwoosh.radio.notifications
 
+import android.app.Notification
 import android.app.NotificationChannel
 import android.app.NotificationManager
 import android.content.Context
@@ -18,9 +19,18 @@ object NotificationPublisher {
                 NotificationChannel(
                     playerChannelID,
                     context.getString(R.string.notification_channel_audio_player),
-                    NotificationManager.IMPORTANCE_DEFAULT
+                    NotificationManager.IMPORTANCE_LOW
                 )
             )
         }
+    }
+
+    fun notify(
+        context: Context,
+        notificationID: Int,
+        notification: Notification
+    ) {
+        NotificationManagerCompat.from(context)
+            .notify(notificationID, notification)
     }
 }

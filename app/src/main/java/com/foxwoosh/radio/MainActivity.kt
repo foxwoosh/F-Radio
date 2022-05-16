@@ -8,6 +8,7 @@ import androidx.navigation.compose.NavHost
 import androidx.navigation.compose.composable
 import androidx.navigation.compose.rememberNavController
 import com.foxwoosh.radio.media_player.MediaPlayerService
+import com.foxwoosh.radio.media_player.MediaPlayerSource
 import com.foxwoosh.radio.ui.AppDestination
 import com.foxwoosh.radio.ui.login.LoginScreen
 import com.foxwoosh.radio.ui.player.PlayerScreen
@@ -39,5 +40,7 @@ class MainActivity : ComponentActivity() {
                 }
             }
         }
+
+        MediaPlayerService.start(this, MediaPlayerSource.ULTRA_HD)
     }
 }

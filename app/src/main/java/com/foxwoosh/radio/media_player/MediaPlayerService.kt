@@ -1,28 +1,26 @@
 package com.foxwoosh.radio.media_player
 
-import android.app.Notification
-import android.app.PendingIntent
 import android.app.Service
+import android.content.BroadcastReceiver
 import android.content.Context
 import android.content.Intent
-import android.graphics.drawable.Icon
+import android.content.IntentFilter
 import android.media.AudioAttributes
+import android.media.MediaMetadata
 import android.media.MediaPlayer
 import android.media.session.MediaSession
+import android.media.session.PlaybackState
 import android.os.IBinder
 import android.util.Log
 import androidx.compose.ui.graphics.Color
 import androidx.core.app.NotificationManagerCompat
 import androidx.palette.graphics.Palette
 import com.foxwoosh.radio.image_loader.ImageLoader
+import com.foxwoosh.radio.notifications.NotificationPublisher
 import com.foxwoosh.radio.storage.remote.current_data.CurrentDataRemoteStorage
-import com.foxwoosh.radio.ui.player.PlayerState
 import dagger.hilt.android.AndroidEntryPoint
 import kotlinx.coroutines.*
-import kotlinx.coroutines.flow.MutableStateFlow
-import kotlinx.coroutines.flow.asStateFlow
-import kotlinx.coroutines.flow.launchIn
-import kotlinx.coroutines.flow.onEach
+import kotlinx.coroutines.flow.*
 import javax.inject.Inject
 import kotlin.coroutines.CoroutineContext
 
@@ -33,15 +31,26 @@ class MediaPlayerService : Service(), CoroutineScope {
         private const val mediaSessionTag = "foxy_radio_media_session_tag"
         private const val mediaNotificationID = 128459
 
-        internal const val mediaPlayerActionStart = "action_player_start"
-        internal const val mediaPlayerActionPause = "action_player_pause"
+        internal const val mediaPlayerActionPlay = "action_player_start"
+        internal const val mediaPlayerActionStop = "action_player_stop"
+
+        internal const val mediaPlayerExtraSource = "media_player_extra_source"
 
         internal const val mediaPlayerRequestCodeStart = 999
-        internal const val mediaPlayerRequestCodePause = 888
+        internal const val mediaPlayerRequestCodeStop = 888
 
-        fun start(context: Context) {
+        fun start(context: Context, source: MediaPlayerSource) {
             val intent = Intent(context, MediaPlayerService::class.java)
+                .putExtra(mediaPlayerExtraSource, source)
             context.startService(intent)
+        }
+
+        fun play(context: Context) {
+            context.sendBroadcast(Intent(mediaPlayerActionPlay))
+        }
+
+        fun stop(context: Context) {
+            context.sendBroadcast(Intent(mediaPlayerActionStop))
         }
     }
 
@@ -53,8 +62,11 @@ class MediaPlayerService : Service(), CoroutineScope {
     @Inject
     lateinit var imageLoader: ImageLoader
 
-    private val mutableStateFlow = MutableStateFlow<MediaPlayerState>(MediaPlayerState.Buffering)
-    val stateFlow = mutableStateFlow.asStateFlow()
+    private val mutableTrackData = MutableStateFlow(MediaPlayerTrackData.buffering)
+    val trackData = mutableTrackData.asStateFlow()
+
+    private val mutablePlayerState = MutableStateFlow(false)
+    val playerState = mutablePlayerState.asStateFlow()
 
     private val mediaPlayer = MediaPlayer().apply {
         setAudioAttributes(
@@ -64,7 +76,6 @@ class MediaPlayerService : Service(), CoroutineScope {
                 .build()
         )
     }
-    private val mediaPlayerBroadcastReceiver = MediaPlayerBroadcastReceiver(mediaPlayer)
     private var mediaSession: MediaSession? = null
 
     private val notificationCreator by lazy { MediaPlayerNotificationCreator(this) }
@@ -73,48 +84,31 @@ class MediaPlayerService : Service(), CoroutineScope {
         super.onCreate()
 
         mediaSession = MediaSession(this, mediaSessionTag).also {
-            it.setCallback(
-                object : MediaSession.Callback() {
-                    override fun onPlay() {
-                        Log.i("DDLOG", "MediaSessionCallback onPlay")
-                    }
-
-                    override fun onPause() {
-                        Log.i("DDLOG", "MediaSessionCallback onPause")
-                    }
-
-                    override fun onStop() {
-                        Log.i("DDLOG", "MediaSessionCallback onStop")
-                    }
-                }
-            )
+            it.setCallback(mediaSessionCallback)
             it.isActive = true
         }
 
-        registerReceiver(mediaPlayerBroadcastReceiver, mediaPlayerBroadcastReceiver.filter)
+        registerReceiver(broadcastReceiver, broadcastReceiver.filter)
 
-        stateFlow
-            .onEach {
-                val notification = notificationCreator.getNotification(
-                    this,
-                    mediaSession?.sessionToken,
-                    it
-                )
-
-                if (it is MediaPlayerState.Playing) {
-                    startForeground(mediaNotificationID, notification)
-                } else {
-                    stopForeground(false)
-
-                    NotificationManagerCompat.from(this)
-                        .notify(mediaNotificationID, notification)
-                }
-            }
-            .launchIn(this)
+        playerState.combine(trackData) { isPlaying, trackData ->
+            updateMediaSession(trackData, isPlaying)
+        }.launchIn(this)
     }
 
     override fun onStartCommand(intent: Intent?, flags: Int, startId: Int): Int {
-        startMediaSession(MediaPlayerSource.ULTRA_HD)
+        intent?.getSerializableExtra(mediaPlayerExtraSource)?.let {
+            setupMediaPlayer(it as MediaPlayerSource)
+        }
+
+        startForeground(
+            mediaNotificationID,
+            notificationCreator.getNotification(
+                this,
+                mediaSession?.sessionToken,
+                trackData.value,
+                playerState.value
+            )
+        )
 
         return START_NOT_STICKY
     }
@@ -122,7 +116,7 @@ class MediaPlayerService : Service(), CoroutineScope {
     override fun onDestroy() {
         super.onDestroy()
 
-        unregisterReceiver(mediaPlayerBroadcastReceiver)
+        unregisterReceiver(broadcastReceiver)
 
         mediaSession?.release()
         mediaSession = null
@@ -130,10 +124,8 @@ class MediaPlayerService : Service(), CoroutineScope {
 
     override fun onBind(p0: Intent?): IBinder? = null
 
-    private fun startMediaSession(source: MediaPlayerSource) = launch {
+    private fun setupMediaPlayer(source: MediaPlayerSource) = launch {
         mediaPlayer.setDataSource(source.url)
-        mediaPlayer.prepare()
-        mediaPlayer.start()
 
         val track = currentDataRemoteStorage.loadCurrentData()
 
@@ -147,25 +139,64 @@ class MediaPlayerService : Service(), CoroutineScope {
                 ?: palette.dominantSwatch?.let { getColorsFromSwatch(it) }
                 ?: Triple(Color.Black, Color.White, Color.White)
 
-        mutableStateFlow.emit(
-            if (mediaPlayer.isPlaying) {
-                MediaPlayerState.Playing(
-                    track.title,
-                    track.artist,
-                    bitmap,
-                    surfaceColor,
-                    primaryTextColor,
-                    secondaryTextColor,
-                    MusicServicesData(
-                        youtubeMusic = track.youtubeMusicUrl,
-                        youtube = track.youtubeUrl,
-                        spotify = track.spotifyUrl,
-                        iTunes = track.iTunesUrl,
-                        yandexMusic = track.yandexMusicUrl
-                    )
-                )
-            } else MediaPlayerState.Paused
+        val trackData = MediaPlayerTrackData(
+            track.title,
+            track.artist,
+            track.album,
+            bitmap,
+            surfaceColor,
+            primaryTextColor,
+            secondaryTextColor,
+            MusicServicesData(
+                youtubeMusic = track.youtubeMusicUrl,
+                youtube = track.youtubeUrl,
+                spotify = track.spotifyUrl,
+                iTunes = track.iTunesUrl,
+                yandexMusic = track.yandexMusicUrl
+            )
         )
+
+        mutableTrackData.emit(trackData)
+    }
+
+    fun play() = launch {
+        mediaPlayer.prepare()
+        mediaPlayer.start()
+
+        mutablePlayerState.emit(true)
+    }
+
+    fun stop() = launch {
+        mediaPlayer.stop()
+
+        mutablePlayerState.emit(false)
+    }
+
+    private fun updateMediaSession(
+        trackData: MediaPlayerTrackData,
+        isPlaying: Boolean
+    ) {
+        mediaSession?.setPlaybackState(
+            PlaybackState.Builder()
+                .setActions(PlaybackState.ACTION_PLAY_PAUSE)
+                .build()
+        )
+        mediaSession?.setMetadata(
+            MediaMetadata.Builder()
+                .putBitmap(MediaMetadata.METADATA_KEY_ALBUM_ART, trackData.cover)
+                .putString(MediaMetadata.METADATA_KEY_TITLE, trackData.title)
+                .putString(MediaMetadata.METADATA_KEY_ARTIST, trackData.artist)
+                .putString(MediaMetadata.METADATA_KEY_ALBUM, trackData.album)
+                .build()
+        )
+
+        val notification = notificationCreator.getNotification(
+            this@MediaPlayerService,
+            mediaSession?.sessionToken,
+            trackData,
+            isPlaying
+        )
+        NotificationPublisher.notify(this, mediaNotificationID, notification)
     }
 
     private fun getColorsFromSwatch(swatch: Palette.Swatch) = Triple(
@@ -173,4 +204,28 @@ class MediaPlayerService : Service(), CoroutineScope {
         Color(swatch.bodyTextColor),
         Color(swatch.titleTextColor)
     )
+
+    private val broadcastReceiver = object : BroadcastReceiver() {
+        val filter = IntentFilter().apply {
+            addAction(mediaPlayerActionPlay)
+            addAction(mediaPlayerActionStop)
+        }
+
+        override fun onReceive(context: Context, intent: Intent) {
+            when (intent.action) {
+                mediaPlayerActionPlay -> play()
+                mediaPlayerActionStop -> stop()
+            }
+        }
+    }
+
+    private val mediaSessionCallback =  object : MediaSession.Callback() {
+        override fun onPlay() {
+            play()
+        }
+
+        override fun onStop() {
+            stop()
+        }
+    }
 }
