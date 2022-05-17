@@ -1,9 +1,9 @@
-package com.foxwoosh.radio.media_player
+package com.foxwoosh.radio.player
 
 import android.graphics.Bitmap
 import androidx.compose.ui.graphics.Color
 
-data class MediaPlayerTrackData(
+data class PlayerTrackData(
     val title: String,
     val artist: String,
     val album: String?,
@@ -14,7 +14,7 @@ data class MediaPlayerTrackData(
     val musicServices: MusicServicesData
 ) {
     companion object {
-        val buffering = MediaPlayerTrackData(
+        val buffering = PlayerTrackData(
             "Buffering",
             "",
             null,

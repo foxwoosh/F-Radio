@@ -5,7 +5,7 @@ import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import androidx.palette.graphics.Palette
 import com.foxwoosh.radio.image_loader.ImageLoader
-import com.foxwoosh.radio.media_player.MusicServicesData
+import com.foxwoosh.radio.player.MusicServicesData
 import com.foxwoosh.radio.storage.remote.current_data.CurrentDataRemoteStorage
 import dagger.hilt.android.lifecycle.HiltViewModel
 import kotlinx.coroutines.Dispatchers

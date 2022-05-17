@@ -2,7 +2,7 @@ package com.foxwoosh.radio.ui.player
 
 import android.graphics.Bitmap
 import androidx.compose.ui.graphics.Color
-import com.foxwoosh.radio.media_player.MusicServicesData
+import com.foxwoosh.radio.player.MusicServicesData
 
 sealed class PlayerState {
     object Loading : PlayerState()

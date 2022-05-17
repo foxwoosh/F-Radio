@@ -1,4 +1,6 @@
 <?xml version="1.0" encoding="utf-8"?>
 <resources>
     <string name="notification_channel_audio_player">Аудио плеер</string>
+    <string name="notification_action_play">Воспроизвести</string>
+    <string name="notification_action_stop">Стоп</string>
 </resources>

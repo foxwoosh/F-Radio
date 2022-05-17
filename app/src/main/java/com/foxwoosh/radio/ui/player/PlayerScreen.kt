@@ -9,16 +9,12 @@ import androidx.compose.animation.core.tween
 import androidx.compose.foundation.Image
 import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
-import androidx.compose.foundation.indication
-import androidx.compose.foundation.interaction.MutableInteractionSource
 import androidx.compose.foundation.layout.*
 import androidx.compose.material.*
-import androidx.compose.material.ripple.rememberRipple
 import androidx.compose.runtime.*
 import androidx.compose.runtime.saveable.rememberSaveable
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.composed
 import androidx.compose.ui.draw.scale
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.asImageBitmap
@@ -28,15 +24,14 @@ import androidx.compose.ui.platform.LocalConfiguration
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.tooling.preview.Preview
-import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.dp
 import androidx.core.graphics.drawable.toBitmap
 import androidx.lifecycle.ViewModelStoreOwner
 import androidx.lifecycle.viewmodel.compose.viewModel
 import com.foxwoosh.radio.R
 import com.foxwoosh.radio.Utils
-import com.foxwoosh.radio.media_player.MediaPlayerService
-import com.foxwoosh.radio.media_player.MusicServicesData
+import com.foxwoosh.radio.player.PlayerService
+import com.foxwoosh.radio.player.MusicServicesData
 import com.foxwoosh.radio.ui.CenteredProgress
 import com.foxwoosh.radio.ui.borderlessClickable
 import com.foxwoosh.radio.ui.theme.FoxyRadioTheme
@@ -49,8 +44,6 @@ fun PlayerScreen(owner: ViewModelStoreOwner) {
 
     val state by viewModel.stateFlow.collectAsState()
     var playerVisible by rememberSaveable { mutableStateOf(false) }
-
-    val context = LocalContext.current
 
     Surface {
         when (state) {
@@ -80,7 +73,7 @@ fun PlayerScreen(owner: ViewModelStoreOwner) {
                         ).value,
                         musicServices = done.musicServices
                     ) {
-
+                        viewModel.reload()
                     }
                 }
 
@@ -89,7 +82,6 @@ fun PlayerScreen(owner: ViewModelStoreOwner) {
         }
     }
 }
-
 
 @Composable
 fun Player(
@@ -175,12 +167,16 @@ fun Player(
         Spacer(modifier = Modifier.height(100.dp))
 
         Row {
-            OutlinedButton(onClick = { MediaPlayerService.play(context) }) {
+            OutlinedButton(onClick = { PlayerService.start(context) }) {
                 Text(text = "Play")
             }
 
-            OutlinedButton(onClick = { MediaPlayerService.stop(context) }) {
+            OutlinedButton(onClick = { PlayerService.stop(context) }) {
                 Text(text = "Stop")
+            }
+            
+            OutlinedButton(onClick = onReload) {
+                Text(text = "Reload")
             }
         }
     }

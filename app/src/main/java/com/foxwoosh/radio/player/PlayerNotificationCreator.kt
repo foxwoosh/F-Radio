@@ -1,4 +1,4 @@
-package com.foxwoosh.radio.media_player
+package com.foxwoosh.radio.player
 
 import android.app.Notification
 import android.app.PendingIntent
@@ -10,26 +10,34 @@ import android.os.Build
 import com.foxwoosh.radio.R
 import com.foxwoosh.radio.notifications.NotificationPublisher
 
-class MediaPlayerNotificationCreator(context: Context) {
+class PlayerNotificationCreator(
+    context: Context,
+    playerActionStart: String,
+    playerActionStop: String
+) {
+    companion object {
+        const val notificationID = 777
+    }
+
     private val playAction = if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.M) {
         Notification.Action.Builder(
-            Icon.createWithResource(context, R.drawable.ic_player_action_play),
-            "Play",
+            Icon.createWithResource(context, R.drawable.ic_player_play),
+            context.getString(R.string.notification_action_play),
             PendingIntent.getBroadcast(
                 context,
-                MediaPlayerService.mediaPlayerRequestCodeStart,
-                Intent(MediaPlayerService.mediaPlayerActionPlay),
+                128459,
+                Intent(playerActionStart),
                 PendingIntent.FLAG_CANCEL_CURRENT or PendingIntent.FLAG_IMMUTABLE
             )
         )
     } else {
         Notification.Action.Builder(
-            R.drawable.ic_player_action_play,
-            "Play",
+            R.drawable.ic_player_play,
+            context.getString(R.string.notification_action_play),
             PendingIntent.getBroadcast(
                 context,
-                MediaPlayerService.mediaPlayerRequestCodeStart,
-                Intent(MediaPlayerService.mediaPlayerActionPlay),
+                128459,
+                Intent(playerActionStart),
                 PendingIntent.FLAG_CANCEL_CURRENT or PendingIntent.FLAG_IMMUTABLE
             )
         )
@@ -37,23 +45,23 @@ class MediaPlayerNotificationCreator(context: Context) {
 
     private val stopAction = if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.M) {
         Notification.Action.Builder(
-            Icon.createWithResource(context, R.drawable.ic_player_action_stop),
-            "Stop",
+            Icon.createWithResource(context, R.drawable.ic_player_stop),
+            context.getString(R.string.notification_action_stop),
             PendingIntent.getBroadcast(
                 context,
-                MediaPlayerService.mediaPlayerRequestCodeStop,
-                Intent(MediaPlayerService.mediaPlayerActionStop),
+                98741,
+                Intent(playerActionStop),
                 PendingIntent.FLAG_CANCEL_CURRENT or PendingIntent.FLAG_IMMUTABLE
             )
         )
     } else {
         Notification.Action.Builder(
-            R.drawable.ic_player_action_stop,
-            "Stop",
+            R.drawable.ic_player_stop,
+            context.getString(R.string.notification_action_stop),
             PendingIntent.getBroadcast(
                 context,
-                MediaPlayerService.mediaPlayerRequestCodeStop,
-                Intent(MediaPlayerService.mediaPlayerActionStop),
+                98741,
+                Intent(playerActionStop),
                 PendingIntent.FLAG_CANCEL_CURRENT or PendingIntent.FLAG_IMMUTABLE
             )
         )
@@ -62,7 +70,7 @@ class MediaPlayerNotificationCreator(context: Context) {
     fun getNotification(
         context: Context,
         mediaSessionToken: MediaSession.Token?,
-        playerState: MediaPlayerTrackData,
+        trackData: PlayerTrackData,
         isPlaying: Boolean
     ): Notification {
         val builder = if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
@@ -72,11 +80,11 @@ class MediaPlayerNotificationCreator(context: Context) {
         }
 
         return builder
-            .setColor(playerState.surfaceColor.value.toInt())
-            .setContentTitle(playerState.title)
+            .setColor(trackData.surfaceColor.value.toInt())
+            .setContentTitle(trackData.title)
             .setSmallIcon(R.drawable.ic_notification_play)
-            .setLargeIcon(playerState.cover)
-            .setContentText(playerState.artist)
+            .setLargeIcon(trackData.cover)
+            .setContentText(trackData.artist)
             .addAction(
                 when (isPlaying) {
                     true -> stopAction

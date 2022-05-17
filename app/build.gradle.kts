@@ -6,6 +6,7 @@ val hiltVersion = rootProject.extra.get("hilt_version")
 val roomVersion = rootProject.extra.get("room_version")
 val coroutinesVersion = rootProject.extra.get("coroutines_version")
 val lifecycleVersion = rootProject.extra.get("lifecycle_version")
+val mediaVersion = rootProject.extra.get("media_version")
 
 plugins {
     id("com.android.application")
@@ -109,6 +110,9 @@ dependencies {
 
     implementation("com.github.bumptech.glide:glide:4.13.2")
     kapt("com.github.bumptech.glide:compiler:4.13.2")
+
+    implementation("androidx.media3:media3-exoplayer:$mediaVersion")
+    implementation("androidx.media3:media3-exoplayer-dash:$mediaVersion")
 
     implementation("com.squareup.retrofit2:retrofit:2.9.0")
     implementation("com.jakewharton.retrofit:retrofit2-kotlinx-serialization-converter:0.8.0")
