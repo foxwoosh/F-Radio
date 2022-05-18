@@ -1,15 +1,17 @@
-package com.foxwoosh.radio.storage.remote.current_data
+package com.foxwoosh.radio.storage.remote.ultra
 
 import com.foxwoosh.radio.api.ApiService
 import com.foxwoosh.radio.storage.models.Track
 import javax.inject.Inject
 
-class CurrentDataRemoteStorageImpl @Inject constructor(
+class UltraDataRemoteStorage @Inject constructor(
     private val apiService: ApiService
-) : CurrentDataRemoteStorage {
+) : IUltraDataRemoteStorage {
 
     override suspend fun loadCurrentData(): Track {
-        val result = apiService.api.getCurrentTrack(System.currentTimeMillis())
+        val result = apiService
+            .api
+            .getCurrentTrack(System.currentTimeMillis())
 
         return Track(
             result.id,
@@ -24,4 +26,9 @@ class CurrentDataRemoteStorageImpl @Inject constructor(
             result.yandexMusicUrl
         )
     }
+
+    override suspend fun getUniqueID() = apiService
+        .api
+        .checkID(System.currentTimeMillis())
+        .uniqueID
 }

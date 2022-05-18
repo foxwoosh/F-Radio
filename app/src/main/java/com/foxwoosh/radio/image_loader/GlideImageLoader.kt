@@ -5,7 +5,7 @@ import com.bumptech.glide.Glide
 import dagger.hilt.android.qualifiers.ApplicationContext
 import javax.inject.Inject
 
-class ImageLoaderImpl @Inject constructor(
+class GlideImageLoader @Inject constructor(
     @ApplicationContext private val context: Context
 ) : ImageLoader {
 

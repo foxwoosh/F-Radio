@@ -7,18 +7,18 @@ data class PlayerTrackData(
     val title: String,
     val artist: String,
     val album: String?,
-    val cover: Bitmap,
+    val cover: Bitmap?,
     val surfaceColor: Color,
     val primaryTextColor: Color,
     val secondaryTextColor: Color,
     val musicServices: MusicServicesData
 ) {
     companion object {
-        val buffering = PlayerTrackData(
-            "Buffering",
+        val waiting = PlayerTrackData(
+            "Waiting...",
             "",
             null,
-            Bitmap.createBitmap(1, 1, Bitmap.Config.ARGB_8888),
+            null,
             Color.Black,
             Color.White,
             Color.White,

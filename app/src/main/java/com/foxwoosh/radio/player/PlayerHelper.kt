@@ -4,15 +4,19 @@ import android.app.Notification
 import android.app.PendingIntent
 import android.content.Context
 import android.content.Intent
+import android.graphics.Bitmap
 import android.graphics.drawable.Icon
+import android.media.MediaMetadata
 import android.media.session.MediaSession
 import android.os.Build
+import androidx.compose.ui.graphics.Color
+import androidx.palette.graphics.Palette
 import com.foxwoosh.radio.R
 import com.foxwoosh.radio.notifications.NotificationPublisher
 
-class PlayerNotificationCreator(
+class PlayerHelper(
     context: Context,
-    playerActionStart: String,
+    playerActionPlay: String,
     playerActionStop: String
 ) {
     companion object {
@@ -26,7 +30,7 @@ class PlayerNotificationCreator(
             PendingIntent.getBroadcast(
                 context,
                 128459,
-                Intent(playerActionStart),
+                Intent(playerActionPlay),
                 PendingIntent.FLAG_CANCEL_CURRENT or PendingIntent.FLAG_IMMUTABLE
             )
         )
@@ -37,7 +41,7 @@ class PlayerNotificationCreator(
             PendingIntent.getBroadcast(
                 context,
                 128459,
-                Intent(playerActionStart),
+                Intent(playerActionPlay),
                 PendingIntent.FLAG_CANCEL_CURRENT or PendingIntent.FLAG_IMMUTABLE
             )
         )
@@ -69,8 +73,7 @@ class PlayerNotificationCreator(
 
     fun getNotification(
         context: Context,
-        mediaSessionToken: MediaSession.Token?,
-        trackData: PlayerTrackData,
+        mediaSession: MediaSession?,
         isPlaying: Boolean
     ): Notification {
         val builder = if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
@@ -79,26 +82,44 @@ class PlayerNotificationCreator(
             Notification.Builder(context)
         }
 
+        val controller = mediaSession?.controller
+
         return builder
-            .setColor(trackData.surfaceColor.value.toInt())
-            .setContentTitle(trackData.title)
-            .setSmallIcon(R.drawable.ic_notification_play)
-            .setLargeIcon(trackData.cover)
-            .setContentText(trackData.artist)
+//            .setColor(trackData.surfaceColor.value.toInt())
+            .setContentTitle(controller?.metadata?.getString(MediaMetadata.METADATA_KEY_TITLE))
+            .setContentText(controller?.metadata?.getString(MediaMetadata.METADATA_KEY_ARTIST))
+            .setLargeIcon(controller?.metadata?.getBitmap(MediaMetadata.METADATA_KEY_ALBUM_ART))
             .addAction(
                 when (isPlaying) {
                     true -> stopAction
                     false -> playAction
                 }
             )
+            .setSmallIcon(R.drawable.ic_notification_play)
+            .setVisibility(Notification.VISIBILITY_PUBLIC)
             .setAutoCancel(false)
             .setOngoing(isPlaying)
             .setShowWhen(false)
             .setStyle(
                 Notification.MediaStyle().also {
-                    it.setMediaSession(mediaSessionToken)
+                    it.setMediaSession(mediaSession?.sessionToken)
                 }
             )
             .build()
     }
+
+    fun extractColors(bitmap: Bitmap): Triple<Color, Color, Color> {
+        val palette = Palette.Builder(bitmap).generate()
+
+        return palette.darkVibrantSwatch?.let { getColorsFromSwatch(it) }
+                ?: palette.mutedSwatch?.let { getColorsFromSwatch(it) }
+                ?: palette.dominantSwatch?.let { getColorsFromSwatch(it) }
+                ?: Triple(Color.Black, Color.White, Color.White)
+    }
+
+    private fun getColorsFromSwatch(swatch: Palette.Swatch) = Triple(
+        Color(swatch.rgb),
+        Color(swatch.bodyTextColor),
+        Color(swatch.titleTextColor)
+    )
 }

@@ -12,7 +12,6 @@ import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.*
 import androidx.compose.material.*
 import androidx.compose.runtime.*
-import androidx.compose.runtime.saveable.rememberSaveable
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.scale
@@ -32,7 +31,6 @@ import com.foxwoosh.radio.R
 import com.foxwoosh.radio.Utils
 import com.foxwoosh.radio.player.PlayerService
 import com.foxwoosh.radio.player.MusicServicesData
-import com.foxwoosh.radio.ui.CenteredProgress
 import com.foxwoosh.radio.ui.borderlessClickable
 import com.foxwoosh.radio.ui.theme.FoxyRadioTheme
 
@@ -42,44 +40,27 @@ private const val colorsChangeDuration = 1_000
 fun PlayerScreen(owner: ViewModelStoreOwner) {
     val viewModel = viewModel<PlayerViewModel>(owner)
 
-    val state by viewModel.stateFlow.collectAsState()
-    var playerVisible by rememberSaveable { mutableStateOf(false) }
+    val state by viewModel.trackDataFlow.collectAsState()
 
     Surface {
-        when (state) {
-            PlayerState.Loading -> CenteredProgress()
-            is PlayerState.Done -> {
-                val done = state as PlayerState.Done
-
-                AnimatedVisibility(
-                    visible = playerVisible,
-                    enter = fadeIn(animationSpec = tween(colorsChangeDuration))
-                ) {
-                    Player(
-                        title = done.title,
-                        artist = done.artist,
-                        bitmap = done.bitmap,
-                        surfaceColor = animateColorAsState(
-                            targetValue = done.surfaceColor,
-                            animationSpec = tween(colorsChangeDuration)
-                        ).value,
-                        primaryTextColor = animateColorAsState(
-                            targetValue = done.primaryTextColor,
-                            animationSpec = tween(colorsChangeDuration)
-                        ).value,
-                        secondaryTextColor = animateColorAsState(
-                            targetValue = done.secondaryTextColor,
-                            animationSpec = tween(colorsChangeDuration)
-                        ).value,
-                        musicServices = done.musicServices
-                    ) {
-                        viewModel.reload()
-                    }
-                }
-
-                playerVisible = true
-            }
-        }
+        Player(
+            title = state.title,
+            artist = state.artist,
+            cover = state.cover,
+            surfaceColor = animateColorAsState(
+                targetValue = state.surfaceColor,
+                animationSpec = tween(colorsChangeDuration)
+            ).value,
+            primaryTextColor = animateColorAsState(
+                targetValue = state.primaryTextColor,
+                animationSpec = tween(colorsChangeDuration)
+            ).value,
+            secondaryTextColor = animateColorAsState(
+                targetValue = state.secondaryTextColor,
+                animationSpec = tween(colorsChangeDuration)
+            ).value,
+            musicServices = state.musicServices
+        )
     }
 }
 
@@ -87,12 +68,11 @@ fun PlayerScreen(owner: ViewModelStoreOwner) {
 fun Player(
     title: String,
     artist: String,
-    bitmap: Bitmap,
+    cover: Bitmap?,
     surfaceColor: Color,
     primaryTextColor: Color,
     secondaryTextColor: Color,
-    musicServices: MusicServicesData = MusicServicesData(),
-    onReload: () -> Unit
+    musicServices: MusicServicesData = MusicServicesData()
 ) {
     var musicServicesMenuOpened by remember { mutableStateOf(false) }
 
@@ -118,9 +98,13 @@ fun Player(
                 }
             )
 
-            Crossfade(targetState = bitmap) {
+            Crossfade(targetState = cover) {
                 Image(
-                    bitmap = it.asImageBitmap(),
+                    bitmap = it?.asImageBitmap()
+                        ?: context
+                            .getDrawable(R.drawable.ic_no_music_playing)
+                            ?.toBitmap()
+                            ?.asImageBitmap()!!,
                     contentScale = ContentScale.Fit,
                     contentDescription = "Cover",
                     modifier = Modifier
@@ -167,16 +151,12 @@ fun Player(
         Spacer(modifier = Modifier.height(100.dp))
 
         Row {
-            OutlinedButton(onClick = { PlayerService.start(context) }) {
+            OutlinedButton(onClick = { PlayerService.play(context) }) {
                 Text(text = "Play")
             }
 
             OutlinedButton(onClick = { PlayerService.stop(context) }) {
                 Text(text = "Stop")
-            }
-            
-            OutlinedButton(onClick = onReload) {
-                Text(text = "Reload")
             }
         }
     }
@@ -256,7 +236,7 @@ fun PreviewPlayer() {
                 Color.Black,
                 Color.White,
                 Color.White
-            ) {}
+            )
         }
     }
 }
