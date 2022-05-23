@@ -111,9 +111,9 @@ dependencies {
     implementation("com.github.bumptech.glide:glide:4.13.2")
     kapt("com.github.bumptech.glide:compiler:4.13.2")
 
-    implementation("com.google.android.exoplayer:exoplayer:$exoPlayerVersion")
-    implementation("com.google.android.exoplayer:exoplayer-dash:$exoPlayerVersion")
-    implementation("com.google.android.exoplayer:extension-mediasession:$exoPlayerVersion")
+    implementation("androidx.media3:media3-exoplayer:$exoPlayerVersion")
+//    implementation("com.google.android.exoplayer:exoplayer-dash:$exoPlayerVersion")
+//    implementation("com.google.android.exoplayer:extension-mediasession:$exoPlayerVersion")
 
     implementation("com.squareup.retrofit2:retrofit:2.9.0")
     implementation("com.jakewharton.retrofit:retrofit2-kotlinx-serialization-converter:0.8.0")

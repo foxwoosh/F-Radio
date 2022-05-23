@@ -10,16 +10,15 @@ import android.media.session.MediaSession
 import android.media.session.PlaybackState
 import android.os.IBinder
 import android.util.Log
+import androidx.media3.common.AudioAttributes
+import androidx.media3.common.MediaItem
+import androidx.media3.common.Player
+import androidx.media3.exoplayer.ExoPlayer
 import android.media.AudioAttributes as AndroidAudioAttributes
 import com.foxwoosh.radio.image_loader.ImageLoader
 import com.foxwoosh.radio.notifications.NotificationPublisher
 import com.foxwoosh.radio.storage.local.player.IPlayerLocalStorage
 import com.foxwoosh.radio.storage.remote.ultra.IUltraDataRemoteStorage
-import com.google.android.exoplayer2.ExoPlayer
-import com.google.android.exoplayer2.MediaItem
-import com.google.android.exoplayer2.Player
-import com.google.android.exoplayer2.audio.AudioAttributes
-import com.google.android.exoplayer2.ext.mediasession.MediaSessionConnector
 import dagger.hilt.android.AndroidEntryPoint
 import kotlinx.coroutines.*
 import kotlinx.coroutines.flow.combine
@@ -30,19 +29,20 @@ import javax.inject.Inject
 class PlayerService : Service(), CoroutineScope {
 
     companion object {
-        private const val ACTION_PLAYER_PLAY = "b100252a-5bc4-4232-825b-634e36725423"
-        private const val ACTION_PLAYER_STOP = "55104f5f-768c-4365-908b-4e3f97cf99e6"
-
         fun createService(context: Context) {
             context.startService(Intent(context, PlayerService::class.java))
         }
 
         fun play(context: Context) {
-            context.sendBroadcast(Intent(ACTION_PLAYER_PLAY))
+            context.sendBroadcast(Intent(PlayerNotificationFabric.ACTION_PLAYER_PLAY))
+        }
+
+        fun pause(context: Context) {
+            context.sendBroadcast(Intent(PlayerNotificationFabric.ACTION_PLAYER_PAUSE))
         }
 
         fun stop(context: Context) {
-            context.sendBroadcast(Intent(ACTION_PLAYER_STOP))
+            context.sendBroadcast(Intent(PlayerNotificationFabric.ACTION_PLAYER_STOP))
         }
     }
 
@@ -52,9 +52,7 @@ class PlayerService : Service(), CoroutineScope {
     @Inject lateinit var ultraDataRemoteStorage: IUltraDataRemoteStorage
     @Inject lateinit var imageLoader: ImageLoader
 
-    private val helper by lazy {
-        PlayerHelper(this, ACTION_PLAYER_PLAY, ACTION_PLAYER_STOP)
-    }
+    private val notificationFabric by lazy { PlayerNotificationFabric(this) }
 
     private val player by lazy {
         ExoPlayer.Builder(this)
@@ -91,7 +89,7 @@ class PlayerService : Service(), CoroutineScope {
             mediaSession?.setPlaybackState(
                 PlaybackState.Builder()
                     .setActions(
-                        if (isPlaying)
+                        PlaybackState.ACTION_STOP or if (isPlaying)
                             PlaybackState.ACTION_STOP
                         else
                             PlaybackState.ACTION_PLAY
@@ -107,26 +105,24 @@ class PlayerService : Service(), CoroutineScope {
                     .build()
             )
 
-//            NotificationPublisher.notify(
-//                this,
-//                PlayerHelper.notificationID,
-//                helper.getNotification(
-//                    this,
-//                    playerLocalStorage.trackData.value,
-//                    mediaSession.sessionToken,
-//                    isPlaying
-//                )
-//            )
+            NotificationPublisher.notify(
+                this,
+                PlayerNotificationFabric.notificationID,
+                notificationFabric.getNotification(
+                    playerLocalStorage.trackData.value,
+                    mediaSession?.sessionToken,
+                    isPlaying
+                )
+            )
         }.launchIn(this)
     }
 
     override fun onStartCommand(intent: Intent?, flags: Int, startId: Int): Int {
         startForeground(
-            PlayerHelper.notificationID,
-            helper.getNotification(
-                this,
-//                playerLocalStorage.trackData.value,
-                mediaSession,
+            PlayerNotificationFabric.notificationID,
+            notificationFabric.getNotification(
+                playerLocalStorage.trackData.value,
+                mediaSession?.sessionToken,
                 player.isPlaying
             )
         )
@@ -156,21 +152,23 @@ class PlayerService : Service(), CoroutineScope {
         player.play()
     }
 
-    private fun stop() {
+    /**
+     * For radio stream pause should stop player
+     */
+    private fun pause() {
         player.stop()
     }
 
     private fun startPlayerPolling() = launch {
         var currentUniqueID: String? = null
 
-        while (true) {
+        while (isActive) {
             val fetchedUniqueID = ultraDataRemoteStorage.getUniqueID()
             if (fetchedUniqueID != currentUniqueID) {
-                Log.i("DDLOG", "unique id is different, loading track info")
                 val track = ultraDataRemoteStorage.loadCurrentData()
                 val coverBitmap = imageLoader.load(track.imageUrl)
                 val (surfaceColor, primaryTextColor, secondaryTextColor) =
-                    helper.extractColors(coverBitmap)
+                    CoverColorExtractor.extractColors(coverBitmap)
 
                 playerLocalStorage.setPlayerTrackData(
                     PlayerTrackData(
@@ -202,14 +200,16 @@ class PlayerService : Service(), CoroutineScope {
 
     private val broadcastReceiver = object : BroadcastReceiver() {
         val filter = IntentFilter().apply {
-            addAction(ACTION_PLAYER_PLAY)
-            addAction(ACTION_PLAYER_STOP)
+            addAction(PlayerNotificationFabric.ACTION_PLAYER_PLAY)
+            addAction(PlayerNotificationFabric.ACTION_PLAYER_PAUSE)
+            addAction(PlayerNotificationFabric.ACTION_PLAYER_STOP)
         }
 
         override fun onReceive(context: Context, intent: Intent) {
             when (intent.action) {
-                ACTION_PLAYER_PLAY -> play(PlayerSource.ULTRA_HD.url)
-                ACTION_PLAYER_STOP -> stop()
+                PlayerNotificationFabric.ACTION_PLAYER_PLAY -> play(PlayerSource.ULTRA_HD.url)
+                PlayerNotificationFabric.ACTION_PLAYER_PAUSE -> pause()
+                PlayerNotificationFabric.ACTION_PLAYER_STOP -> stopSelf()
             }
         }
     }
@@ -226,7 +226,7 @@ class PlayerService : Service(), CoroutineScope {
         }
 
         override fun onStop() {
-            stop()
+            pause()
         }
     }
 }

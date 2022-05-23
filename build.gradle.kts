@@ -11,7 +11,7 @@ buildscript {
         set("room_version", "2.4.2")
         set("coroutines_version", "1.6.1")
         set("lifecycle_version", "2.4.1")
-        set("exo_player_version", "2.17.1")
+        set("exo_player_version", "1.0.0-alpha03")
     }
 
     dependencies {

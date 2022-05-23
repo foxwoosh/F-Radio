@@ -151,13 +151,7 @@ fun Player(
         Spacer(modifier = Modifier.height(100.dp))
 
         Row {
-            OutlinedButton(onClick = { PlayerService.play(context) }) {
-                Text(text = "Play")
-            }
 
-            OutlinedButton(onClick = { PlayerService.stop(context) }) {
-                Text(text = "Stop")
-            }
         }
     }
 }
