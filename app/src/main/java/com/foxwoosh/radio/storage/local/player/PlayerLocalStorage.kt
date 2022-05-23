@@ -7,7 +7,7 @@ import javax.inject.Singleton
 
 @Singleton
 class PlayerLocalStorage @Inject constructor() : IPlayerLocalStorage {
-    override val trackData = MutableStateFlow(PlayerTrackData.waiting)
+    override val trackData = MutableStateFlow(PlayerTrackData.chooseStation)
     override val isPlaying = MutableStateFlow(false)
 
     override suspend fun setPlayerTrackData(data: PlayerTrackData) {

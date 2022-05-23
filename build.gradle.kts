@@ -5,7 +5,7 @@ buildscript {
     }
 
     extra.apply {
-        set("compose_version", "1.1.1")
+        set("compose_version", "1.2.0-beta02")
         set("datastore_version", "1.0.0")
         set("hilt_version", "2.38.1")
         set("room_version", "2.4.2")
@@ -16,8 +16,8 @@ buildscript {
 
     dependencies {
         classpath("com.google.dagger:hilt-android-gradle-plugin:2.38.1")
-        classpath(kotlin("gradle-plugin", version = "1.6.10"))
-        classpath(kotlin("serialization", version = "1.6.10"))
+        classpath(kotlin("gradle-plugin", version = "1.6.21"))
+        classpath(kotlin("serialization", version = "1.6.21"))
     }
 }
 
@@ -26,7 +26,7 @@ buildscript {
 plugins {
     id("com.android.application") version "7.2.0" apply false
     id("com.android.library") version "7.2.0" apply false
-    id("org.jetbrains.kotlin.android") version "1.6.10" apply false
+    id("org.jetbrains.kotlin.android") version "1.6.21" apply false
 }
 
 task<Delete>("clean") {

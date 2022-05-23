@@ -14,15 +14,26 @@ data class PlayerTrackData(
     val musicServices: MusicServicesData
 ) {
     companion object {
-        val waiting = PlayerTrackData(
-            "Waiting...",
+        val chooseStation = PlayerTrackData(
+            "Choose station",
             "",
             null,
             null,
             Color.Black,
             Color.White,
             Color.White,
-            MusicServicesData()
+            MusicServicesData.empty
+        )
+
+        val buffering = PlayerTrackData(
+            "Buffering...",
+            "",
+            null,
+            null,
+            Color.Black,
+            Color.White,
+            Color.White,
+            MusicServicesData.empty
         )
     }
 }

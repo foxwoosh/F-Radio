@@ -29,8 +29,16 @@ import javax.inject.Inject
 class PlayerService : Service(), CoroutineScope {
 
     companion object {
-        fun createService(context: Context) {
-            context.startService(Intent(context, PlayerService::class.java))
+        private const val KEY_STATION = "0e877531-9b37-477d-853d-357462d88c63"
+
+        var isRunning = false
+            private set
+
+        fun selectSource(context: Context, station: Station) {
+            context.startService(
+                Intent(context, PlayerService::class.java)
+                    .putExtra(KEY_STATION, station)
+            )
         }
 
         fun play(context: Context) {
@@ -48,9 +56,12 @@ class PlayerService : Service(), CoroutineScope {
 
     override val coroutineContext = SupervisorJob() + Dispatchers.IO
 
-    @Inject lateinit var playerLocalStorage: IPlayerLocalStorage
-    @Inject lateinit var ultraDataRemoteStorage: IUltraDataRemoteStorage
-    @Inject lateinit var imageLoader: ImageLoader
+    @Inject
+    lateinit var playerLocalStorage: IPlayerLocalStorage
+    @Inject
+    lateinit var ultraDataRemoteStorage: IUltraDataRemoteStorage
+    @Inject
+    lateinit var imageLoader: ImageLoader
 
     private val notificationFabric by lazy { PlayerNotificationFabric(this) }
 
@@ -72,8 +83,12 @@ class PlayerService : Service(), CoroutineScope {
     private var mediaSession: MediaSession? = null
     private var playerPolling: Job? = null
 
+    private var currentStation: Station? = null
+
     override fun onCreate() {
         super.onCreate()
+
+        isRunning = true
 
         registerReceiver(
             broadcastReceiver,
@@ -118,23 +133,30 @@ class PlayerService : Service(), CoroutineScope {
     }
 
     override fun onStartCommand(intent: Intent?, flags: Int, startId: Int): Int {
-        startForeground(
-            PlayerNotificationFabric.notificationID,
-            notificationFabric.getNotification(
-                playerLocalStorage.trackData.value,
-                mediaSession?.sessionToken,
-                player.isPlaying
-            )
-        )
+        val station = intent?.getSerializableExtra(KEY_STATION) as? Station
 
-        Log.i("DDLOG", "polling started")
-        playerPolling = startPlayerPolling()
+        if (station != null && currentStation != station) {
+            startForeground(
+                PlayerNotificationFabric.notificationID,
+                notificationFabric.getNotification(
+                    playerLocalStorage.trackData.value,
+                    mediaSession?.sessionToken,
+                    player.isPlaying
+                )
+            )
+            play(station.url)
+
+            playerPolling?.cancel()
+            playerPolling = startPlayerPolling()
+        }
 
         return START_NOT_STICKY
     }
 
     override fun onDestroy() {
         Log.i("DDLOG", "destroying service")
+
+        isRunning = false
 
         unregisterReceiver(broadcastReceiver)
         player.release()
@@ -145,7 +167,6 @@ class PlayerService : Service(), CoroutineScope {
     }
 
     private fun play(url: String) {
-        Log.i("DDLOG", "play $url")
         val mediaItem = MediaItem.fromUri(url)
         player.setMediaItem(mediaItem)
         player.prepare()
@@ -160,6 +181,8 @@ class PlayerService : Service(), CoroutineScope {
     }
 
     private fun startPlayerPolling() = launch {
+        playerLocalStorage.setPlayerTrackData(PlayerTrackData.buffering)
+
         var currentUniqueID: String? = null
 
         while (isActive) {
@@ -207,7 +230,7 @@ class PlayerService : Service(), CoroutineScope {
 
         override fun onReceive(context: Context, intent: Intent) {
             when (intent.action) {
-                PlayerNotificationFabric.ACTION_PLAYER_PLAY -> play(PlayerSource.ULTRA_HD.url)
+                PlayerNotificationFabric.ACTION_PLAYER_PLAY -> play(Station.ULTRA_HD.url)
                 PlayerNotificationFabric.ACTION_PLAYER_PAUSE -> pause()
                 PlayerNotificationFabric.ACTION_PLAYER_STOP -> stopSelf()
             }
@@ -222,7 +245,7 @@ class PlayerService : Service(), CoroutineScope {
 
     private val mediaSessionCallback = object : MediaSession.Callback() {
         override fun onPlay() {
-            play(PlayerSource.ULTRA_HD.url)
+            play(Station.ULTRA_HD.url)
         }
 
         override fun onStop() {

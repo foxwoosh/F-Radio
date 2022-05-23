@@ -10,6 +10,8 @@ import androidx.compose.foundation.Image
 import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.*
+import androidx.compose.foundation.lazy.LazyColumn
+import androidx.compose.foundation.lazy.items
 import androidx.compose.material.*
 import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
@@ -29,37 +31,67 @@ import androidx.lifecycle.ViewModelStoreOwner
 import androidx.lifecycle.viewmodel.compose.viewModel
 import com.foxwoosh.radio.R
 import com.foxwoosh.radio.Utils
-import com.foxwoosh.radio.player.PlayerService
 import com.foxwoosh.radio.player.MusicServicesData
+import com.foxwoosh.radio.player.PlayerService
+import com.foxwoosh.radio.player.Station
 import com.foxwoosh.radio.ui.borderlessClickable
 import com.foxwoosh.radio.ui.theme.FoxyRadioTheme
+import kotlinx.coroutines.launch
 
 private const val colorsChangeDuration = 1_000
 
+@OptIn(ExperimentalMaterialApi::class)
 @Composable
 fun PlayerScreen(owner: ViewModelStoreOwner) {
+    val context = LocalContext.current
     val viewModel = viewModel<PlayerViewModel>(owner)
 
     val state by viewModel.trackDataFlow.collectAsState()
+    val stationSelectorState = rememberBackdropScaffoldState(initialValue = BackdropValue.Concealed)
+    val scope = rememberCoroutineScope()
 
     Surface {
-        Player(
-            title = state.title,
-            artist = state.artist,
-            cover = state.cover,
-            surfaceColor = animateColorAsState(
-                targetValue = state.surfaceColor,
-                animationSpec = tween(colorsChangeDuration)
-            ).value,
-            primaryTextColor = animateColorAsState(
-                targetValue = state.primaryTextColor,
-                animationSpec = tween(colorsChangeDuration)
-            ).value,
-            secondaryTextColor = animateColorAsState(
-                targetValue = state.secondaryTextColor,
-                animationSpec = tween(colorsChangeDuration)
-            ).value,
-            musicServices = state.musicServices
+        BackdropScaffold(
+            appBar = {
+                TopAppBar(
+                    modifier = Modifier.statusBarsPadding(),
+                    title = {
+                        Text(
+                            text = "Select station",
+                            Modifier.clickable {
+                                scope.launch { stationSelectorState.reveal() }
+                            }
+                        )
+                    }
+                )
+            },
+            backLayerContent = {
+                StationsList {
+                    PlayerService.selectSource(context = context, station = it)
+                    scope.launch { stationSelectorState.conceal() }
+                }
+            },
+            scaffoldState = stationSelectorState,
+            frontLayerContent = {
+                Player(
+                    title = state.title,
+                    artist = state.artist,
+                    cover = state.cover,
+                    surfaceColor = animateColorAsState(
+                        targetValue = state.surfaceColor,
+                        animationSpec = tween(colorsChangeDuration)
+                    ).value,
+                    primaryTextColor = animateColorAsState(
+                        targetValue = state.primaryTextColor,
+                        animationSpec = tween(colorsChangeDuration)
+                    ).value,
+                    secondaryTextColor = animateColorAsState(
+                        targetValue = state.secondaryTextColor,
+                        animationSpec = tween(colorsChangeDuration)
+                    ).value,
+                    musicServices = state.musicServices
+                )
+            }
         )
     }
 }
@@ -163,7 +195,11 @@ fun PlayerMusicServicesRow(
     musicServiceSelected: (url: String) -> Unit
 ) {
     if (musicServices.hasSomething) {
-        Row(modifier.animateContentSize()) {
+        Row(
+            modifier
+                .animateContentSize()
+                .padding(20.dp)
+        ) {
             if (!musicServices.youtubeMusic.isNullOrEmpty()) {
                 Image(
                     painter = painterResource(id = R.drawable.ic_youtube_music),
@@ -216,6 +252,29 @@ fun PlayerMusicServicesRow(
             }
         }
     }
+}
+
+@OptIn(ExperimentalMaterialApi::class)
+@Composable
+fun StationsList(
+    onStationSelected: (station: Station) -> Unit
+) {
+    LazyColumn {
+        items(Station.values()) { station ->
+            StationItem(source = station, onClick = { onStationSelected(station) })
+        }
+    }
+}
+
+@Composable
+fun StationItem(source: Station, onClick: () -> Unit) {
+    Text(
+        text = source.stationName,
+        modifier = Modifier
+            .fillMaxWidth()
+            .clickable(onClick = onClick)
+            .padding(horizontal = 16.dp, vertical = 10.dp)
+    )
 }
 
 @Preview

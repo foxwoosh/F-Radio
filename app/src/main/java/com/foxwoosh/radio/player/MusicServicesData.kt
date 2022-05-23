@@ -13,4 +13,8 @@ data class MusicServicesData(
                 || spotify.isNullOrEmpty().not()
                 || iTunes.isNullOrEmpty().not()
                 || yandexMusic.isNullOrEmpty().not()
+
+    companion object {
+        val empty = MusicServicesData()
+    }
 }
