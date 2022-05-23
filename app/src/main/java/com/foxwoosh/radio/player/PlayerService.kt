@@ -31,6 +31,7 @@ class PlayerService : Service(), CoroutineScope {
     companion object {
         private const val KEY_STATION = "0e877531-9b37-477d-853d-357462d88c63"
 
+        private var currentStation: Station? = null
         var isRunning = false
             private set
 
@@ -82,8 +83,6 @@ class PlayerService : Service(), CoroutineScope {
 
     private var mediaSession: MediaSession? = null
     private var playerPolling: Job? = null
-
-    private var currentStation: Station? = null
 
     override fun onCreate() {
         super.onCreate()

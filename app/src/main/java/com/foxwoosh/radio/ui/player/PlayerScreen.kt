@@ -36,6 +36,9 @@ import com.foxwoosh.radio.player.PlayerService
 import com.foxwoosh.radio.player.Station
 import com.foxwoosh.radio.ui.borderlessClickable
 import com.foxwoosh.radio.ui.theme.FoxyRadioTheme
+import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.GlobalScope
+import kotlinx.coroutines.SupervisorJob
 import kotlinx.coroutines.launch
 
 private const val colorsChangeDuration = 1_000
@@ -54,17 +57,15 @@ fun PlayerScreen(owner: ViewModelStoreOwner) {
         BackdropScaffold(
             appBar = {
                 TopAppBar(
-                    modifier = Modifier.statusBarsPadding(),
+                    modifier = Modifier
+                        .statusBarsPadding(),
+                    elevation = 0.dp,
                     title = {
-                        Text(
-                            text = "Select station",
-                            Modifier.clickable {
-                                scope.launch { stationSelectorState.reveal() }
-                            }
-                        )
+                        Text(text = "Select station")
                     }
                 )
             },
+            peekHeight = 0.dp,
             backLayerContent = {
                 StationsList {
                     PlayerService.selectSource(context = context, station = it)
@@ -89,7 +90,10 @@ fun PlayerScreen(owner: ViewModelStoreOwner) {
                         targetValue = state.secondaryTextColor,
                         animationSpec = tween(colorsChangeDuration)
                     ).value,
-                    musicServices = state.musicServices
+                    musicServices = state.musicServices,
+                    selectStation = {
+                        scope.launch { stationSelectorState.reveal() }
+                    }
                 )
             }
         )
@@ -104,7 +108,8 @@ fun Player(
     surfaceColor: Color,
     primaryTextColor: Color,
     secondaryTextColor: Color,
-    musicServices: MusicServicesData = MusicServicesData()
+    musicServices: MusicServicesData = MusicServicesData(),
+    selectStation: () -> Unit
 ) {
     var musicServicesMenuOpened by remember { mutableStateOf(false) }
 
@@ -186,6 +191,26 @@ fun Player(
 
         }
     }
+
+    TopAppBar(
+        title = {
+            Text(
+                text = "Station",
+                color = primaryTextColor
+            )
+        },
+        backgroundColor = Color.Transparent,
+        navigationIcon = {
+            Image(
+                painter = painterResource(id = R.drawable.ic_arrow_down),
+                contentDescription = "Select",
+                modifier = Modifier
+                    .borderlessClickable(onClick = selectStation)
+                    .padding(16.dp)
+            )
+        },
+        modifier = Modifier.statusBarsPadding()
+    )
 }
 
 @Composable
@@ -288,7 +313,8 @@ fun PreviewPlayer() {
                 LocalContext.current.getDrawable(R.drawable.ic_youtube_music)?.toBitmap()!!,
                 Color.Black,
                 Color.White,
-                Color.White
+                Color.White,
+                selectStation = {}
             )
         }
     }

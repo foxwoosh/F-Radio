@@ -123,6 +123,7 @@ class PlayerNotificationFabric(private val context: Context) {
             .setStyle(
                 Notification.MediaStyle().also {
                     it.setMediaSession(mediaSessionToken)
+                    it.setShowActionsInCompactView()
                 }
             )
             .build()
