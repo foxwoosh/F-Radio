@@ -24,17 +24,18 @@ class MainActivity : ComponentActivity() {
         setContent {
             FoxyRadioTheme {
                 val navController = rememberNavController()
+
                 NavHost(
                     navController = navController,
                     startDestination = AppDestination.Player.route
                 ) {
                     composable(route = AppDestination.Login.route) {
                         LoginScreen {
-                            navController.navigate(it)
+                            navController.navigate(AppDestination.Player.route)
                         }
                     }
                     composable(route = AppDestination.Player.route) {
-                        PlayerScreen(this@MainActivity)
+                        PlayerScreen()
                     }
                 }
             }

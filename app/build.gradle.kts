@@ -87,12 +87,14 @@ android {
 
 dependencies {
     implementation("androidx.core:core-ktx:1.7.0")
-    implementation("androidx.compose.ui:ui:$composeVersion")
-    implementation("androidx.compose.material:material:$composeVersion")
-    implementation("androidx.compose.ui:ui-tooling-preview:$composeVersion")
     implementation("androidx.activity:activity-compose:1.4.0")
     implementation("androidx.palette:palette:1.0.0")
     implementation("androidx.navigation:navigation-compose:2.4.2")
+
+    implementation("androidx.compose.ui:ui:$composeVersion")
+    implementation("androidx.compose.material:material:$composeVersion")
+    implementation("androidx.compose.ui:ui-tooling-preview:$composeVersion")
+    implementation("androidx.hilt:hilt-navigation-compose:1.0.0")
 
     implementation("androidx.lifecycle:lifecycle-viewmodel-ktx:$lifecycleVersion")
     implementation("androidx.lifecycle:lifecycle-viewmodel-compose:$lifecycleVersion")
@@ -112,8 +114,6 @@ dependencies {
     kapt("com.github.bumptech.glide:compiler:4.13.2")
 
     implementation("androidx.media3:media3-exoplayer:$exoPlayerVersion")
-//    implementation("com.google.android.exoplayer:exoplayer-dash:$exoPlayerVersion")
-//    implementation("com.google.android.exoplayer:extension-mediasession:$exoPlayerVersion")
 
     implementation("com.squareup.retrofit2:retrofit:2.9.0")
     implementation("com.jakewharton.retrofit:retrofit2-kotlinx-serialization-converter:0.8.0")

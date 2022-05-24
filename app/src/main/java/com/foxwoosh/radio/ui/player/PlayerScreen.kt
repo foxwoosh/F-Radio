@@ -28,6 +28,7 @@ import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import androidx.core.graphics.drawable.toBitmap
+import androidx.hilt.navigation.compose.hiltViewModel
 import androidx.lifecycle.ViewModelStoreOwner
 import androidx.lifecycle.viewmodel.compose.viewModel
 import com.foxwoosh.radio.R
@@ -43,9 +44,9 @@ private const val colorsChangeDuration = 1_000
 
 @OptIn(ExperimentalMaterialApi::class)
 @Composable
-fun PlayerScreen(owner: ViewModelStoreOwner) {
+fun PlayerScreen() {
     val context = LocalContext.current
-    val viewModel = viewModel<PlayerViewModel>(owner)
+    val viewModel = hiltViewModel<PlayerViewModel>()
 
     val trackData by viewModel.trackDataFlow.collectAsState()
     val isPlaying by viewModel.isPlayingFlow.collectAsState()

@@ -14,15 +14,16 @@ import androidx.compose.ui.text.input.KeyboardType
 import androidx.compose.ui.text.input.PasswordVisualTransformation
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
+import androidx.hilt.navigation.compose.hiltViewModel
 import androidx.lifecycle.viewmodel.compose.viewModel
 import com.foxwoosh.radio.ui.AppDestination
 import com.foxwoosh.radio.ui.theme.FoxyRadioTheme
 
 @Composable
 fun LoginScreen(
-    navigateTo: (route: String) -> Unit
+    navigateToPlayer: () -> Unit
 ) {
-    val viewModel = viewModel<LoginViewModel>()
+    val viewModel = hiltViewModel<LoginViewModel>()
 
     var login by rememberSaveable { mutableStateOf("") }
     var password by rememberSaveable { mutableStateOf("") }
@@ -58,7 +59,7 @@ fun LoginScreen(
             Button(
                 onClick = {
                     viewModel.saveLogin(login, password)
-                    navigateTo(AppDestination.Player.route)
+                    navigateToPlayer()
                 }
             ) {
                 Text(text = "Login")
