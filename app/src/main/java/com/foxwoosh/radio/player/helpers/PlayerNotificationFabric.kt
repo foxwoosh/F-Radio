@@ -4,11 +4,15 @@ import android.app.Notification
 import android.app.PendingIntent
 import android.content.Context
 import android.content.Intent
+import android.graphics.Bitmap
 import android.graphics.drawable.Icon
 import android.media.session.MediaSession
 import android.os.Build
+import androidx.compose.ui.graphics.Color
+import androidx.core.graphics.drawable.toBitmap
 import com.foxwoosh.radio.R
 import com.foxwoosh.radio.player.models.PlayerTrackData
+import com.foxwoosh.radio.player.models.TrackDataState
 
 class PlayerNotificationFabric(private val context: Context) {
 
@@ -94,7 +98,7 @@ class PlayerNotificationFabric(private val context: Context) {
     }.build()
 
     fun getNotification(
-        trackData: PlayerTrackData,
+        trackData: TrackDataState,
         mediaSessionToken: MediaSession.Token?,
         isPlaying: Boolean
     ): Notification {
@@ -104,11 +108,37 @@ class PlayerNotificationFabric(private val context: Context) {
             Notification.Builder(context)
         }
 
+        val image: Bitmap?
+        val artist: String
+        val title: String
+        val color: Color
+
+        when (trackData) {
+            TrackDataState.Idle -> {
+                image = context.getDrawable(R.drawable.ic_no_music_playing)?.toBitmap()
+                artist = ""
+                title = context.getString(R.string.player_title_idle)
+                color = Color.Black
+            }
+            TrackDataState.Loading -> {
+                image = context.getDrawable(R.drawable.ic_no_music_playing)?.toBitmap()
+                artist = ""
+                title = context.getString(R.string.player_title_loading)
+                color = Color.Black
+            }
+            is TrackDataState.Ready -> {
+                image = trackData.cover
+                artist = trackData.artist
+                title = trackData.title
+                color = trackData.surfaceColor
+            }
+        }
+
         return builder
-            .setColor(trackData.surfaceColor.value.toInt())
-            .setContentTitle(trackData.title)
-            .setContentText(trackData.artist)
-            .setLargeIcon(trackData.cover)
+            .setColor(color.value.toInt())
+            .setContentTitle(title)
+            .setContentText(artist)
+            .setLargeIcon(image)
             .addAction(
                 when (isPlaying) {
                     true -> pauseAction

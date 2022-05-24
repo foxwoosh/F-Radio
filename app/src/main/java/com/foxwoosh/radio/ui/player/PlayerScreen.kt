@@ -36,6 +36,7 @@ import com.foxwoosh.radio.Utils
 import com.foxwoosh.radio.player.models.MusicServicesData
 import com.foxwoosh.radio.player.PlayerService
 import com.foxwoosh.radio.player.models.Station
+import com.foxwoosh.radio.player.models.TrackDataState
 import com.foxwoosh.radio.ui.borderlessClickable
 import com.foxwoosh.radio.ui.theme.FoxyRadioTheme
 import kotlinx.coroutines.launch
@@ -75,23 +76,63 @@ fun PlayerScreen() {
             },
             scaffoldState = stationSelectorState,
             frontLayerContent = {
+                val title: String
+                val artist: String
+                val cover: Bitmap?
+                val surfaceColor: Color
+                val primaryTextColor: Color
+                val secondaryTextColor: Color
+                val musicServices: MusicServicesData?
+
+                when (trackData) {
+                    TrackDataState.Idle -> {
+                        title = context.getString(R.string.player_title_idle)
+                        artist = ""
+                        cover = context.getDrawable(R.drawable.ic_no_music_playing)?.toBitmap()
+                        surfaceColor = Color.Black
+                        primaryTextColor = Color.White
+                        secondaryTextColor = Color.White
+                        musicServices = null
+                    }
+                    TrackDataState.Loading -> {
+                        title = context.getString(R.string.player_title_loading)
+                        artist = ""
+                        cover = context.getDrawable(R.drawable.ic_no_music_playing)?.toBitmap()
+                        surfaceColor = Color.Black
+                        primaryTextColor = Color.White
+                        secondaryTextColor = Color.White
+                        musicServices = null
+                    }
+                    is TrackDataState.Ready -> {
+                        val data = trackData as TrackDataState.Ready
+
+                        title = data.title
+                        artist = data.artist
+                        cover = data.cover
+                        surfaceColor = data.surfaceColor
+                        primaryTextColor = data.primaryTextColor
+                        secondaryTextColor = data.secondaryTextColor
+                        musicServices = data.musicServices
+                    }
+                }
+
                 Player(
-                    title = trackData.title,
-                    artist = trackData.artist,
-                    cover = trackData.cover,
+                    title = title,
+                    artist = artist,
+                    cover = cover,
                     surfaceColor = animateColorAsState(
-                        targetValue = trackData.surfaceColor,
+                        targetValue = surfaceColor,
                         animationSpec = tween(colorsChangeDuration)
                     ).value,
                     primaryTextColor = animateColorAsState(
-                        targetValue = trackData.primaryTextColor,
+                        targetValue = primaryTextColor,
                         animationSpec = tween(colorsChangeDuration)
                     ).value,
                     secondaryTextColor = animateColorAsState(
-                        targetValue = trackData.secondaryTextColor,
+                        targetValue = secondaryTextColor,
                         animationSpec = tween(colorsChangeDuration)
                     ).value,
-                    musicServices = trackData.musicServices,
+                    musicServices = musicServices,
                     selectStation = {
                         scope.launch { stationSelectorState.reveal() }
                     },
@@ -110,7 +151,7 @@ fun Player(
     surfaceColor: Color,
     primaryTextColor: Color,
     secondaryTextColor: Color,
-    musicServices: MusicServicesData = MusicServicesData(),
+    musicServices: MusicServicesData? = null,
     selectStation: () -> Unit,
     isPlaying: Boolean
 ) {
@@ -218,10 +259,12 @@ fun Player(
 
 @Composable
 fun PlayerMusicServicesRow(
-    musicServices: MusicServicesData,
+    musicServices: MusicServicesData?,
     modifier: Modifier = Modifier,
     musicServiceSelected: (url: String) -> Unit
 ) {
+    if (musicServices == null) return
+
     if (musicServices.hasSomething) {
         Row(
             modifier
@@ -286,39 +329,26 @@ fun PlayerMusicServicesRow(
 fun PlayerController(color: Color, isPlaying: Boolean) {
     val context = LocalContext.current
 
-    Row {
-        Crossfade(targetState = isPlaying) {
-            Image(
-                painter = painterResource(
-                    id = if (it)
-                        R.drawable.ic_player_pause_filled
+    Crossfade(targetState = isPlaying) {
+        Image(
+            painter = painterResource(
+                id = if (it)
+                    R.drawable.ic_player_pause_filled
+                else
+                    R.drawable.ic_player_play_filled
+            ),
+            contentDescription = if (it) "Pause" else "Play",
+            colorFilter = ColorFilter.tint(color),
+            modifier = Modifier
+                .padding(8.dp)
+                .size(48.dp)
+                .borderlessClickable {
+                    if (it)
+                        PlayerService.pause(context)
                     else
-                        R.drawable.ic_player_play_filled
-                ),
-                contentDescription = if (it) "Pause" else "Play",
-                colorFilter = ColorFilter.tint(color),
-                modifier = Modifier
-                    .padding(8.dp)
-                    .size(48.dp)
-                    .borderlessClickable {
-                        if (it)
-                            PlayerService.pause(context)
-                        else
-                            PlayerService.play(context)
-                    }
-            )
-        }
-        if (isPlaying) {
-            Image(
-                painter = painterResource(id = R.drawable.ic_player_stop_filled),
-                contentDescription = "Stop",
-                colorFilter = ColorFilter.tint(color),
-                modifier = Modifier
-                    .padding(8.dp)
-                    .size(48.dp)
-                    .borderlessClickable { PlayerService.stop(context) }
-            )
-        }
+                        PlayerService.play(context)
+                }
+        )
     }
 }
 

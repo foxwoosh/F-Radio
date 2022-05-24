@@ -5,15 +5,18 @@ import android.content.BroadcastReceiver
 import android.content.Context
 import android.content.Intent
 import android.content.IntentFilter
+import android.graphics.Bitmap
 import android.media.MediaMetadata
 import android.media.session.MediaSession
 import android.media.session.PlaybackState
 import android.os.IBinder
 import android.util.Log
+import androidx.core.graphics.drawable.toBitmap
 import androidx.media3.common.AudioAttributes
 import androidx.media3.common.MediaItem
 import androidx.media3.common.Player
 import androidx.media3.exoplayer.ExoPlayer
+import com.foxwoosh.radio.R
 import android.media.AudioAttributes as AndroidAudioAttributes
 import com.foxwoosh.radio.image_loader.ImageLoader
 import com.foxwoosh.radio.notifications.NotificationPublisher
@@ -22,6 +25,7 @@ import com.foxwoosh.radio.player.helpers.PlayerNotificationFabric
 import com.foxwoosh.radio.player.models.MusicServicesData
 import com.foxwoosh.radio.player.models.PlayerTrackData
 import com.foxwoosh.radio.player.models.Station
+import com.foxwoosh.radio.player.models.TrackDataState
 import com.foxwoosh.radio.storage.local.player.IPlayerLocalStorage
 import com.foxwoosh.radio.storage.remote.ultra.IUltraDataRemoteStorage
 import dagger.hilt.android.AndroidEntryPoint
@@ -109,18 +113,45 @@ class PlayerService : Service(), CoroutineScope {
                 PlaybackState.Builder()
                     .setActions(
                         PlaybackState.ACTION_STOP or if (isPlaying)
-                            PlaybackState.ACTION_STOP
+                            PlaybackState.ACTION_PAUSE
                         else
                             PlaybackState.ACTION_PLAY
                     )
                     .build()
             )
+
+            val image: Bitmap?
+            val album: String?
+            val artist: String
+            val title: String
+
+            when (trackData) {
+                TrackDataState.Idle -> {
+                    image = getDrawable(R.drawable.ic_no_music_playing)?.toBitmap()
+                    album = ""
+                    artist = ""
+                    title = getString(R.string.player_title_idle)
+                }
+                TrackDataState.Loading -> {
+                    image = getDrawable(R.drawable.ic_no_music_playing)?.toBitmap()
+                    album = ""
+                    artist = ""
+                    title = getString(R.string.player_title_loading)
+                }
+                is TrackDataState.Ready -> {
+                    image = trackData.cover
+                    album = trackData.album
+                    artist = trackData.artist
+                    title = trackData.title
+                }
+            }
+
             mediaSession?.setMetadata(
                 MediaMetadata.Builder()
-                    .putBitmap(MediaMetadata.METADATA_KEY_ALBUM_ART, trackData.cover)
-                    .putString(MediaMetadata.METADATA_KEY_ALBUM, trackData.album)
-                    .putString(MediaMetadata.METADATA_KEY_ARTIST, trackData.artist)
-                    .putString(MediaMetadata.METADATA_KEY_TITLE, trackData.title)
+                    .putBitmap(MediaMetadata.METADATA_KEY_ALBUM_ART, image)
+                    .putString(MediaMetadata.METADATA_KEY_ALBUM, album)
+                    .putString(MediaMetadata.METADATA_KEY_ARTIST, artist)
+                    .putString(MediaMetadata.METADATA_KEY_TITLE, title)
                     .build()
             )
 
@@ -187,7 +218,7 @@ class PlayerService : Service(), CoroutineScope {
     }
 
     private fun startPlayerPolling() = launch {
-        playerLocalStorage.setPlayerTrackData(PlayerTrackData.buffering)
+        playerLocalStorage.setPlayerTrackData(TrackDataState.Loading)
 
         var currentUniqueID: String? = null
 
@@ -200,7 +231,7 @@ class PlayerService : Service(), CoroutineScope {
                     CoverColorExtractor.extractColors(coverBitmap)
 
                 playerLocalStorage.setPlayerTrackData(
-                    PlayerTrackData(
+                    TrackDataState.Ready(
                         track.title,
                         track.artist,
                         track.album,

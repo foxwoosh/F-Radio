@@ -1,19 +1,19 @@
-package com.foxwoosh.radio.ui.player
+package com.foxwoosh.radio.player.models
 
 import android.graphics.Bitmap
 import androidx.compose.ui.graphics.Color
-import com.foxwoosh.radio.player.models.MusicServicesData
 
-sealed class PlayerState {
-    object Loading : PlayerState()
-    data class Done(
+sealed class TrackDataState {
+    object Idle : TrackDataState()
+    object Loading : TrackDataState()
+    data class Ready(
         val title: String,
         val artist: String,
-        val bitmap: Bitmap,
+        val album: String?,
+        val cover: Bitmap?,
         val surfaceColor: Color,
         val primaryTextColor: Color,
         val secondaryTextColor: Color,
         val musicServices: MusicServicesData
-    ) : PlayerState()
-
+    ) : TrackDataState()
 }
