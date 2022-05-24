@@ -18,6 +18,7 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.scale
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.graphics.ColorFilter
 import androidx.compose.ui.graphics.asImageBitmap
 import androidx.compose.ui.graphics.graphicsLayer
 import androidx.compose.ui.layout.ContentScale
@@ -31,14 +32,11 @@ import androidx.lifecycle.ViewModelStoreOwner
 import androidx.lifecycle.viewmodel.compose.viewModel
 import com.foxwoosh.radio.R
 import com.foxwoosh.radio.Utils
-import com.foxwoosh.radio.player.MusicServicesData
+import com.foxwoosh.radio.player.models.MusicServicesData
 import com.foxwoosh.radio.player.PlayerService
-import com.foxwoosh.radio.player.Station
+import com.foxwoosh.radio.player.models.Station
 import com.foxwoosh.radio.ui.borderlessClickable
 import com.foxwoosh.radio.ui.theme.FoxyRadioTheme
-import kotlinx.coroutines.Dispatchers
-import kotlinx.coroutines.GlobalScope
-import kotlinx.coroutines.SupervisorJob
 import kotlinx.coroutines.launch
 
 private const val colorsChangeDuration = 1_000
@@ -49,7 +47,9 @@ fun PlayerScreen(owner: ViewModelStoreOwner) {
     val context = LocalContext.current
     val viewModel = viewModel<PlayerViewModel>(owner)
 
-    val state by viewModel.trackDataFlow.collectAsState()
+    val trackData by viewModel.trackDataFlow.collectAsState()
+    val isPlaying by viewModel.isPlayingFlow.collectAsState()
+
     val stationSelectorState = rememberBackdropScaffoldState(initialValue = BackdropValue.Concealed)
     val scope = rememberCoroutineScope()
 
@@ -75,25 +75,26 @@ fun PlayerScreen(owner: ViewModelStoreOwner) {
             scaffoldState = stationSelectorState,
             frontLayerContent = {
                 Player(
-                    title = state.title,
-                    artist = state.artist,
-                    cover = state.cover,
+                    title = trackData.title,
+                    artist = trackData.artist,
+                    cover = trackData.cover,
                     surfaceColor = animateColorAsState(
-                        targetValue = state.surfaceColor,
+                        targetValue = trackData.surfaceColor,
                         animationSpec = tween(colorsChangeDuration)
                     ).value,
                     primaryTextColor = animateColorAsState(
-                        targetValue = state.primaryTextColor,
+                        targetValue = trackData.primaryTextColor,
                         animationSpec = tween(colorsChangeDuration)
                     ).value,
                     secondaryTextColor = animateColorAsState(
-                        targetValue = state.secondaryTextColor,
+                        targetValue = trackData.secondaryTextColor,
                         animationSpec = tween(colorsChangeDuration)
                     ).value,
-                    musicServices = state.musicServices,
+                    musicServices = trackData.musicServices,
                     selectStation = {
                         scope.launch { stationSelectorState.reveal() }
-                    }
+                    },
+                    isPlaying = isPlaying
                 )
             }
         )
@@ -109,7 +110,8 @@ fun Player(
     primaryTextColor: Color,
     secondaryTextColor: Color,
     musicServices: MusicServicesData = MusicServicesData(),
-    selectStation: () -> Unit
+    selectStation: () -> Unit,
+    isPlaying: Boolean
 ) {
     var musicServicesMenuOpened by remember { mutableStateOf(false) }
 
@@ -185,11 +187,9 @@ fun Player(
             color = secondaryTextColor
         )
 
-        Spacer(modifier = Modifier.height(100.dp))
+        Spacer(modifier = Modifier.height(64.dp))
 
-        Row {
-
-        }
+        PlayerController(color = primaryTextColor, isPlaying = isPlaying)
     }
 
     TopAppBar(
@@ -206,10 +206,12 @@ fun Player(
                 contentDescription = "Select",
                 modifier = Modifier
                     .borderlessClickable(onClick = selectStation)
-                    .padding(16.dp)
+                    .padding(16.dp),
+                colorFilter = ColorFilter.tint(primaryTextColor)
             )
         },
-        modifier = Modifier.statusBarsPadding()
+        modifier = Modifier.statusBarsPadding(),
+        elevation = 0.dp
     )
 }
 
@@ -279,7 +281,46 @@ fun PlayerMusicServicesRow(
     }
 }
 
-@OptIn(ExperimentalMaterialApi::class)
+@Composable
+fun PlayerController(color: Color, isPlaying: Boolean) {
+    val context = LocalContext.current
+
+    Row {
+        Crossfade(targetState = isPlaying) {
+            Image(
+                painter = painterResource(
+                    id = if (it)
+                        R.drawable.ic_player_pause_filled
+                    else
+                        R.drawable.ic_player_play_filled
+                ),
+                contentDescription = if (it) "Pause" else "Play",
+                colorFilter = ColorFilter.tint(color),
+                modifier = Modifier
+                    .padding(8.dp)
+                    .size(48.dp)
+                    .borderlessClickable {
+                        if (it)
+                            PlayerService.pause(context)
+                        else
+                            PlayerService.play(context)
+                    }
+            )
+        }
+        if (isPlaying) {
+            Image(
+                painter = painterResource(id = R.drawable.ic_player_stop_filled),
+                contentDescription = "Stop",
+                colorFilter = ColorFilter.tint(color),
+                modifier = Modifier
+                    .padding(8.dp)
+                    .size(48.dp)
+                    .borderlessClickable { PlayerService.stop(context) }
+            )
+        }
+    }
+}
+
 @Composable
 fun StationsList(
     onStationSelected: (station: Station) -> Unit
@@ -314,7 +355,8 @@ fun PreviewPlayer() {
                 Color.Black,
                 Color.White,
                 Color.White,
-                selectStation = {}
+                selectStation = {},
+                isPlaying = false
             )
         }
     }

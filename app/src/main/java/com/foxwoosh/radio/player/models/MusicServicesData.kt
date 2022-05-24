@@ -1,4 +1,4 @@
-package com.foxwoosh.radio.player
+package com.foxwoosh.radio.player.models
 
 data class MusicServicesData(
     val youtubeMusic: String? = null,

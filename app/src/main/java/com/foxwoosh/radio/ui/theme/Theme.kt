@@ -15,9 +15,9 @@ private val DarkColorPalette = darkColors(
 )
 
 private val LightColorPalette = lightColors(
-    primary = Foxy,
-    onPrimary = Color.Black,
-    onBackground = Color.Green,
+    primary = Tundora,
+    onPrimary = Color.White,
+    onBackground = Color.White,
     onSurface = Color.White,
     background = CodGray,
     surface = Color.Black

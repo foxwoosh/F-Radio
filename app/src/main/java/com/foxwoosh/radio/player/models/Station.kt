@@ -1,4 +1,4 @@
-package com.foxwoosh.radio.player
+package com.foxwoosh.radio.player.models
 
 enum class Station(
     val stationName: String,

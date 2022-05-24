@@ -1,4 +1,4 @@
-package com.foxwoosh.radio.player
+package com.foxwoosh.radio.player.models
 
 import android.graphics.Bitmap
 import androidx.compose.ui.graphics.Color

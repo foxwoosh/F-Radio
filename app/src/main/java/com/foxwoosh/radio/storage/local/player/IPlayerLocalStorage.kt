@@ -1,6 +1,6 @@
 package com.foxwoosh.radio.storage.local.player
 
-import com.foxwoosh.radio.player.PlayerTrackData
+import com.foxwoosh.radio.player.models.PlayerTrackData
 import kotlinx.coroutines.flow.StateFlow
 
 interface IPlayerLocalStorage {

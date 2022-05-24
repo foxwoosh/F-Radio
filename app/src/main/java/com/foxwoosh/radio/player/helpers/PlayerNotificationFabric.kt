@@ -1,4 +1,4 @@
-package com.foxwoosh.radio.player
+package com.foxwoosh.radio.player.helpers
 
 import android.app.Notification
 import android.app.PendingIntent
@@ -8,7 +8,7 @@ import android.graphics.drawable.Icon
 import android.media.session.MediaSession
 import android.os.Build
 import com.foxwoosh.radio.R
-import com.foxwoosh.radio.notifications.NotificationPublisher
+import com.foxwoosh.radio.player.models.PlayerTrackData
 
 class PlayerNotificationFabric(private val context: Context) {
 
@@ -69,29 +69,29 @@ class PlayerNotificationFabric(private val context: Context) {
         )
     }.build()
 
-//    private val pauseAction = if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.M) {
-//        Notification.Action.Builder(
-//            Icon.createWithResource(context, R.drawable.ic_player_pause),
-//            context.getString(R.string.notification_action_stop),
-//            PendingIntent.getBroadcast(
-//                context,
-//                98741,
-//                Intent(ACTION_PLAYER_PAUSE),
-//                PendingIntent.FLAG_CANCEL_CURRENT or PendingIntent.FLAG_IMMUTABLE
-//            )
-//        )
-//    } else {
-//        Notification.Action.Builder(
-//            R.drawable.ic_player_stop,
-//            context.getString(R.string.notification_action_stop),
-//            PendingIntent.getBroadcast(
-//                context,
-//                98741,
-//                Intent(ACTION_PLAYER_PAUSE),
-//                PendingIntent.FLAG_CANCEL_CURRENT or PendingIntent.FLAG_IMMUTABLE
-//            )
-//        )
-//    }.build()
+    private val stopAction = if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.M) {
+        Notification.Action.Builder(
+            Icon.createWithResource(context, R.drawable.ic_player_stop),
+            context.getString(R.string.notification_action_stop),
+            PendingIntent.getBroadcast(
+                context,
+                1488228,
+                Intent(ACTION_PLAYER_STOP),
+                PendingIntent.FLAG_CANCEL_CURRENT or PendingIntent.FLAG_IMMUTABLE
+            )
+        )
+    } else {
+        Notification.Action.Builder(
+            R.drawable.ic_player_stop,
+            context.getString(R.string.notification_action_stop),
+            PendingIntent.getBroadcast(
+                context,
+                1488228,
+                Intent(ACTION_PLAYER_STOP),
+                PendingIntent.FLAG_CANCEL_CURRENT or PendingIntent.FLAG_IMMUTABLE
+            )
+        )
+    }.build()
 
     fun getNotification(
         trackData: PlayerTrackData,
@@ -115,7 +115,8 @@ class PlayerNotificationFabric(private val context: Context) {
                     false -> playAction
                 }
             )
-            .setSmallIcon(R.drawable.ic_notification_play)
+            .addAction(stopAction)
+            .setSmallIcon(R.drawable.ic_foxy_radio_logo)
             .setVisibility(Notification.VISIBILITY_PUBLIC)
             .setAutoCancel(false)
             .setOngoing(isPlaying)
@@ -123,7 +124,7 @@ class PlayerNotificationFabric(private val context: Context) {
             .setStyle(
                 Notification.MediaStyle().also {
                     it.setMediaSession(mediaSessionToken)
-                    it.setShowActionsInCompactView()
+                    it.setShowActionsInCompactView(0, 1)
                 }
             )
             .build()

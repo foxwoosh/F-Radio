@@ -8,7 +8,7 @@ import android.os.Build
 import androidx.annotation.RequiresApi
 import androidx.core.app.NotificationManagerCompat
 import com.foxwoosh.radio.R
-import com.foxwoosh.radio.player.PlayerNotificationFabric
+import com.foxwoosh.radio.player.helpers.PlayerNotificationFabric
 
 object NotificationPublisher {
 

@@ -17,6 +17,11 @@ import androidx.media3.exoplayer.ExoPlayer
 import android.media.AudioAttributes as AndroidAudioAttributes
 import com.foxwoosh.radio.image_loader.ImageLoader
 import com.foxwoosh.radio.notifications.NotificationPublisher
+import com.foxwoosh.radio.player.helpers.CoverColorExtractor
+import com.foxwoosh.radio.player.helpers.PlayerNotificationFabric
+import com.foxwoosh.radio.player.models.MusicServicesData
+import com.foxwoosh.radio.player.models.PlayerTrackData
+import com.foxwoosh.radio.player.models.Station
 import com.foxwoosh.radio.storage.local.player.IPlayerLocalStorage
 import com.foxwoosh.radio.storage.remote.ultra.IUltraDataRemoteStorage
 import dagger.hilt.android.AndroidEntryPoint
@@ -147,6 +152,8 @@ class PlayerService : Service(), CoroutineScope {
 
             playerPolling?.cancel()
             playerPolling = startPlayerPolling()
+
+            currentStation = station
         }
 
         return START_NOT_STICKY
@@ -229,7 +236,7 @@ class PlayerService : Service(), CoroutineScope {
 
         override fun onReceive(context: Context, intent: Intent) {
             when (intent.action) {
-                PlayerNotificationFabric.ACTION_PLAYER_PLAY -> play(Station.ULTRA_HD.url)
+                PlayerNotificationFabric.ACTION_PLAYER_PLAY -> currentStation?.let { play(it.url) }
                 PlayerNotificationFabric.ACTION_PLAYER_PAUSE -> pause()
                 PlayerNotificationFabric.ACTION_PLAYER_STOP -> stopSelf()
             }
@@ -244,7 +251,7 @@ class PlayerService : Service(), CoroutineScope {
 
     private val mediaSessionCallback = object : MediaSession.Callback() {
         override fun onPlay() {
-            play(Station.ULTRA_HD.url)
+            currentStation?.let { play(it.url) }
         }
 
         override fun onStop() {
