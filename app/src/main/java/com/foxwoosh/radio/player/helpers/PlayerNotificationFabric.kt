@@ -11,7 +11,6 @@ import android.os.Build
 import androidx.compose.ui.graphics.Color
 import androidx.core.graphics.drawable.toBitmap
 import com.foxwoosh.radio.R
-import com.foxwoosh.radio.player.models.PlayerTrackData
 import com.foxwoosh.radio.player.models.TrackDataState
 
 class PlayerNotificationFabric(private val context: Context) {

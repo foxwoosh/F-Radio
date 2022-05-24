@@ -23,7 +23,6 @@ import com.foxwoosh.radio.notifications.NotificationPublisher
 import com.foxwoosh.radio.player.helpers.CoverColorExtractor
 import com.foxwoosh.radio.player.helpers.PlayerNotificationFabric
 import com.foxwoosh.radio.player.models.MusicServicesData
-import com.foxwoosh.radio.player.models.PlayerTrackData
 import com.foxwoosh.radio.player.models.Station
 import com.foxwoosh.radio.player.models.TrackDataState
 import com.foxwoosh.radio.storage.local.player.IPlayerLocalStorage
@@ -199,6 +198,11 @@ class PlayerService : Service(), CoroutineScope {
         player.release()
         playerPolling?.cancel()
         playerPolling = null
+
+        launch {
+            playerLocalStorage.setPlayerTrackData(TrackDataState.Idle)
+            playerLocalStorage.setPlayerIsPlaying(false)
+        }
 
         super.onDestroy()
     }

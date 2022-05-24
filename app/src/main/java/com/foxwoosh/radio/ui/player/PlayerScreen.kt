@@ -1,6 +1,7 @@
 package com.foxwoosh.radio.ui.player
 
 import android.graphics.Bitmap
+import androidx.annotation.DrawableRes
 import androidx.compose.animation.*
 import androidx.compose.animation.core.Spring
 import androidx.compose.animation.core.animateFloatAsState
@@ -78,7 +79,7 @@ fun PlayerScreen() {
             frontLayerContent = {
                 val title: String
                 val artist: String
-                val cover: Bitmap?
+                val cover: Bitmap
                 val surfaceColor: Color
                 val primaryTextColor: Color
                 val secondaryTextColor: Color
@@ -88,7 +89,7 @@ fun PlayerScreen() {
                     TrackDataState.Idle -> {
                         title = context.getString(R.string.player_title_idle)
                         artist = ""
-                        cover = context.getDrawable(R.drawable.ic_no_music_playing)?.toBitmap()
+                        cover = context.getDrawable(R.drawable.ic_no_music_playing)!!.toBitmap()
                         surfaceColor = Color.Black
                         primaryTextColor = Color.White
                         secondaryTextColor = Color.White
@@ -97,7 +98,7 @@ fun PlayerScreen() {
                     TrackDataState.Loading -> {
                         title = context.getString(R.string.player_title_loading)
                         artist = ""
-                        cover = context.getDrawable(R.drawable.ic_no_music_playing)?.toBitmap()
+                        cover = context.getDrawable(R.drawable.ic_no_music_playing)!!.toBitmap()
                         surfaceColor = Color.Black
                         primaryTextColor = Color.White
                         secondaryTextColor = Color.White
@@ -136,6 +137,7 @@ fun PlayerScreen() {
                     selectStation = {
                         scope.launch { stationSelectorState.reveal() }
                     },
+                    isInitialized = trackData is TrackDataState.Ready,
                     isPlaying = isPlaying
                 )
             }
@@ -147,12 +149,13 @@ fun PlayerScreen() {
 fun Player(
     title: String,
     artist: String,
-    cover: Bitmap?,
+    cover: Bitmap,
     surfaceColor: Color,
     primaryTextColor: Color,
     secondaryTextColor: Color,
     musicServices: MusicServicesData? = null,
     selectStation: () -> Unit,
+    isInitialized: Boolean,
     isPlaying: Boolean
 ) {
     var musicServicesMenuOpened by remember { mutableStateOf(false) }
@@ -181,11 +184,7 @@ fun Player(
 
             Crossfade(targetState = cover) {
                 Image(
-                    bitmap = it?.asImageBitmap()
-                        ?: context
-                            .getDrawable(R.drawable.ic_no_music_playing)
-                            ?.toBitmap()
-                            ?.asImageBitmap()!!,
+                    bitmap = it.asImageBitmap(),
                     contentScale = ContentScale.Fit,
                     contentDescription = "Cover",
                     modifier = Modifier
@@ -231,7 +230,12 @@ fun Player(
 
         Spacer(modifier = Modifier.height(64.dp))
 
-        PlayerController(color = primaryTextColor, isPlaying = isPlaying)
+        PlayerController(
+            color = primaryTextColor,
+            isInitialized = isInitialized,
+            isPlaying = isPlaying,
+            selectStation = selectStation
+        )
     }
 
     TopAppBar(
@@ -326,30 +330,56 @@ fun PlayerMusicServicesRow(
 }
 
 @Composable
-fun PlayerController(color: Color, isPlaying: Boolean) {
+fun PlayerController(
+    color: Color,
+    isInitialized: Boolean,
+    isPlaying: Boolean,
+    selectStation: () -> Unit
+) {
     val context = LocalContext.current
 
-    Crossfade(targetState = isPlaying) {
-        Image(
-            painter = painterResource(
-                id = if (it)
+    if (isInitialized) {
+        Crossfade(targetState = isPlaying) {
+            PlayerControllerButton(
+                picRes = if (it)
                     R.drawable.ic_player_pause_filled
                 else
-                    R.drawable.ic_player_play_filled
-            ),
-            contentDescription = if (it) "Pause" else "Play",
-            colorFilter = ColorFilter.tint(color),
-            modifier = Modifier
-                .padding(8.dp)
-                .size(48.dp)
-                .borderlessClickable {
-                    if (it)
-                        PlayerService.pause(context)
-                    else
-                        PlayerService.play(context)
-                }
+                    R.drawable.ic_player_play_filled,
+                contentDescription = if (it) "Pause" else "Play",
+                color = color
+            ) {
+                if (it)
+                    PlayerService.pause(context)
+                else
+                    PlayerService.play(context)
+            }
+        }
+    } else {
+        PlayerControllerButton(
+            picRes = R.drawable.ic_music_library,
+            contentDescription = "Stations list",
+            color = color,
+            onClick = selectStation
         )
     }
+}
+
+@Composable
+fun PlayerControllerButton(
+    @DrawableRes picRes: Int,
+    contentDescription: String,
+    color: Color,
+    onClick: () -> Unit
+) {
+    Image(
+        painter = painterResource(picRes),
+        contentDescription = contentDescription,
+        colorFilter = ColorFilter.tint(color),
+        modifier = Modifier
+            .padding(8.dp)
+            .size(48.dp)
+            .borderlessClickable(onClick = onClick)
+    )
 }
 
 @Composable
@@ -373,24 +403,3 @@ fun StationItem(source: Station, onClick: () -> Unit) {
             .padding(horizontal = 16.dp, vertical = 10.dp)
     )
 }
-
-@Preview
-@Composable
-fun PreviewPlayer() {
-    FoxyRadioTheme {
-        Surface {
-            Player(
-                "Song name",
-                "Artist",
-                LocalContext.current.getDrawable(R.drawable.ic_youtube_music)?.toBitmap()!!,
-                Color.Black,
-                Color.White,
-                Color.White,
-                selectStation = {},
-                isPlaying = false
-            )
-        }
-    }
-}
-
-
