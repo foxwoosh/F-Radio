@@ -51,6 +51,10 @@ fun PlayerScreen() {
     val playerState by viewModel.playerStateFlow.collectAsState()
 
     val stationSelectorState = rememberBackdropScaffoldState(initialValue = BackdropValue.Concealed)
+    val bottomSheetScaffoldState = rememberBottomSheetScaffoldState(
+        bottomSheetState = BottomSheetState(BottomSheetValue.Collapsed)
+    )
+
     val scope = rememberCoroutineScope()
 
     Surface {
@@ -131,50 +135,57 @@ fun PlayerScreen() {
                     animationSpec = tween(colorsChangeDuration)
                 )
 
-                Column(
-                    modifier = Modifier
-                        .fillMaxSize()
-                        .background(surfaceAnimatedColor)
+
+                BottomSheetScaffold(
+                    scaffoldState = bottomSheetScaffoldState,
+                    sheetContent = { PlayerBottomSheetContent() },
+                    sheetPeekHeight = 80.dp
                 ) {
-                    Image(
-                        painter = painterResource(id = R.drawable.ic_arrow_down),
-                        contentDescription = "Select",
-                        modifier = Modifier
-                            .statusBarsPadding()
-                            .borderlessClickable(
-                                onClick = { scope.launch { stationSelectorState.reveal() } }
-                            )
-                            .padding(16.dp),
-                        colorFilter = ColorFilter.tint(primaryTextAnimatedColor)
-                    )
-
                     Column(
-                        Modifier.fillMaxSize(),
-                        verticalArrangement = Arrangement.Center,
-                        horizontalAlignment = Alignment.CenterHorizontally
+                        modifier = Modifier
+                            .fillMaxSize()
+                            .background(surfaceAnimatedColor)
                     ) {
-                        CoverWithServices(
-                            cover = cover,
-                            musicServices = musicServices,
-                            trackDataReady = trackData is TrackDataState.Ready
+                        Image(
+                            painter = painterResource(id = R.drawable.ic_arrow_down),
+                            contentDescription = "Select",
+                            modifier = Modifier
+                                .statusBarsPadding()
+                                .borderlessClickable(
+                                    onClick = { scope.launch { stationSelectorState.reveal() } }
+                                )
+                                .padding(16.dp),
+                            colorFilter = ColorFilter.tint(primaryTextAnimatedColor)
                         )
 
-                        Spacer(modifier = Modifier.height(24.dp))
+                        Column(
+                            Modifier.fillMaxSize(),
+                            verticalArrangement = Arrangement.Center,
+                            horizontalAlignment = Alignment.CenterHorizontally
+                        ) {
+                            CoverWithServices(
+                                cover = cover,
+                                musicServices = musicServices,
+                                trackDataReady = trackData is TrackDataState.Ready
+                            )
 
-                        TrackInfo(
-                            title = title,
-                            primaryTextColor = primaryTextAnimatedColor,
-                            artist = artist,
-                            secondaryTextColor = secondaryTextAnimatedColor
-                        )
+                            Spacer(modifier = Modifier.height(24.dp))
 
-                        Spacer(modifier = Modifier.height(48.dp))
+                            TrackInfo(
+                                title = title,
+                                primaryTextColor = primaryTextAnimatedColor,
+                                artist = artist,
+                                secondaryTextColor = secondaryTextAnimatedColor
+                            )
 
-                        PlaybackController(
-                            color = primaryTextAnimatedColor,
-                            playerState = playerState,
-                            selectStation = { scope.launch { stationSelectorState.reveal() } }
-                        )
+                            Spacer(modifier = Modifier.height(48.dp))
+
+                            PlaybackController(
+                                color = primaryTextAnimatedColor,
+                                playerState = playerState,
+                                selectStation = { scope.launch { stationSelectorState.reveal() } }
+                            )
+                        }
                     }
                 }
             }
