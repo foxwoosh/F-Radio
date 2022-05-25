@@ -1,12 +1,13 @@
 package com.foxwoosh.radio.storage.local.player
 
+import com.foxwoosh.radio.player.models.PlayerState
 import com.foxwoosh.radio.player.models.TrackDataState
 import kotlinx.coroutines.flow.StateFlow
 
 interface IPlayerLocalStorage {
     val trackData: StateFlow<TrackDataState>
-    val isPlaying: StateFlow<Boolean>
+    val playerState: StateFlow<PlayerState>
 
     suspend fun setPlayerTrackData(data: TrackDataState)
-    suspend fun setPlayerIsPlaying(playing: Boolean)
+    suspend fun setPlayerState(state: PlayerState)
 }

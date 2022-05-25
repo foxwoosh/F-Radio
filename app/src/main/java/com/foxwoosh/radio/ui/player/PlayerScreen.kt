@@ -1,12 +1,11 @@
+@file:OptIn(ExperimentalAnimationApi::class, ExperimentalMaterialApi::class)
+
 package com.foxwoosh.radio.ui.player
 
 import android.graphics.Bitmap
 import androidx.annotation.DrawableRes
 import androidx.compose.animation.*
-import androidx.compose.animation.core.Spring
-import androidx.compose.animation.core.animateFloatAsState
-import androidx.compose.animation.core.spring
-import androidx.compose.animation.core.tween
+import androidx.compose.animation.core.*
 import androidx.compose.foundation.Image
 import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
@@ -23,35 +22,33 @@ import androidx.compose.ui.graphics.ColorFilter
 import androidx.compose.ui.graphics.asImageBitmap
 import androidx.compose.ui.graphics.graphicsLayer
 import androidx.compose.ui.layout.ContentScale
-import androidx.compose.ui.platform.LocalConfiguration
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.painterResource
-import androidx.compose.ui.tooling.preview.Preview
+import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.unit.dp
 import androidx.core.graphics.drawable.toBitmap
 import androidx.hilt.navigation.compose.hiltViewModel
-import androidx.lifecycle.ViewModelStoreOwner
-import androidx.lifecycle.viewmodel.compose.viewModel
 import com.foxwoosh.radio.R
 import com.foxwoosh.radio.Utils
 import com.foxwoosh.radio.player.models.MusicServicesData
 import com.foxwoosh.radio.player.PlayerService
+import com.foxwoosh.radio.player.models.PlayerState
 import com.foxwoosh.radio.player.models.Station
 import com.foxwoosh.radio.player.models.TrackDataState
 import com.foxwoosh.radio.ui.borderlessClickable
-import com.foxwoosh.radio.ui.theme.FoxyRadioTheme
+import com.foxwoosh.radio.ui.singleCondition
+import kotlinx.coroutines.delay
 import kotlinx.coroutines.launch
 
 private const val colorsChangeDuration = 1_000
 
-@OptIn(ExperimentalMaterialApi::class)
 @Composable
 fun PlayerScreen() {
     val context = LocalContext.current
     val viewModel = hiltViewModel<PlayerViewModel>()
 
     val trackData by viewModel.trackDataFlow.collectAsState()
-    val isPlaying by viewModel.isPlayingFlow.collectAsState()
+    val playerState by viewModel.playerStateFlow.collectAsState()
 
     val stationSelectorState = rememberBackdropScaffoldState(initialValue = BackdropValue.Concealed)
     val scope = rememberCoroutineScope()
@@ -71,8 +68,12 @@ fun PlayerScreen() {
             peekHeight = 0.dp,
             backLayerContent = {
                 StationsList {
-                    PlayerService.selectSource(context = context, station = it)
-                    scope.launch { stationSelectorState.conceal() }
+                    scope.launch {
+                        stationSelectorState.conceal()
+                        delay(50)
+
+                        PlayerService.selectSource(context = context, station = it)
+                    }
                 }
             },
             scaffoldState = stationSelectorState,
@@ -117,152 +118,149 @@ fun PlayerScreen() {
                     }
                 }
 
-                Player(
-                    title = title,
-                    artist = artist,
-                    cover = cover,
-                    surfaceColor = animateColorAsState(
-                        targetValue = surfaceColor,
-                        animationSpec = tween(colorsChangeDuration)
-                    ).value,
-                    primaryTextColor = animateColorAsState(
-                        targetValue = primaryTextColor,
-                        animationSpec = tween(colorsChangeDuration)
-                    ).value,
-                    secondaryTextColor = animateColorAsState(
-                        targetValue = secondaryTextColor,
-                        animationSpec = tween(colorsChangeDuration)
-                    ).value,
-                    musicServices = musicServices,
-                    selectStation = {
-                        scope.launch { stationSelectorState.reveal() }
-                    },
-                    isInitialized = trackData is TrackDataState.Ready,
-                    isPlaying = isPlaying
+                val surfaceAnimatedColor by animateColorAsState(
+                    targetValue = surfaceColor,
+                    animationSpec = tween(colorsChangeDuration)
                 )
+                val primaryTextAnimatedColor by animateColorAsState(
+                    targetValue = primaryTextColor,
+                    animationSpec = tween(colorsChangeDuration)
+                )
+                val secondaryTextAnimatedColor by animateColorAsState(
+                    targetValue = secondaryTextColor,
+                    animationSpec = tween(colorsChangeDuration)
+                )
+
+                Column(
+                    modifier = Modifier
+                        .fillMaxSize()
+                        .background(surfaceAnimatedColor)
+                ) {
+                    Image(
+                        painter = painterResource(id = R.drawable.ic_arrow_down),
+                        contentDescription = "Select",
+                        modifier = Modifier
+                            .statusBarsPadding()
+                            .borderlessClickable(
+                                onClick = { scope.launch { stationSelectorState.reveal() } }
+                            )
+                            .padding(16.dp),
+                        colorFilter = ColorFilter.tint(primaryTextAnimatedColor)
+                    )
+
+                    Column(
+                        Modifier.fillMaxSize(),
+                        verticalArrangement = Arrangement.Center,
+                        horizontalAlignment = Alignment.CenterHorizontally
+                    ) {
+                        CoverWithServices(
+                            cover = cover,
+                            musicServices = musicServices,
+                            trackDataReady = trackData is TrackDataState.Ready
+                        )
+
+                        Spacer(modifier = Modifier.height(24.dp))
+
+                        TrackInfo(
+                            title = title,
+                            primaryTextColor = primaryTextAnimatedColor,
+                            artist = artist,
+                            secondaryTextColor = secondaryTextAnimatedColor
+                        )
+
+                        Spacer(modifier = Modifier.height(48.dp))
+
+                        PlaybackController(
+                            color = primaryTextAnimatedColor,
+                            playerState = playerState,
+                            selectStation = { scope.launch { stationSelectorState.reveal() } }
+                        )
+                    }
+                }
             }
         )
     }
 }
 
 @Composable
-fun Player(
-    title: String,
-    artist: String,
+fun CoverWithServices(
     cover: Bitmap,
-    surfaceColor: Color,
-    primaryTextColor: Color,
-    secondaryTextColor: Color,
-    musicServices: MusicServicesData? = null,
-    selectStation: () -> Unit,
-    isInitialized: Boolean,
-    isPlaying: Boolean
+    musicServices: MusicServicesData?,
+    trackDataReady: Boolean
 ) {
     var musicServicesMenuOpened by remember { mutableStateOf(false) }
+    val context = LocalContext.current
 
-    Column(
-        modifier = Modifier
-            .fillMaxSize()
-            .background(surfaceColor),
-        verticalArrangement = Arrangement.Center,
-        horizontalAlignment = Alignment.CenterHorizontally
+    Box(
+        Modifier
+            .fillMaxWidth()
+            .padding(horizontal = 32.dp)
+            .aspectRatio(1f)
     ) {
-        val cfg = LocalConfiguration.current
-        val context = LocalContext.current
-
-        Box {
-            PlayerMusicServicesRow(
-                musicServices = musicServices,
-                modifier = Modifier
-                    .align(Alignment.BottomCenter)
-                    .scale(animateFloatAsState(if (musicServicesMenuOpened) 1f else 0f).value),
-                musicServiceSelected = { url ->
-                    Utils.openURL(context, url)
-                    musicServicesMenuOpened = false
-                }
-            )
-
-            Crossfade(targetState = cover) {
-                Image(
-                    bitmap = it.asImageBitmap(),
-                    contentScale = ContentScale.Fit,
-                    contentDescription = "Cover",
-                    modifier = Modifier
-                        .size(cfg.screenWidthDp.dp - 64.dp)
-                        .aspectRatio(1f)
-                        .graphicsLayer(
-                            shadowElevation = animateFloatAsState(
-                                if (musicServicesMenuOpened) 30f else 0f
-                            ).value,
-                            scaleX = animateFloatAsState(
-                                targetValue = if (musicServicesMenuOpened) 0.5f else 1f,
-                                animationSpec = spring(
-                                    dampingRatio = Spring.DampingRatioMediumBouncy
-                                )
-                            ).value,
-                            scaleY = animateFloatAsState(
-                                targetValue = if (musicServicesMenuOpened) 0.5f else 1f,
-                                animationSpec = spring(
-                                    dampingRatio = Spring.DampingRatioMediumBouncy
-                                )
-                            ).value
-                        )
-                        .clickable { musicServicesMenuOpened = !musicServicesMenuOpened }
-                )
+        PlayerMusicServices(
+            musicServices = musicServices,
+            modifier = Modifier
+                .align(Alignment.BottomCenter)
+                .scale(animateFloatAsState(if (musicServicesMenuOpened) 1f else 0f).value),
+            musicServiceSelected = { url ->
+                Utils.openURL(context, url)
+                musicServicesMenuOpened = false
             }
-        }
-
-        Spacer(modifier = Modifier.height(24.dp))
-
-        Text(
-            text = title,
-            style = MaterialTheme.typography.h6,
-            color = primaryTextColor
         )
 
-        Spacer(modifier = Modifier.height(8.dp))
+        Crossfade(targetState = cover) {
+            val smallScaledCover = musicServicesMenuOpened && trackDataReady
 
-        Text(
-            text = artist,
-            style = MaterialTheme.typography.body1,
-            color = secondaryTextColor
-        )
-
-        Spacer(modifier = Modifier.height(64.dp))
-
-        PlayerController(
-            color = primaryTextColor,
-            isInitialized = isInitialized,
-            isPlaying = isPlaying,
-            selectStation = selectStation
-        )
-    }
-
-    TopAppBar(
-        title = {
-            Text(
-                text = "Station",
-                color = primaryTextColor
-            )
-        },
-        backgroundColor = Color.Transparent,
-        navigationIcon = {
             Image(
-                painter = painterResource(id = R.drawable.ic_arrow_down),
-                contentDescription = "Select",
+                bitmap = it.asImageBitmap(),
+                contentScale = ContentScale.Fit,
+                contentDescription = "Cover",
                 modifier = Modifier
-                    .borderlessClickable(onClick = selectStation)
-                    .padding(16.dp),
-                colorFilter = ColorFilter.tint(primaryTextColor)
+                    .fillMaxSize()
+                    .graphicsLayer(
+                        shadowElevation = animateFloatAsState(
+                            if (smallScaledCover) 30f else 0f
+                        ).value,
+                        scaleX = animateFloatAsState(
+                            targetValue = if (smallScaledCover) 0.5f else 1f,
+                            animationSpec = spring(
+                                dampingRatio = Spring.DampingRatioMediumBouncy
+                            )
+                        ).value,
+                        scaleY = animateFloatAsState(
+                            targetValue = if (smallScaledCover) 0.5f else 1f,
+                            animationSpec = spring(
+                                dampingRatio = Spring.DampingRatioMediumBouncy
+                            )
+                        ).value
+                    )
+                    .singleCondition(trackDataReady) {
+                        clickable { musicServicesMenuOpened = !musicServicesMenuOpened }
+                    }
             )
-        },
-        modifier = Modifier.statusBarsPadding(),
-        elevation = 0.dp
+        }
+    }
+}
+
+@Composable
+fun TrackInfo(title: String, primaryTextColor: Color, artist: String, secondaryTextColor: Color) {
+    Text(
+        text = title,
+        style = MaterialTheme.typography.h6,
+        color = primaryTextColor
+    )
+
+    Spacer(modifier = Modifier.height(8.dp))
+
+    Text(
+        text = artist,
+        style = MaterialTheme.typography.body1,
+        color = secondaryTextColor
     )
 }
 
 @Composable
-fun PlayerMusicServicesRow(
+fun PlayerMusicServices(
     musicServices: MusicServicesData?,
     modifier: Modifier = Modifier,
     musicServiceSelected: (url: String) -> Unit
@@ -330,37 +328,66 @@ fun PlayerMusicServicesRow(
 }
 
 @Composable
-fun PlayerController(
+fun PlaybackController(
     color: Color,
-    isInitialized: Boolean,
-    isPlaying: Boolean,
+    playerState: PlayerState,
     selectStation: () -> Unit
 ) {
     val context = LocalContext.current
 
-    if (isInitialized) {
-        Crossfade(targetState = isPlaying) {
-            PlayerControllerButton(
-                picRes = if (it)
-                    R.drawable.ic_player_pause_filled
-                else
-                    R.drawable.ic_player_play_filled,
-                contentDescription = if (it) "Pause" else "Play",
-                color = color
-            ) {
-                if (it)
-                    PlayerService.pause(context)
-                else
-                    PlayerService.play(context)
+    Box(
+        Modifier
+            .height(72.dp)
+            .fillMaxWidth(),
+        contentAlignment = Alignment.Center
+    ) {
+        AnimatedVisibility(
+            visible = playerState == PlayerState.IDLE,
+            enter = scaleIn(),
+            exit = scaleOut()
+        ) {
+            Button(onClick = selectStation) {
+                Text(text = stringResource(id = R.string.player_select_station_button))
             }
         }
-    } else {
-        PlayerControllerButton(
-            picRes = R.drawable.ic_music_library,
-            contentDescription = "Stations list",
-            color = color,
-            onClick = selectStation
-        )
+
+        AnimatedVisibility(
+            visible = playerState == PlayerState.PLAYING,
+            enter = scaleIn(),
+            exit = fadeOut()
+        ) {
+            PlayerControllerButton(
+                picRes = R.drawable.ic_player_pause_filled,
+                contentDescription = "Pause",
+                color = color,
+                onClick = { PlayerService.pause(context) }
+            )
+        }
+
+        AnimatedVisibility(
+            visible = playerState == PlayerState.PAUSED,
+            enter = fadeIn(),
+            exit = scaleOut()
+        ) {
+            PlayerControllerButton(
+                picRes = R.drawable.ic_player_play_filled,
+                contentDescription = "Play",
+                color = color,
+                onClick = { PlayerService.play(context) }
+            )
+        }
+
+        AnimatedVisibility(
+            visible = playerState == PlayerState.BUFFERING,
+            enter = scaleIn(),
+            exit = scaleOut()
+        ) {
+            CircularProgressIndicator(
+                color = color,
+                modifier = Modifier
+                    .size(48.dp)
+            )
+        }
     }
 }
 
@@ -368,16 +395,17 @@ fun PlayerController(
 fun PlayerControllerButton(
     @DrawableRes picRes: Int,
     contentDescription: String,
+    onClick: () -> Unit,
     color: Color,
-    onClick: () -> Unit
+    modifier: Modifier = Modifier
 ) {
     Image(
         painter = painterResource(picRes),
         contentDescription = contentDescription,
         colorFilter = ColorFilter.tint(color),
-        modifier = Modifier
+        modifier = modifier
             .padding(8.dp)
-            .size(48.dp)
+            .size(64.dp)
             .borderlessClickable(onClick = onClick)
     )
 }

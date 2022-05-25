@@ -3,6 +3,8 @@
     <string name="notification_channel_audio_player">Аудио плеер</string>
     <string name="notification_action_play">Воспроизвести</string>
     <string name="notification_action_stop">Стоп</string>
-    <string name="player_title_idle">Станция не выбрано</string>
+    <string name="player_title_idle">Станция не выбрана</string>
     <string name="player_title_loading">Загрузка…</string>
+    <string name="player_select_station_button">Выбрать</string>
+    <string name="station_selector_title">Выберите станцию</string>
 </resources>

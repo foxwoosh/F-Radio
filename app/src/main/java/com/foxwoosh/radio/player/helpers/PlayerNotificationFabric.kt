@@ -10,7 +10,9 @@ import android.media.session.MediaSession
 import android.os.Build
 import androidx.compose.ui.graphics.Color
 import androidx.core.graphics.drawable.toBitmap
+import com.foxwoosh.radio.MainActivity
 import com.foxwoosh.radio.R
+import com.foxwoosh.radio.player.models.PlayerState
 import com.foxwoosh.radio.player.models.TrackDataState
 
 class PlayerNotificationFabric(private val context: Context) {
@@ -99,7 +101,7 @@ class PlayerNotificationFabric(private val context: Context) {
     fun getNotification(
         trackData: TrackDataState,
         mediaSessionToken: MediaSession.Token?,
-        isPlaying: Boolean
+        playerState: PlayerState
     ): Notification {
         val builder = if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
             Notification.Builder(context, notificationChannelID)
@@ -139,17 +141,26 @@ class PlayerNotificationFabric(private val context: Context) {
             .setContentText(artist)
             .setLargeIcon(image)
             .addAction(
-                when (isPlaying) {
-                    true -> pauseAction
-                    false -> playAction
+                when (playerState) {
+                    PlayerState.PLAYING -> pauseAction
+                    PlayerState.PAUSED -> playAction
+                    else -> null
                 }
             )
             .addAction(stopAction)
             .setSmallIcon(R.drawable.ic_foxy_radio_logo)
             .setVisibility(Notification.VISIBILITY_PUBLIC)
             .setAutoCancel(false)
-            .setOngoing(isPlaying)
+            .setOngoing(playerState != PlayerState.IDLE)
             .setShowWhen(false)
+            .setContentIntent(
+                PendingIntent.getActivity(
+                    context,
+                    11111,
+                    Intent(context, MainActivity::class.java),
+                    PendingIntent.FLAG_IMMUTABLE
+                )
+            )
             .setStyle(
                 Notification.MediaStyle().also {
                     it.setMediaSession(mediaSessionToken)

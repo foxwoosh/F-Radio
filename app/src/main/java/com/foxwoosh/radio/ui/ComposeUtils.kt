@@ -24,3 +24,12 @@ fun Modifier.borderlessClickable(
         onClick = onClick
     )
 }
+
+fun Modifier.singleCondition(
+    condition: Boolean,
+    function: Modifier.() -> Modifier
+) = if (condition) {
+    function()
+} else {
+    this
+}

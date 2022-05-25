@@ -17,12 +17,13 @@ import androidx.media3.common.MediaItem
 import androidx.media3.common.Player
 import androidx.media3.exoplayer.ExoPlayer
 import com.foxwoosh.radio.R
-import android.media.AudioAttributes as AndroidAudioAttributes
 import com.foxwoosh.radio.image_loader.ImageLoader
+import android.media.AudioAttributes as AndroidAudioAttributes
 import com.foxwoosh.radio.notifications.NotificationPublisher
 import com.foxwoosh.radio.player.helpers.CoverColorExtractor
 import com.foxwoosh.radio.player.helpers.PlayerNotificationFabric
 import com.foxwoosh.radio.player.models.MusicServicesData
+import com.foxwoosh.radio.player.models.PlayerState
 import com.foxwoosh.radio.player.models.Station
 import com.foxwoosh.radio.player.models.TrackDataState
 import com.foxwoosh.radio.storage.local.player.IPlayerLocalStorage
@@ -30,6 +31,7 @@ import com.foxwoosh.radio.storage.remote.ultra.IUltraDataRemoteStorage
 import dagger.hilt.android.AndroidEntryPoint
 import kotlinx.coroutines.*
 import kotlinx.coroutines.flow.combine
+import kotlinx.coroutines.flow.debounce
 import kotlinx.coroutines.flow.launchIn
 import javax.inject.Inject
 
@@ -67,8 +69,10 @@ class PlayerService : Service(), CoroutineScope {
 
     @Inject
     lateinit var playerLocalStorage: IPlayerLocalStorage
+
     @Inject
     lateinit var ultraDataRemoteStorage: IUltraDataRemoteStorage
+
     @Inject
     lateinit var imageLoader: ImageLoader
 
@@ -85,6 +89,7 @@ class PlayerService : Service(), CoroutineScope {
             )
             .build()
             .also {
+                it.playWhenReady = true
                 it.addListener(playerStateListener)
             }
     }
@@ -107,63 +112,7 @@ class PlayerService : Service(), CoroutineScope {
                 setCallback(mediaSessionCallback)
             }
 
-        playerLocalStorage.trackData.combine(playerLocalStorage.isPlaying) { trackData, isPlaying ->
-            mediaSession?.setPlaybackState(
-                PlaybackState.Builder()
-                    .setActions(
-                        PlaybackState.ACTION_STOP or if (isPlaying)
-                            PlaybackState.ACTION_PAUSE
-                        else
-                            PlaybackState.ACTION_PLAY
-                    )
-                    .build()
-            )
-
-            val image: Bitmap?
-            val album: String?
-            val artist: String
-            val title: String
-
-            when (trackData) {
-                TrackDataState.Idle -> {
-                    image = getDrawable(R.drawable.ic_no_music_playing)?.toBitmap()
-                    album = ""
-                    artist = ""
-                    title = getString(R.string.player_title_idle)
-                }
-                TrackDataState.Loading -> {
-                    image = getDrawable(R.drawable.ic_no_music_playing)?.toBitmap()
-                    album = ""
-                    artist = ""
-                    title = getString(R.string.player_title_loading)
-                }
-                is TrackDataState.Ready -> {
-                    image = trackData.cover
-                    album = trackData.album
-                    artist = trackData.artist
-                    title = trackData.title
-                }
-            }
-
-            mediaSession?.setMetadata(
-                MediaMetadata.Builder()
-                    .putBitmap(MediaMetadata.METADATA_KEY_ALBUM_ART, image)
-                    .putString(MediaMetadata.METADATA_KEY_ALBUM, album)
-                    .putString(MediaMetadata.METADATA_KEY_ARTIST, artist)
-                    .putString(MediaMetadata.METADATA_KEY_TITLE, title)
-                    .build()
-            )
-
-            NotificationPublisher.notify(
-                this,
-                PlayerNotificationFabric.notificationID,
-                notificationFabric.getNotification(
-                    playerLocalStorage.trackData.value,
-                    mediaSession?.sessionToken,
-                    isPlaying
-                )
-            )
-        }.launchIn(this)
+        subscribeStateChanged()
     }
 
     override fun onStartCommand(intent: Intent?, flags: Int, startId: Int): Int {
@@ -175,7 +124,7 @@ class PlayerService : Service(), CoroutineScope {
                 notificationFabric.getNotification(
                     playerLocalStorage.trackData.value,
                     mediaSession?.sessionToken,
-                    player.isPlaying
+                    playerLocalStorage.playerState.value
                 )
             )
             play(station.url)
@@ -193,6 +142,7 @@ class PlayerService : Service(), CoroutineScope {
         Log.i("DDLOG", "destroying service")
 
         isRunning = false
+        currentStation = null
 
         unregisterReceiver(broadcastReceiver)
         player.release()
@@ -201,8 +151,10 @@ class PlayerService : Service(), CoroutineScope {
 
         launch {
             playerLocalStorage.setPlayerTrackData(TrackDataState.Idle)
-            playerLocalStorage.setPlayerIsPlaying(false)
+            playerLocalStorage.setPlayerState(PlayerState.IDLE)
         }
+
+        coroutineContext.cancel()
 
         super.onDestroy()
     }
@@ -260,6 +212,77 @@ class PlayerService : Service(), CoroutineScope {
         }
     }
 
+    private fun subscribeStateChanged() {
+        playerLocalStorage
+            .trackData
+            .combine(playerLocalStorage.playerState) { trackData, playerState ->
+                mediaSession?.setPlaybackState(
+                    PlaybackState.Builder()
+                        .setActions(
+                            when (playerState) {
+                                PlayerState.PLAYING -> {
+                                    PlaybackState.ACTION_PAUSE or PlaybackState.ACTION_STOP
+                                }
+                                PlayerState.IDLE -> {
+                                    PlaybackState.ACTION_PLAY
+                                }
+                                else -> 0
+                            }
+                        )
+                        .build()
+                )
+
+                val image: Bitmap?
+                val album: String?
+                val artist: String
+                val title: String
+
+                when (trackData) {
+                    TrackDataState.Idle -> {
+                        image = getDrawable(R.drawable.ic_no_music_playing)?.toBitmap()
+                        album = ""
+                        artist = ""
+                        title = getString(R.string.player_title_idle)
+                    }
+                    TrackDataState.Loading -> {
+                        image = getDrawable(R.drawable.ic_no_music_playing)?.toBitmap()
+                        album = ""
+                        artist = ""
+                        title = getString(R.string.player_title_loading)
+                    }
+                    is TrackDataState.Ready -> {
+                        image = trackData.cover
+                        album = trackData.album
+                        artist = trackData.artist
+                        title = trackData.title
+                    }
+                }
+
+                mediaSession?.setMetadata(
+                    MediaMetadata.Builder()
+                        .putBitmap(MediaMetadata.METADATA_KEY_ALBUM_ART, image)
+                        .putString(MediaMetadata.METADATA_KEY_ALBUM, album)
+                        .putString(MediaMetadata.METADATA_KEY_ARTIST, artist)
+                        .putString(MediaMetadata.METADATA_KEY_TITLE, title)
+                        .build()
+                )
+
+                if (playerState != PlayerState.IDLE) {
+                    NotificationPublisher.notify(
+                        this,
+                        PlayerNotificationFabric.notificationID,
+                        notificationFabric.getNotification(
+                            playerLocalStorage.trackData.value,
+                            mediaSession?.sessionToken,
+                            playerState
+                        )
+                    )
+                }
+            }
+            .debounce(100)
+            .launchIn(this)
+    }
+
     override fun onBind(intent: Intent?): IBinder? = null
 
     private val broadcastReceiver = object : BroadcastReceiver() {
@@ -279,8 +302,23 @@ class PlayerService : Service(), CoroutineScope {
     }
 
     private val playerStateListener = object : Player.Listener {
-        override fun onIsPlayingChanged(isPlaying: Boolean) {
-            launch { playerLocalStorage.setPlayerIsPlaying(isPlaying) }
+        override fun onPlaybackStateChanged(playbackState: Int) {
+            launch {
+                playerLocalStorage.setPlayerState(
+                    when (playbackState) {
+                        Player.STATE_BUFFERING -> PlayerState.BUFFERING
+                        Player.STATE_READY -> PlayerState.PLAYING
+                        Player.STATE_IDLE -> if (currentStation == null)
+                            PlayerState.IDLE
+                        else
+                            PlayerState.PAUSED
+                        else -> {
+                            Log.e("PlayerService", "Unsupported player state")
+                            PlayerState.IDLE
+                        }
+                    }
+                )
+            }
         }
     }
 

@@ -11,5 +11,5 @@ class PlayerViewModel @Inject constructor(
 ) : ViewModel() {
 
     val trackDataFlow = playerLocalStorage.trackData
-    val isPlayingFlow = playerLocalStorage.isPlaying
+    val playerStateFlow = playerLocalStorage.playerState
 }

@@ -33,4 +33,12 @@ object NotificationPublisher {
         NotificationManagerCompat.from(context)
             .notify(notificationID, notification)
     }
+
+    fun cancel(
+        context: Context,
+        notificationID: Int
+    ) {
+        NotificationManagerCompat.from(context)
+            .cancel(notificationID)
+    }
 }

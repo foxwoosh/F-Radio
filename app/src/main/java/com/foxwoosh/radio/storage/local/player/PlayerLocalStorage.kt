@@ -1,5 +1,6 @@
 package com.foxwoosh.radio.storage.local.player
 
+import com.foxwoosh.radio.player.models.PlayerState
 import com.foxwoosh.radio.player.models.TrackDataState
 import kotlinx.coroutines.flow.MutableStateFlow
 import javax.inject.Inject
@@ -8,13 +9,13 @@ import javax.inject.Singleton
 @Singleton
 class PlayerLocalStorage @Inject constructor() : IPlayerLocalStorage {
     override val trackData = MutableStateFlow<TrackDataState>(TrackDataState.Idle)
-    override val isPlaying = MutableStateFlow(false)
+    override val playerState = MutableStateFlow(PlayerState.IDLE)
 
     override suspend fun setPlayerTrackData(data: TrackDataState) {
         trackData.emit(data)
     }
 
-    override suspend fun setPlayerIsPlaying(playing: Boolean) {
-        isPlaying.emit(playing)
+    override suspend fun setPlayerState(state: PlayerState) {
+        playerState.emit(state)
     }
 }
