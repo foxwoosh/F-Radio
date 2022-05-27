@@ -21,8 +21,11 @@ import androidx.compose.ui.draw.alpha
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.ColorFilter
+import androidx.compose.ui.res.fontResource
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.res.stringResource
+import androidx.compose.ui.text.font.FontStyle
+import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.dp
 import coil.compose.AsyncImage
@@ -111,7 +114,8 @@ fun PlayerBottomSheetContent(
                 } else {
                     PreviousTracksList(
                         previousTracks = previousTracks,
-                        textColor = primaryTextColor,
+                        primaryTextColor = primaryTextColor,
+                        secondaryTextColor = secondaryTextColor,
                         modifier = Modifier.fillMaxSize()
                     )
                 }
@@ -128,7 +132,8 @@ fun PlayerBottomSheetContent(
 @Composable
 fun PreviousTracksList(
     previousTracks: List<PreviousTrack>,
-    textColor: Color,
+    primaryTextColor: Color,
+    secondaryTextColor: Color,
     modifier: Modifier = Modifier
 ) {
     LazyColumn(
@@ -144,16 +149,27 @@ fun PreviousTracksList(
                 AsyncImage(
                     model = track.coverUrl,
                     contentDescription = "Cover",
-                    modifier = Modifier.size(48.dp)
+                    modifier = Modifier
+                        .size(48.dp)
                         .clip(RoundedCornerShape(8.dp))
                 )
 
                 Spacer(modifier = Modifier.width(12.dp))
 
-                Text(
-                    text = "${track.title} by ${track.artist}",
-                    color = textColor
-                )
+                Column(
+                    Modifier.fillMaxWidth()
+                ) {
+                    Text(
+                        text = track.title,
+                        color = primaryTextColor,
+                        fontWeight = FontWeight.Bold
+                    )
+                    Text(
+                        text = track.artist,
+                        color = secondaryTextColor
+                    )
+                }
+
             }
         }
     }

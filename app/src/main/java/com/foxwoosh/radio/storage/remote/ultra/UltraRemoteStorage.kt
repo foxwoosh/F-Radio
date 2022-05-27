@@ -5,9 +5,9 @@ import com.foxwoosh.radio.storage.models.PreviousTrack
 import com.foxwoosh.radio.storage.models.Track
 import javax.inject.Inject
 
-class UltraDataRemoteStorage @Inject constructor(
+class UltraRemoteStorage @Inject constructor(
     private val apiService: ApiService
-) : IUltraDataRemoteStorage {
+) : IUltraRemoteStorage {
 
     override suspend fun loadCurrentData(): Track {
         val result = apiService

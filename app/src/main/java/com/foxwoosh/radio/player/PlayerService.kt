@@ -27,7 +27,7 @@ import com.foxwoosh.radio.player.models.PlayerState
 import com.foxwoosh.radio.player.models.Station
 import com.foxwoosh.radio.player.models.TrackDataState
 import com.foxwoosh.radio.storage.local.player.IPlayerLocalStorage
-import com.foxwoosh.radio.storage.remote.ultra.IUltraDataRemoteStorage
+import com.foxwoosh.radio.storage.remote.ultra.IUltraRemoteStorage
 import dagger.hilt.android.AndroidEntryPoint
 import kotlinx.coroutines.*
 import kotlinx.coroutines.flow.combine
@@ -71,7 +71,7 @@ class PlayerService : Service(), CoroutineScope {
     lateinit var playerLocalStorage: IPlayerLocalStorage
 
     @Inject
-    lateinit var ultraDataRemoteStorage: IUltraDataRemoteStorage
+    lateinit var ultraDataRemoteStorage: IUltraRemoteStorage
 
     @Inject
     lateinit var imageProvider: ImageProvider
@@ -183,7 +183,6 @@ class PlayerService : Service(), CoroutineScope {
             if (fetchedUniqueID != currentUniqueID) {
                 val track = ultraDataRemoteStorage.loadCurrentData()
                 val coverBitmap = imageProvider.load(track.imageUrl)
-
 
                 playerLocalStorage.setPlayerTrackData(
                     TrackDataState.Ready(
