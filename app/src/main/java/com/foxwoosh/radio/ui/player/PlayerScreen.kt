@@ -57,12 +57,17 @@ fun PlayerScreen() {
 
     val scope = rememberCoroutineScope()
 
+    val statusBarHeight = WindowInsets.statusBars.asPaddingValues().calculateTopPadding()
+    val navigationBarHeight = WindowInsets.navigationBars.asPaddingValues().calculateBottomPadding()
+    val bottomSheetPeekHeight = 80.dp + navigationBarHeight
+
     val title: String
     val artist: String
     val cover: Bitmap
     val colors: PlayerColors
     val musicServices: MusicServicesData?
     val previousTracks: List<PreviousTrack>?
+    val lyrics: String
 
     when (trackData) {
         TrackDataState.Idle -> {
@@ -72,6 +77,7 @@ fun PlayerScreen() {
             colors = PlayerColors.default
             musicServices = null
             previousTracks = null
+            lyrics = ""
         }
         TrackDataState.Loading -> {
             title = context.getString(R.string.player_title_loading)
@@ -80,6 +86,7 @@ fun PlayerScreen() {
             colors = PlayerColors.default
             musicServices = null
             previousTracks = null
+            lyrics = ""
         }
         is TrackDataState.Ready -> {
             val data = trackData as TrackDataState.Ready
@@ -90,6 +97,7 @@ fun PlayerScreen() {
             colors = data.colors
             musicServices = data.musicServices
             previousTracks = data.previousTracks
+            lyrics = data.lyrics
         }
     }
 
@@ -111,11 +119,6 @@ fun PlayerScreen() {
         animationSpec = animationSpec
     )
 
-    val bottomSheetPeekHeight = 80.dp + WindowInsets
-        .navigationBars
-        .asPaddingValues()
-        .calculateBottomPadding()
-
     Surface {
         PlayerBackdropStationSelector(
             surfaceColor = surfaceColor,
@@ -128,10 +131,12 @@ fun PlayerScreen() {
                 sheetContent = {
                     PlayerBottomSheetContent(
                         offset = bottomSheetScaffoldState.currentFraction,
+                        statusBarHeight = statusBarHeight,
                         backgroundColor = surfaceColor,
                         primaryTextColor = primaryTextColor,
                         secondaryTextColor = secondaryTextColor,
                         previousTracks = previousTracks ?: emptyList(),
+                        lyrics = lyrics,
                         onPageSelected = {
                             if (bottomSheetScaffoldState.bottomSheetState.isCollapsed) {
                                 bottomSheetScaffoldState.bottomSheetState.expand()

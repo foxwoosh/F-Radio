@@ -11,8 +11,12 @@ class UltraDataRemoteStorage @Inject constructor(
 
     override suspend fun loadCurrentData(): Track {
         val result = apiService
-            .api
+            .ultra
             .getCurrentTrack(System.currentTimeMillis())
+
+        val lyricsResult = apiService
+            .musixmatch
+            .getLyrics("200acb889018ad10244fa91bc6281d24", result.title, result.artist)
 
         return Track(
             result.id,
@@ -27,12 +31,13 @@ class UltraDataRemoteStorage @Inject constructor(
             result.yandexMusicUrl,
             result.previousTracks.map {
                 PreviousTrack(it.title, it.artist, "${result.root}${it.coverWebp}")
-            }.reversed()
+            }.reversed(),
+            lyricsResult.message.body.lyrics.lyrics_body
         )
     }
 
     override suspend fun getUniqueID() = apiService
-        .api
+        .ultra
         .checkID(System.currentTimeMillis())
         .uniqueID
 }

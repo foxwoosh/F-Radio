@@ -199,7 +199,8 @@ class PlayerService : Service(), CoroutineScope {
                             track.iTunesUrl,
                             track.yandexMusicUrl
                         ),
-                        track.previousTracks
+                        track.previousTracks,
+                        track.lyrics
                     )
                 )
 

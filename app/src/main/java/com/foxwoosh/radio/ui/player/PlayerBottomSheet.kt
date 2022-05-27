@@ -23,6 +23,7 @@ import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.ColorFilter
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.res.stringResource
+import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.dp
 import coil.compose.AsyncImage
 import com.foxwoosh.radio.storage.models.PreviousTrack
@@ -36,11 +37,13 @@ import kotlinx.coroutines.launch
 @Composable
 fun PlayerBottomSheetContent(
     offset: Float,
+    statusBarHeight: Dp,
     backgroundColor: Color,
     primaryTextColor: Color,
     secondaryTextColor: Color,
     onPageSelected: suspend () -> Unit,
-    previousTracks: List<PreviousTrack>
+    previousTracks: List<PreviousTrack>,
+    lyrics: String
 ) {
     val pagerState = rememberPagerState()
     val pages = listOf("Previous", "Lyrics")
@@ -51,11 +54,7 @@ fun PlayerBottomSheetContent(
             .fillMaxSize()
             .background(backgroundColor)
             .background(BlackOverlay)
-            .padding(
-                top = WindowInsets.statusBars
-                    .asPaddingValues()
-                    .calculateTopPadding() * offset
-            ),
+            .padding(top = statusBarHeight * offset),
         horizontalAlignment = Alignment.CenterHorizontally
     ) {
         Image(
@@ -116,12 +115,11 @@ fun PlayerBottomSheetContent(
                         modifier = Modifier.fillMaxSize()
                     )
                 }
-                1 -> Box(Modifier.fillMaxSize(), contentAlignment = Alignment.Center) {
-                    Text(
-                        text = "Coming soon :)",
-                        color = primaryTextColor
-                    )
-                }
+                1 -> Text(
+                    text = lyrics,
+                    color = primaryTextColor,
+                    modifier = Modifier.fillMaxSize()
+                )
             }
         }
     }

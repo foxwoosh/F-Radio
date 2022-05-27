@@ -1,4 +1,4 @@
-package com.foxwoosh.radio.api.responses
+package com.foxwoosh.radio.api.ultra.responses
 
 import kotlinx.serialization.SerialName
 import kotlinx.serialization.Serializable

@@ -1,13 +1,14 @@
 package com.foxwoosh.radio.api
 
-import com.foxwoosh.radio.api.responses.CheckIDResponse
-import com.foxwoosh.radio.api.responses.CurrentTrackResponse
+import com.foxwoosh.radio.api.musixmatch.LyricsMatchResponse
+import com.foxwoosh.radio.api.ultra.responses.CheckIDResponse
+import com.foxwoosh.radio.api.ultra.responses.CurrentTrackResponse
 import com.jakewharton.retrofit2.converter.kotlinx.serialization.asConverterFactory
 import kotlinx.serialization.json.Json
-import okhttp3.MediaType
 import okhttp3.MediaType.Companion.toMediaType
 import okhttp3.OkHttpClient
 import retrofit2.Retrofit
+import retrofit2.create
 import retrofit2.http.GET
 import retrofit2.http.Query
 import java.util.concurrent.TimeUnit
@@ -30,18 +31,34 @@ class ApiService @Inject constructor() {
 
     private val converterFactory = json.asConverterFactory("application/json".toMediaType())
 
-    val api: Api = Retrofit.Builder()
+    val ultra: UltraApi = Retrofit.Builder()
         .baseUrl("https://meta.fmgid.com/")
         .client(client)
         .addConverterFactory(converterFactory)
         .build()
-        .create(Api::class.java)
+        .create()
 
-    interface Api {
+    val musixmatch: MusixmatchApi = Retrofit.Builder()
+        .baseUrl("https://api.musixmatch.com/ws/1.1/")
+        .client(client)
+        .addConverterFactory(converterFactory)
+        .build()
+        .create()
+
+    interface UltraApi {
         @GET("stations/ultra/current.json")
         suspend fun getCurrentTrack(@Query("t") time: Long): CurrentTrackResponse
 
         @GET("stations/ultra/id.json")
         suspend fun checkID(@Query("t") time: Long): CheckIDResponse
+    }
+
+    interface MusixmatchApi {
+        @GET("matcher.lyrics.get")
+        suspend fun getLyrics(
+            @Query("apikey") key: String,
+            @Query("q_track") title: String,
+            @Query("q_artist") artist: String
+        ) : LyricsMatchResponse
     }
 }

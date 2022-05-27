@@ -14,6 +14,7 @@ sealed class TrackDataState {
         val cover: Bitmap,
         val colors: PlayerColors,
         val musicServices: MusicServicesData,
-        val previousTracks: List<PreviousTrack>
+        val previousTracks: List<PreviousTrack>,
+        val lyrics: String
     ) : TrackDataState()
 }
