@@ -12,6 +12,7 @@ import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
+import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.*
 import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
@@ -30,12 +31,10 @@ import androidx.core.graphics.drawable.toBitmap
 import androidx.hilt.navigation.compose.hiltViewModel
 import com.foxwoosh.radio.R
 import com.foxwoosh.radio.Utils
-import com.foxwoosh.radio.player.models.MusicServicesData
 import com.foxwoosh.radio.player.PlayerService
-import com.foxwoosh.radio.player.models.PlayerState
-import com.foxwoosh.radio.player.models.Station
-import com.foxwoosh.radio.player.models.TrackDataState
+import com.foxwoosh.radio.player.models.*
 import com.foxwoosh.radio.ui.borderlessClickable
+import com.foxwoosh.radio.ui.currentFraction
 import com.foxwoosh.radio.ui.singleCondition
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.launch
@@ -57,139 +56,135 @@ fun PlayerScreen() {
 
     val scope = rememberCoroutineScope()
 
+    val title: String
+    val artist: String
+    val cover: Bitmap
+    val colors: PlayerColors
+    val musicServices: MusicServicesData?
+
+    when (trackData) {
+        TrackDataState.Idle -> {
+            title = context.getString(R.string.player_title_idle)
+            artist = ""
+            cover = context.getDrawable(R.drawable.ic_no_music_playing)!!.toBitmap()
+            colors = PlayerColors.default
+            musicServices = null
+        }
+        TrackDataState.Loading -> {
+            title = context.getString(R.string.player_title_loading)
+            artist = ""
+            cover = context.getDrawable(R.drawable.ic_no_music_playing)!!.toBitmap()
+            colors = PlayerColors.default
+            musicServices = null
+        }
+        is TrackDataState.Ready -> {
+            val data = trackData as TrackDataState.Ready
+
+            title = data.title
+            artist = data.artist
+            cover = data.cover
+            colors = data.colors
+            musicServices = data.musicServices
+        }
+    }
+
+    val animationSpec: AnimationSpec<Color> = tween(colorsChangeDuration)
+    val surfaceColor by animateColorAsState(
+        targetValue = colors.surfaceColor,
+        animationSpec = animationSpec
+    )
+    val vibrantSurfaceColor by animateColorAsState(
+        targetValue = colors.vibrantSurfaceColor,
+        animationSpec = animationSpec
+    )
+    val primaryTextColor by animateColorAsState(
+        targetValue = colors.primaryTextColor,
+        animationSpec = animationSpec
+    )
+    val secondaryTextColor by animateColorAsState(
+        targetValue = colors.secondaryTextColor,
+        animationSpec = animationSpec
+    )
+
+    val bottomSheetPeekHeight = 80.dp + WindowInsets
+        .navigationBars
+        .asPaddingValues()
+        .calculateBottomPadding()
+
     Surface {
-        BackdropScaffold(
-            appBar = {
-                TopAppBar(
+        PlayerBackdropStationSelector(
+            surfaceColor = surfaceColor,
+            primaryTextColor = primaryTextColor,
+            secondaryTextColor = secondaryTextColor,
+            state = stationSelectorState,
+        ) {
+            BottomSheetScaffold(
+                scaffoldState = bottomSheetScaffoldState,
+                sheetContent = {
+                    PlayerBottomSheetContent(
+                        bottomSheetScaffoldState.currentFraction,
+                        surfaceColor,
+                        primaryTextColor,
+                        secondaryTextColor
+                    )
+                },
+                sheetShape = RoundedCornerShape(
+                    topStart = 12.dp,
+                    topEnd = 12.dp
+                ),
+                backgroundColor = vibrantSurfaceColor,
+                sheetPeekHeight = bottomSheetPeekHeight
+            ) {
+                Column(
                     modifier = Modifier
-                        .statusBarsPadding(),
-                    elevation = 0.dp,
-                    title = {
-                        Text(text = "Select station")
-                    }
-                )
-            },
-            peekHeight = 0.dp,
-            backLayerContent = {
-                StationsList {
-                    scope.launch {
-                        stationSelectorState.conceal()
-                        delay(50)
-
-                        PlayerService.selectSource(context = context, station = it)
-                    }
-                }
-            },
-            scaffoldState = stationSelectorState,
-            frontLayerContent = {
-                val title: String
-                val artist: String
-                val cover: Bitmap
-                val surfaceColor: Color
-                val primaryTextColor: Color
-                val secondaryTextColor: Color
-                val musicServices: MusicServicesData?
-
-                when (trackData) {
-                    TrackDataState.Idle -> {
-                        title = context.getString(R.string.player_title_idle)
-                        artist = ""
-                        cover = context.getDrawable(R.drawable.ic_no_music_playing)!!.toBitmap()
-                        surfaceColor = Color.Black
-                        primaryTextColor = Color.White
-                        secondaryTextColor = Color.White
-                        musicServices = null
-                    }
-                    TrackDataState.Loading -> {
-                        title = context.getString(R.string.player_title_loading)
-                        artist = ""
-                        cover = context.getDrawable(R.drawable.ic_no_music_playing)!!.toBitmap()
-                        surfaceColor = Color.Black
-                        primaryTextColor = Color.White
-                        secondaryTextColor = Color.White
-                        musicServices = null
-                    }
-                    is TrackDataState.Ready -> {
-                        val data = trackData as TrackDataState.Ready
-
-                        title = data.title
-                        artist = data.artist
-                        cover = data.cover
-                        surfaceColor = data.surfaceColor
-                        primaryTextColor = data.primaryTextColor
-                        secondaryTextColor = data.secondaryTextColor
-                        musicServices = data.musicServices
-                    }
-                }
-
-                val surfaceAnimatedColor by animateColorAsState(
-                    targetValue = surfaceColor,
-                    animationSpec = tween(colorsChangeDuration)
-                )
-                val primaryTextAnimatedColor by animateColorAsState(
-                    targetValue = primaryTextColor,
-                    animationSpec = tween(colorsChangeDuration)
-                )
-                val secondaryTextAnimatedColor by animateColorAsState(
-                    targetValue = secondaryTextColor,
-                    animationSpec = tween(colorsChangeDuration)
-                )
-
-
-                BottomSheetScaffold(
-                    scaffoldState = bottomSheetScaffoldState,
-                    sheetContent = { PlayerBottomSheetContent() },
-                    sheetPeekHeight = 80.dp
+                        .fillMaxSize()
+                        .background(surfaceColor)
                 ) {
-                    Column(
+                    Image(
+                        painter = painterResource(id = R.drawable.ic_arrow_down),
+                        contentDescription = "Select",
                         modifier = Modifier
-                            .fillMaxSize()
-                            .background(surfaceAnimatedColor)
+                            .statusBarsPadding()
+                            .borderlessClickable(
+                                onClick = { scope.launch { stationSelectorState.reveal() } }
+                            )
+                            .padding(16.dp),
+                        colorFilter = ColorFilter.tint(primaryTextColor)
+                    )
+
+                    Column(
+                        Modifier.fillMaxSize(),
+                        verticalArrangement = Arrangement.Center,
+                        horizontalAlignment = Alignment.CenterHorizontally
                     ) {
-                        Image(
-                            painter = painterResource(id = R.drawable.ic_arrow_down),
-                            contentDescription = "Select",
-                            modifier = Modifier
-                                .statusBarsPadding()
-                                .borderlessClickable(
-                                    onClick = { scope.launch { stationSelectorState.reveal() } }
-                                )
-                                .padding(16.dp),
-                            colorFilter = ColorFilter.tint(primaryTextAnimatedColor)
+                        CoverWithServices(
+                            cover = cover,
+                            musicServices = musicServices,
+                            trackDataReady = trackData is TrackDataState.Ready
                         )
 
-                        Column(
-                            Modifier.fillMaxSize(),
-                            verticalArrangement = Arrangement.Center,
-                            horizontalAlignment = Alignment.CenterHorizontally
-                        ) {
-                            CoverWithServices(
-                                cover = cover,
-                                musicServices = musicServices,
-                                trackDataReady = trackData is TrackDataState.Ready
-                            )
+                        Spacer(modifier = Modifier.height(24.dp))
 
-                            Spacer(modifier = Modifier.height(24.dp))
+                        TrackInfo(
+                            title = title,
+                            primaryTextColor = primaryTextColor,
+                            artist = artist,
+                            secondaryTextColor = secondaryTextColor
+                        )
 
-                            TrackInfo(
-                                title = title,
-                                primaryTextColor = primaryTextAnimatedColor,
-                                artist = artist,
-                                secondaryTextColor = secondaryTextAnimatedColor
-                            )
+                        Spacer(modifier = Modifier.height(48.dp))
 
-                            Spacer(modifier = Modifier.height(48.dp))
+                        PlaybackController(
+                            color = primaryTextColor,
+                            playerState = playerState,
+                            selectStation = { scope.launch { stationSelectorState.reveal() } }
+                        )
 
-                            PlaybackController(
-                                color = primaryTextAnimatedColor,
-                                playerState = playerState,
-                                selectStation = { scope.launch { stationSelectorState.reveal() } }
-                            )
-                        }
+                        Spacer(modifier = Modifier.height(bottomSheetPeekHeight))
                     }
                 }
             }
-        )
+        }
     }
 }
 
@@ -418,27 +413,5 @@ fun PlayerControllerButton(
             .padding(8.dp)
             .size(64.dp)
             .borderlessClickable(onClick = onClick)
-    )
-}
-
-@Composable
-fun StationsList(
-    onStationSelected: (station: Station) -> Unit
-) {
-    LazyColumn {
-        items(Station.values()) { station ->
-            StationItem(source = station, onClick = { onStationSelected(station) })
-        }
-    }
-}
-
-@Composable
-fun StationItem(source: Station, onClick: () -> Unit) {
-    Text(
-        text = source.stationName,
-        modifier = Modifier
-            .fillMaxWidth()
-            .clickable(onClick = onClick)
-            .padding(horizontal = 16.dp, vertical = 10.dp)
     )
 }

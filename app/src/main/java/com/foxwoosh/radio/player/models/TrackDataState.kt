@@ -11,9 +11,7 @@ sealed class TrackDataState {
         val artist: String,
         val album: String?,
         val cover: Bitmap,
-        val surfaceColor: Color,
-        val primaryTextColor: Color,
-        val secondaryTextColor: Color,
+        val colors: PlayerColors,
         val musicServices: MusicServicesData
     ) : TrackDataState()
 }

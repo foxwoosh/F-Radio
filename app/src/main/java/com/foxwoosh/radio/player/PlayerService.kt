@@ -183,8 +183,7 @@ class PlayerService : Service(), CoroutineScope {
             if (fetchedUniqueID != currentUniqueID) {
                 val track = ultraDataRemoteStorage.loadCurrentData()
                 val coverBitmap = imageLoader.load(track.imageUrl)
-                val (surfaceColor, primaryTextColor, secondaryTextColor) =
-                    CoverColorExtractor.extractColors(coverBitmap)
+
 
                 playerLocalStorage.setPlayerTrackData(
                     TrackDataState.Ready(
@@ -192,9 +191,7 @@ class PlayerService : Service(), CoroutineScope {
                         track.artist,
                         track.album,
                         coverBitmap,
-                        surfaceColor,
-                        primaryTextColor,
-                        secondaryTextColor,
+                        CoverColorExtractor.extractColors(coverBitmap),
                         MusicServicesData(
                             track.youtubeMusicUrl,
                             track.youtubeUrl,

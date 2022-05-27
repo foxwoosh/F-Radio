@@ -3,7 +3,7 @@ package com.foxwoosh.radio.ui.theme
 import androidx.compose.ui.graphics.Color
 
 
-val Black = Color(0xFF000000)
+val BlackOverlay = Color(0x33000000)
 val CodGray = Color(0xFF1D1D1D)
 val Tundora = Color(0xFF404040)
 

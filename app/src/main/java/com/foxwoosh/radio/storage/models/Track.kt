@@ -10,5 +10,6 @@ data class Track(
     val youtubeUrl: String?,
     val spotifyUrl: String?,
     val iTunesUrl: String?,
-    val yandexMusicUrl: String?
+    val yandexMusicUrl: String?,
+//    val previousTracks: List<String>
 )

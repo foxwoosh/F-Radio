@@ -131,7 +131,7 @@ class PlayerNotificationFabric(private val context: Context) {
                 image = trackData.cover
                 artist = trackData.artist
                 title = trackData.title
-                color = trackData.surfaceColor
+                color = trackData.colors.surfaceColor
             }
         }
 
