@@ -7,5 +7,5 @@
     <string name="player_title_loading">Loading…</string>
     <string name="player_select_station_button">Select</string>
     <string name="station_selector_title">Select station</string>
-
+    <string name="previous_tracks_no_data">No data</string>
 </resources>

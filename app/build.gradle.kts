@@ -112,8 +112,10 @@ dependencies {
     implementation("androidx.room:room-ktx:$roomVersion")
     kapt("androidx.room:room-compiler:$roomVersion")
 
-    implementation("com.github.bumptech.glide:glide:4.13.2")
-    kapt("com.github.bumptech.glide:compiler:4.13.2")
+    implementation("io.coil-kt:coil-compose:2.1.0")
+
+//    implementation("com.github.bumptech.glide:glide:4.13.2")
+//    kapt("com.github.bumptech.glide:compiler:4.13.2")
 
     implementation("androidx.media3:media3-exoplayer:$exoPlayerVersion")
 

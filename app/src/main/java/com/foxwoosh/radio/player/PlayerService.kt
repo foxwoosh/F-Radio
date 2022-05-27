@@ -17,7 +17,7 @@ import androidx.media3.common.MediaItem
 import androidx.media3.common.Player
 import androidx.media3.exoplayer.ExoPlayer
 import com.foxwoosh.radio.R
-import com.foxwoosh.radio.image_loader.ImageLoader
+import com.foxwoosh.radio.image_loader.ImageProvider
 import android.media.AudioAttributes as AndroidAudioAttributes
 import com.foxwoosh.radio.notifications.NotificationPublisher
 import com.foxwoosh.radio.player.helpers.CoverColorExtractor
@@ -74,7 +74,7 @@ class PlayerService : Service(), CoroutineScope {
     lateinit var ultraDataRemoteStorage: IUltraDataRemoteStorage
 
     @Inject
-    lateinit var imageLoader: ImageLoader
+    lateinit var imageProvider: ImageProvider
 
     private val notificationFabric by lazy { PlayerNotificationFabric(this) }
 
@@ -182,7 +182,7 @@ class PlayerService : Service(), CoroutineScope {
             val fetchedUniqueID = ultraDataRemoteStorage.getUniqueID()
             if (fetchedUniqueID != currentUniqueID) {
                 val track = ultraDataRemoteStorage.loadCurrentData()
-                val coverBitmap = imageLoader.load(track.imageUrl)
+                val coverBitmap = imageProvider.load(track.imageUrl)
 
 
                 playerLocalStorage.setPlayerTrackData(
@@ -198,7 +198,8 @@ class PlayerService : Service(), CoroutineScope {
                             track.spotifyUrl,
                             track.iTunesUrl,
                             track.yandexMusicUrl
-                        )
+                        ),
+                        track.previousTracks
                     )
                 )
 

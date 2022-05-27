@@ -1,7 +1,7 @@
 package com.foxwoosh.radio.di.modules
 
-import com.foxwoosh.radio.image_loader.ImageLoader
-import com.foxwoosh.radio.image_loader.GlideImageLoader
+import com.foxwoosh.radio.image_loader.ImageProvider
+import com.foxwoosh.radio.image_loader.CoilImageProvider
 import dagger.Binds
 import dagger.Module
 import dagger.hilt.InstallIn
@@ -12,5 +12,5 @@ import dagger.hilt.android.components.ViewModelComponent
 @InstallIn(ViewModelComponent::class, ServiceComponent::class)
 abstract class UtilsModule {
     @Binds
-    abstract fun bindImageLoader(imageLoaderImpl: GlideImageLoader): ImageLoader
+    abstract fun bindImageLoader(imageLoaderImpl: CoilImageProvider): ImageProvider
 }

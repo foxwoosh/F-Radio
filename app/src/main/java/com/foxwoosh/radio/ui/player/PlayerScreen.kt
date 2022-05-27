@@ -10,8 +10,6 @@ import androidx.compose.foundation.Image
 import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.*
-import androidx.compose.foundation.lazy.LazyColumn
-import androidx.compose.foundation.lazy.items
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.*
 import androidx.compose.runtime.*
@@ -32,11 +30,14 @@ import androidx.hilt.navigation.compose.hiltViewModel
 import com.foxwoosh.radio.R
 import com.foxwoosh.radio.Utils
 import com.foxwoosh.radio.player.PlayerService
-import com.foxwoosh.radio.player.models.*
+import com.foxwoosh.radio.player.models.MusicServicesData
+import com.foxwoosh.radio.player.models.PlayerColors
+import com.foxwoosh.radio.player.models.PlayerState
+import com.foxwoosh.radio.player.models.TrackDataState
+import com.foxwoosh.radio.storage.models.PreviousTrack
 import com.foxwoosh.radio.ui.borderlessClickable
 import com.foxwoosh.radio.ui.currentFraction
 import com.foxwoosh.radio.ui.singleCondition
-import kotlinx.coroutines.delay
 import kotlinx.coroutines.launch
 
 private const val colorsChangeDuration = 1_000
@@ -61,6 +62,7 @@ fun PlayerScreen() {
     val cover: Bitmap
     val colors: PlayerColors
     val musicServices: MusicServicesData?
+    val previousTracks: List<PreviousTrack>?
 
     when (trackData) {
         TrackDataState.Idle -> {
@@ -69,6 +71,7 @@ fun PlayerScreen() {
             cover = context.getDrawable(R.drawable.ic_no_music_playing)!!.toBitmap()
             colors = PlayerColors.default
             musicServices = null
+            previousTracks = null
         }
         TrackDataState.Loading -> {
             title = context.getString(R.string.player_title_loading)
@@ -76,6 +79,7 @@ fun PlayerScreen() {
             cover = context.getDrawable(R.drawable.ic_no_music_playing)!!.toBitmap()
             colors = PlayerColors.default
             musicServices = null
+            previousTracks = null
         }
         is TrackDataState.Ready -> {
             val data = trackData as TrackDataState.Ready
@@ -85,6 +89,7 @@ fun PlayerScreen() {
             cover = data.cover
             colors = data.colors
             musicServices = data.musicServices
+            previousTracks = data.previousTracks
         }
     }
 
@@ -122,10 +127,16 @@ fun PlayerScreen() {
                 scaffoldState = bottomSheetScaffoldState,
                 sheetContent = {
                     PlayerBottomSheetContent(
-                        bottomSheetScaffoldState.currentFraction,
-                        surfaceColor,
-                        primaryTextColor,
-                        secondaryTextColor
+                        offset = bottomSheetScaffoldState.currentFraction,
+                        backgroundColor = surfaceColor,
+                        primaryTextColor = primaryTextColor,
+                        secondaryTextColor = secondaryTextColor,
+                        previousTracks = previousTracks ?: emptyList(),
+                        onPageSelected = {
+                            if (bottomSheetScaffoldState.bottomSheetState.isCollapsed) {
+                                bottomSheetScaffoldState.bottomSheetState.expand()
+                            }
+                        }
                     )
                 },
                 sheetShape = RoundedCornerShape(
@@ -352,7 +363,7 @@ fun PlaybackController(
             enter = scaleIn(),
             exit = scaleOut()
         ) {
-            Button(onClick = selectStation) {
+            OutlinedButton(onClick = selectStation) {
                 Text(text = stringResource(id = R.string.player_select_station_button))
             }
         }
