@@ -18,15 +18,14 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.scale
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.ColorFilter
-import androidx.compose.ui.graphics.asImageBitmap
 import androidx.compose.ui.graphics.graphicsLayer
-import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.unit.dp
-import androidx.core.graphics.drawable.toBitmap
 import androidx.hilt.navigation.compose.hiltViewModel
+import coil.ImageLoader
+import coil.compose.AsyncImage
 import com.foxwoosh.radio.R
 import com.foxwoosh.radio.Utils
 import com.foxwoosh.radio.player.PlayerService
@@ -63,7 +62,7 @@ fun PlayerScreen() {
 
     val title: String
     val artist: String
-    val cover: Bitmap
+    val cover: Bitmap?
     val colors: PlayerColors
     val musicServices: MusicServicesData?
     val previousTracks: List<PreviousTrack>?
@@ -73,7 +72,7 @@ fun PlayerScreen() {
         TrackDataState.Idle -> {
             title = context.getString(R.string.player_title_idle)
             artist = ""
-            cover = context.getDrawable(R.drawable.ic_no_music_playing)!!.toBitmap()
+            cover = null
             colors = PlayerColors.default
             musicServices = null
             previousTracks = null
@@ -82,7 +81,7 @@ fun PlayerScreen() {
         TrackDataState.Loading -> {
             title = context.getString(R.string.player_title_loading)
             artist = ""
-            cover = context.getDrawable(R.drawable.ic_no_music_playing)!!.toBitmap()
+            cover = null
             colors = PlayerColors.default
             musicServices = null
             previousTracks = null
@@ -176,7 +175,9 @@ fun PlayerScreen() {
                         CoverWithServices(
                             cover = cover,
                             musicServices = musicServices,
-                            trackDataReady = trackData is TrackDataState.Ready
+                            trackDataReady = trackData is TrackDataState.Ready,
+                            modifier = Modifier
+                                .weight(0.3f, false)
                         )
 
                         Spacer(modifier = Modifier.height(24.dp))
@@ -206,22 +207,21 @@ fun PlayerScreen() {
 
 @Composable
 fun CoverWithServices(
-    cover: Bitmap,
+    cover: Bitmap?,
     musicServices: MusicServicesData?,
-    trackDataReady: Boolean
+    trackDataReady: Boolean,
+    modifier: Modifier = Modifier
 ) {
     var musicServicesMenuOpened by remember { mutableStateOf(false) }
     val context = LocalContext.current
 
     Box(
-        Modifier
-            .fillMaxWidth()
-            .padding(horizontal = 32.dp)
-            .aspectRatio(1f)
+        modifier.fillMaxWidth()
     ) {
         PlayerMusicServices(
             musicServices = musicServices,
             modifier = Modifier
+                .fillMaxWidth()
                 .align(Alignment.BottomCenter)
                 .scale(animateFloatAsState(if (musicServicesMenuOpened) 1f else 0f).value),
             musicServiceSelected = { url ->
@@ -230,37 +230,36 @@ fun CoverWithServices(
             }
         )
 
-        Crossfade(targetState = cover) {
-            val smallScaledCover = musicServicesMenuOpened && trackDataReady
-
-            Image(
-                bitmap = it.asImageBitmap(),
-                contentScale = ContentScale.Fit,
-                contentDescription = "Cover",
-                modifier = Modifier
-                    .fillMaxSize()
-                    .graphicsLayer(
-                        shadowElevation = animateFloatAsState(
-                            if (smallScaledCover) 30f else 0f
-                        ).value,
-                        scaleX = animateFloatAsState(
-                            targetValue = if (smallScaledCover) 0.5f else 1f,
-                            animationSpec = spring(
-                                dampingRatio = Spring.DampingRatioMediumBouncy
-                            )
-                        ).value,
-                        scaleY = animateFloatAsState(
-                            targetValue = if (smallScaledCover) 0.5f else 1f,
-                            animationSpec = spring(
-                                dampingRatio = Spring.DampingRatioMediumBouncy
-                            )
-                        ).value
-                    )
-                    .singleCondition(trackDataReady) {
-                        clickable { musicServicesMenuOpened = !musicServicesMenuOpened }
-                    }
+        val smallScaledCover = musicServicesMenuOpened && trackDataReady
+        val scale by animateFloatAsState(
+            targetValue = if (smallScaledCover) 0.5f else 1f,
+            animationSpec = spring(
+                dampingRatio = Spring.DampingRatioMediumBouncy
             )
-        }
+        )
+
+        val crossfadeLoader = ImageLoader.Builder(context)
+            .crossfade(durationMillis = colorsChangeDuration)
+            .build()
+        AsyncImage(
+            model = cover,
+            imageLoader = crossfadeLoader,
+            contentDescription = "Cover",
+            modifier = Modifier
+                .fillMaxSize()
+                .padding(horizontal = 32.dp)
+                .aspectRatio(1f)
+                .graphicsLayer(
+                    shadowElevation = animateFloatAsState(
+                        if (smallScaledCover) 30f else 0f
+                    ).value,
+                    scaleX = scale,
+                    scaleY = scale
+                )
+                .singleCondition(trackDataReady) {
+                    clickable { musicServicesMenuOpened = !musicServicesMenuOpened }
+                }
+        )
     }
 }
 
@@ -291,9 +290,8 @@ fun PlayerMusicServices(
 
     if (musicServices.hasSomething) {
         Row(
-            modifier
-                .animateContentSize()
-                .padding(20.dp)
+            modifier = modifier.animateContentSize(),
+            horizontalArrangement = Arrangement.Center
         ) {
             if (!musicServices.youtubeMusic.isNullOrEmpty()) {
                 Image(

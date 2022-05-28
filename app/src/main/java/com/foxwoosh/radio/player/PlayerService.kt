@@ -18,7 +18,6 @@ import androidx.media3.common.Player
 import androidx.media3.exoplayer.ExoPlayer
 import com.foxwoosh.radio.R
 import com.foxwoosh.radio.image_loader.ImageProvider
-import android.media.AudioAttributes as AndroidAudioAttributes
 import com.foxwoosh.radio.notifications.NotificationPublisher
 import com.foxwoosh.radio.player.helpers.CoverColorExtractor
 import com.foxwoosh.radio.player.helpers.PlayerNotificationFabric
@@ -34,6 +33,7 @@ import kotlinx.coroutines.flow.combine
 import kotlinx.coroutines.flow.debounce
 import kotlinx.coroutines.flow.launchIn
 import javax.inject.Inject
+import android.media.AudioAttributes as AndroidAudioAttributes
 
 @AndroidEntryPoint
 class PlayerService : Service(), CoroutineScope {

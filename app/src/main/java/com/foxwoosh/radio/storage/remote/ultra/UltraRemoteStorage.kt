@@ -14,9 +14,13 @@ class UltraRemoteStorage @Inject constructor(
             .ultra
             .getCurrentTrack(System.currentTimeMillis())
 
-        val lyricsResult = apiService
-            .musixmatch
-            .getLyrics("200acb889018ad10244fa91bc6281d24", result.title, result.artist)
+        val lyricsResult = try {
+            apiService
+                .musixmatch
+                .getLyrics("200acb889018ad10244fa91bc6281d24", result.title, result.artist)
+        } catch (e: Exception) {
+            null
+        }
 
         return Track(
             result.id,
@@ -32,7 +36,7 @@ class UltraRemoteStorage @Inject constructor(
             result.previousTracks.map {
                 PreviousTrack(it.title, it.artist, "${result.root}${it.coverWebp}")
             }.reversed(),
-            lyricsResult.message.body.lyrics.lyrics_body
+            lyricsResult?.message?.body?.lyrics?.lyrics_body ?: ""
         )
     }
 

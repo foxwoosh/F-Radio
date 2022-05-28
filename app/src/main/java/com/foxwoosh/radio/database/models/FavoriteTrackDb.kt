@@ -1,7 +1,6 @@
 package com.foxwoosh.radio.database.models
 
 import androidx.room.Entity
-import androidx.room.Fts4
 import androidx.room.PrimaryKey
 
 @Entity(tableName = "favorite_tracks")

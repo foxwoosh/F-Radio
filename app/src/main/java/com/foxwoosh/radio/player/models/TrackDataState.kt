@@ -1,7 +1,6 @@
 package com.foxwoosh.radio.player.models
 
 import android.graphics.Bitmap
-import androidx.compose.ui.graphics.Color
 import com.foxwoosh.radio.storage.models.PreviousTrack
 
 sealed class TrackDataState {

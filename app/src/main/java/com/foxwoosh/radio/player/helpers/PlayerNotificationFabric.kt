@@ -135,24 +135,27 @@ class PlayerNotificationFabric(private val context: Context) {
             }
         }
 
-        return builder
+        builder
             .setColor(color.value.toInt())
             .setContentTitle(title)
             .setContentText(artist)
             .setLargeIcon(image)
-            .addAction(
-                when (playerState) {
-                    PlayerState.PLAYING -> pauseAction
-                    PlayerState.PAUSED -> playAction
-                    else -> null
-                }
-            )
             .addAction(stopAction)
             .setSmallIcon(R.drawable.ic_foxy_radio_logo)
             .setVisibility(Notification.VISIBILITY_PUBLIC)
             .setAutoCancel(false)
             .setOngoing(playerState != PlayerState.IDLE)
             .setShowWhen(false)
+            .setStyle(
+                Notification.MediaStyle().also {
+                    it.setMediaSession(mediaSessionToken)
+                    when (playerState) {
+                        PlayerState.PLAYING,
+                        PlayerState.PAUSED -> it.setShowActionsInCompactView(0, 1)
+                        else ->  it.setShowActionsInCompactView(0)
+                    }
+                }
+            )
             .setContentIntent(
                 PendingIntent.getActivity(
                     context,
@@ -161,12 +164,12 @@ class PlayerNotificationFabric(private val context: Context) {
                     PendingIntent.FLAG_IMMUTABLE
                 )
             )
-            .setStyle(
-                Notification.MediaStyle().also {
-                    it.setMediaSession(mediaSessionToken)
-                    it.setShowActionsInCompactView(0, 1)
-                }
-            )
-            .build()
+
+        when (playerState) {
+            PlayerState.PLAYING -> builder.addAction(pauseAction)
+            PlayerState.PAUSED -> builder.addAction(playAction)
+        }
+
+        return builder.build()
     }
 }

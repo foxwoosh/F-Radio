@@ -2,13 +2,14 @@
 
 package com.foxwoosh.radio.ui.player
 
-import com.foxwoosh.radio.R
 import androidx.compose.foundation.Image
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
+import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.shape.RoundedCornerShape
+import androidx.compose.foundation.verticalScroll
 import androidx.compose.material.Tab
 import androidx.compose.material.TabRow
 import androidx.compose.material.TabRowDefaults
@@ -21,14 +22,13 @@ import androidx.compose.ui.draw.alpha
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.ColorFilter
-import androidx.compose.ui.res.fontResource
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.res.stringResource
-import androidx.compose.ui.text.font.FontStyle
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.dp
 import coil.compose.AsyncImage
+import com.foxwoosh.radio.R
 import com.foxwoosh.radio.storage.models.PreviousTrack
 import com.foxwoosh.radio.ui.theme.BlackOverlay
 import com.google.accompanist.pager.ExperimentalPagerApi
@@ -119,11 +119,23 @@ fun PlayerBottomSheetContent(
                         modifier = Modifier.fillMaxSize()
                     )
                 }
-                1 -> Text(
-                    text = lyrics,
-                    color = primaryTextColor,
-                    modifier = Modifier.fillMaxSize()
-                )
+                1 -> {
+                    val scrollState = rememberScrollState()
+                    Text(
+                        text = lyrics,
+                        color = primaryTextColor,
+                        modifier = Modifier
+                            .fillMaxSize()
+                            .verticalScroll(scrollState)
+                            .padding(
+                                start = 16.dp,
+                                end = 16.dp,
+                                top = 16.dp,
+                                bottom = 0.dp
+                            )
+                            .navigationBarsPadding()
+                    )
+                }
             }
         }
     }
@@ -137,9 +149,10 @@ fun PreviousTracksList(
     modifier: Modifier = Modifier
 ) {
     LazyColumn(
-        modifier = modifier
+        modifier = modifier,
+        contentPadding = WindowInsets.navigationBars.asPaddingValues()
     ) {
-        items(previousTracks) { track ->
+        items(previousTracks + previousTracks) { track ->
             Row(
                 modifier = Modifier
                     .padding(horizontal = 16.dp, vertical = 10.dp)
