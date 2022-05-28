@@ -8,4 +8,6 @@
     <string name="player_select_station_button">Выбрать</string>
     <string name="station_selector_title">Выберите станцию</string>
     <string name="previous_tracks_no_data">Нет данных</string>
+    <string name="player_page_title_previous_tracks">Прошлые треки</string>
+    <string name="player_page_title_lyrics">Текст</string>
 </resources>

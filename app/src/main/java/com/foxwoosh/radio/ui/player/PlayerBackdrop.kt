@@ -19,15 +19,14 @@ import androidx.compose.ui.unit.dp
 import com.foxwoosh.radio.R
 import com.foxwoosh.radio.player.PlayerService
 import com.foxwoosh.radio.player.models.Station
+import com.foxwoosh.radio.ui.theme.BlackOverlay
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.launch
 
 
 @Composable
 fun StationsList(
-    surfaceColor: Color,
     primaryTextColor: Color,
-    secondaryTextColor: Color,
     onStationSelected: (station: Station) -> Unit
 ) {
     LazyColumn {
@@ -73,13 +72,10 @@ fun PlayerBackdropStationSelector(
             )
         },
         backLayerBackgroundColor = surfaceColor,
+        frontLayerScrimColor = BlackOverlay,
         peekHeight = 0.dp,
         backLayerContent = {
-            StationsList(
-                surfaceColor,
-                primaryTextColor,
-                secondaryTextColor
-            ) {
+            StationsList(primaryTextColor) {
                 scope.launch {
                     state.conceal()
                     delay(50)

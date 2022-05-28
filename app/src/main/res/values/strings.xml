@@ -8,4 +8,6 @@
     <string name="player_select_station_button">Select</string>
     <string name="station_selector_title">Select station</string>
     <string name="previous_tracks_no_data">No data</string>
+    <string name="player_page_title_previous_tracks">Previous tracks</string>
+    <string name="player_page_title_lyrics">Lyrics</string>
 </resources>

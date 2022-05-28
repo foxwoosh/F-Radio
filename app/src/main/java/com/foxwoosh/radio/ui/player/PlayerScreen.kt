@@ -1,8 +1,13 @@
-@file:OptIn(ExperimentalAnimationApi::class, ExperimentalMaterialApi::class)
+@file:OptIn(
+    ExperimentalAnimationApi::class,
+    ExperimentalMaterialApi::class,
+    ExperimentalUnitApi::class
+)
 
 package com.foxwoosh.radio.ui.player
 
 import android.graphics.Bitmap
+import android.util.Log
 import androidx.annotation.DrawableRes
 import androidx.compose.animation.*
 import androidx.compose.animation.core.*
@@ -22,6 +27,10 @@ import androidx.compose.ui.graphics.graphicsLayer
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.res.stringResource
+import androidx.compose.ui.text.font.FontWeight
+import androidx.compose.ui.unit.ExperimentalUnitApi
+import androidx.compose.ui.unit.TextUnit
+import androidx.compose.ui.unit.TextUnitType
 import androidx.compose.ui.unit.dp
 import androidx.hilt.navigation.compose.hiltViewModel
 import coil.ImageLoader
@@ -48,11 +57,10 @@ fun PlayerScreen() {
 
     val trackData by viewModel.trackDataFlow.collectAsState()
     val playerState by viewModel.playerStateFlow.collectAsState()
+    val lyricsState by viewModel.lyricsStateFlow.collectAsState()
 
     val stationSelectorState = rememberBackdropScaffoldState(initialValue = BackdropValue.Concealed)
-    val bottomSheetScaffoldState = rememberBottomSheetScaffoldState(
-        bottomSheetState = BottomSheetState(BottomSheetValue.Collapsed)
-    )
+    val bottomSheetScaffoldState = rememberBottomSheetScaffoldState()
 
     val scope = rememberCoroutineScope()
 
@@ -66,7 +74,6 @@ fun PlayerScreen() {
     val colors: PlayerColors
     val musicServices: MusicServicesData?
     val previousTracks: List<PreviousTrack>?
-    val lyrics: String
 
     when (trackData) {
         TrackDataState.Idle -> {
@@ -76,7 +83,6 @@ fun PlayerScreen() {
             colors = PlayerColors.default
             musicServices = null
             previousTracks = null
-            lyrics = ""
         }
         TrackDataState.Loading -> {
             title = context.getString(R.string.player_title_loading)
@@ -85,7 +91,6 @@ fun PlayerScreen() {
             colors = PlayerColors.default
             musicServices = null
             previousTracks = null
-            lyrics = ""
         }
         is TrackDataState.Ready -> {
             val data = trackData as TrackDataState.Ready
@@ -96,17 +101,12 @@ fun PlayerScreen() {
             colors = data.colors
             musicServices = data.musicServices
             previousTracks = data.previousTracks
-            lyrics = data.lyrics
         }
     }
 
     val animationSpec: AnimationSpec<Color> = tween(colorsChangeDuration)
     val surfaceColor by animateColorAsState(
         targetValue = colors.surfaceColor,
-        animationSpec = animationSpec
-    )
-    val vibrantSurfaceColor by animateColorAsState(
-        targetValue = colors.vibrantSurfaceColor,
         animationSpec = animationSpec
     )
     val primaryTextColor by animateColorAsState(
@@ -123,37 +123,41 @@ fun PlayerScreen() {
             surfaceColor = surfaceColor,
             primaryTextColor = primaryTextColor,
             secondaryTextColor = secondaryTextColor,
-            state = stationSelectorState,
+            state = stationSelectorState
         ) {
             BottomSheetScaffold(
                 scaffoldState = bottomSheetScaffoldState,
                 sheetContent = {
                     PlayerBottomSheetContent(
-                        offset = bottomSheetScaffoldState.currentFraction,
+                        state = bottomSheetScaffoldState,
                         statusBarHeight = statusBarHeight,
                         backgroundColor = surfaceColor,
                         primaryTextColor = primaryTextColor,
                         secondaryTextColor = secondaryTextColor,
                         previousTracks = previousTracks ?: emptyList(),
-                        lyrics = lyrics,
-                        onPageSelected = {
+                        lyricsState = lyricsState,
+                        onTabClicked = {
                             if (bottomSheetScaffoldState.bottomSheetState.isCollapsed) {
                                 bottomSheetScaffoldState.bottomSheetState.expand()
                             }
+                        },
+                        onPageBecomesVisible = { page ->
+                            when (page) {
+                                PlayerBottomSheetPage.LYRICS ->
+                                    viewModel.fetchLyricsForCurrentTrack()
+                            }
+                            Log.i("DDLOG", "onPageBecomesVisible: $page")
                         }
                     )
                 },
-                sheetShape = RoundedCornerShape(
-                    topStart = 12.dp,
-                    topEnd = 12.dp
-                ),
-                backgroundColor = vibrantSurfaceColor,
+                sheetShape = RoundedCornerShape(topStart = 12.dp, topEnd = 12.dp),
                 sheetPeekHeight = bottomSheetPeekHeight
             ) {
                 Column(
                     modifier = Modifier
                         .fillMaxSize()
                         .background(surfaceColor)
+                        .padding(bottom = bottomSheetPeekHeight)
                 ) {
                     Image(
                         painter = painterResource(id = R.drawable.ic_arrow_down),
@@ -169,7 +173,6 @@ fun PlayerScreen() {
 
                     Column(
                         Modifier.fillMaxSize(),
-                        verticalArrangement = Arrangement.Center,
                         horizontalAlignment = Alignment.CenterHorizontally
                     ) {
                         CoverWithServices(
@@ -189,15 +192,13 @@ fun PlayerScreen() {
                             secondaryTextColor = secondaryTextColor
                         )
 
-                        Spacer(modifier = Modifier.height(48.dp))
+                        Spacer(modifier = Modifier.height(32.dp))
 
                         PlaybackController(
                             color = primaryTextColor,
                             playerState = playerState,
                             selectStation = { scope.launch { stationSelectorState.reveal() } }
                         )
-
-                        Spacer(modifier = Modifier.height(bottomSheetPeekHeight))
                     }
                 }
             }
@@ -215,9 +216,7 @@ fun CoverWithServices(
     var musicServicesMenuOpened by remember { mutableStateOf(false) }
     val context = LocalContext.current
 
-    Box(
-        modifier.fillMaxWidth()
-    ) {
+    Box(modifier.fillMaxWidth()) {
         PlayerMusicServices(
             musicServices = musicServices,
             modifier = Modifier
@@ -230,7 +229,10 @@ fun CoverWithServices(
             }
         )
 
-        val smallScaledCover = musicServicesMenuOpened && trackDataReady
+        val smallScaledCover = musicServicesMenuOpened
+                && trackDataReady
+                && musicServices?.hasSomething == true
+
         val scale by animateFloatAsState(
             targetValue = if (smallScaledCover) 0.5f else 1f,
             animationSpec = spring(
@@ -267,16 +269,19 @@ fun CoverWithServices(
 fun TrackInfo(title: String, primaryTextColor: Color, artist: String, secondaryTextColor: Color) {
     Text(
         text = title,
-        style = MaterialTheme.typography.h6,
-        color = primaryTextColor
+        color = primaryTextColor,
+        fontSize = TextUnit(24f, TextUnitType.Sp),
+        fontWeight = FontWeight.Bold,
+        maxLines = 1
     )
 
     Spacer(modifier = Modifier.height(8.dp))
 
     Text(
         text = artist,
-        style = MaterialTheme.typography.body1,
-        color = secondaryTextColor
+        color = secondaryTextColor,
+        fontSize = TextUnit(14f, TextUnitType.Sp),
+        fontWeight = FontWeight.Normal
     )
 }
 
@@ -351,12 +356,13 @@ fun PlayerMusicServices(
 fun PlaybackController(
     color: Color,
     playerState: PlayerState,
-    selectStation: () -> Unit
+    selectStation: () -> Unit,
+    modifier: Modifier = Modifier
 ) {
     val context = LocalContext.current
 
     Box(
-        Modifier
+        modifier
             .height(72.dp)
             .fillMaxWidth(),
         contentAlignment = Alignment.Center

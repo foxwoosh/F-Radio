@@ -140,7 +140,6 @@ class PlayerNotificationFabric(private val context: Context) {
             .setContentTitle(title)
             .setContentText(artist)
             .setLargeIcon(image)
-            .addAction(stopAction)
             .setSmallIcon(R.drawable.ic_foxy_radio_logo)
             .setVisibility(Notification.VISIBILITY_PUBLIC)
             .setAutoCancel(false)
@@ -152,7 +151,7 @@ class PlayerNotificationFabric(private val context: Context) {
                     when (playerState) {
                         PlayerState.PLAYING,
                         PlayerState.PAUSED -> it.setShowActionsInCompactView(0, 1)
-                        else ->  it.setShowActionsInCompactView(0)
+                        else -> it.setShowActionsInCompactView(0)
                     }
                 }
             )
@@ -169,6 +168,7 @@ class PlayerNotificationFabric(private val context: Context) {
             PlayerState.PLAYING -> builder.addAction(pauseAction)
             PlayerState.PAUSED -> builder.addAction(playAction)
         }
+        builder.addAction(stopAction)
 
         return builder.build()
     }

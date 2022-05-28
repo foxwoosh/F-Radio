@@ -14,8 +14,12 @@ import android.util.Log
 import androidx.core.graphics.drawable.toBitmap
 import androidx.media3.common.AudioAttributes
 import androidx.media3.common.MediaItem
+import androidx.media3.common.PlaybackException
 import androidx.media3.common.Player
 import androidx.media3.exoplayer.ExoPlayer
+import androidx.media3.exoplayer.RenderersFactory
+import androidx.media3.exoplayer.audio.MediaCodecAudioRenderer
+import androidx.media3.exoplayer.mediacodec.MediaCodecSelector
 import com.foxwoosh.radio.R
 import com.foxwoosh.radio.image_loader.ImageProvider
 import com.foxwoosh.radio.notifications.NotificationPublisher
@@ -32,8 +36,11 @@ import kotlinx.coroutines.*
 import kotlinx.coroutines.flow.combine
 import kotlinx.coroutines.flow.debounce
 import kotlinx.coroutines.flow.launchIn
+import java.util.concurrent.Executors
 import javax.inject.Inject
+import kotlin.coroutines.CoroutineContext
 import android.media.AudioAttributes as AndroidAudioAttributes
+
 
 @AndroidEntryPoint
 class PlayerService : Service(), CoroutineScope {
@@ -79,7 +86,18 @@ class PlayerService : Service(), CoroutineScope {
     private val notificationFabric by lazy { PlayerNotificationFabric(this) }
 
     private val player by lazy {
-        ExoPlayer.Builder(this)
+        val audioOnlyRenderersFactory = RenderersFactory { handler, _, audioListener, _, _ ->
+            arrayOf(
+                MediaCodecAudioRenderer(
+                    this,
+                    MediaCodecSelector.DEFAULT,
+                    handler,
+                    audioListener
+                )
+            )
+        }
+
+        ExoPlayer.Builder(this, audioOnlyRenderersFactory)
             .setAudioAttributes(
                 AudioAttributes.Builder()
                     .setContentType(AndroidAudioAttributes.CONTENT_TYPE_MUSIC)
@@ -179,31 +197,35 @@ class PlayerService : Service(), CoroutineScope {
         var currentUniqueID: String? = null
 
         while (isActive) {
-            val fetchedUniqueID = ultraDataRemoteStorage.getUniqueID()
-            if (fetchedUniqueID != currentUniqueID) {
-                val track = ultraDataRemoteStorage.loadCurrentData()
-                val coverBitmap = imageProvider.load(track.imageUrl)
+            try {
+                val fetchedUniqueID = ultraDataRemoteStorage.getUniqueID()
+                if (fetchedUniqueID != currentUniqueID) {
+                    val track = ultraDataRemoteStorage.loadCurrentData()
+                    val coverBitmap = imageProvider.load(track.imageUrl)
 
-                playerLocalStorage.setPlayerTrackData(
-                    TrackDataState.Ready(
-                        track.title,
-                        track.artist,
-                        track.album,
-                        coverBitmap,
-                        CoverColorExtractor.extractColors(coverBitmap),
-                        MusicServicesData(
-                            track.youtubeMusicUrl,
-                            track.youtubeUrl,
-                            track.spotifyUrl,
-                            track.iTunesUrl,
-                            track.yandexMusicUrl
-                        ),
-                        track.previousTracks,
-                        track.lyrics
+                    playerLocalStorage.setPlayerTrackData(
+                        TrackDataState.Ready(
+                            track.id,
+                            track.title,
+                            track.artist,
+                            track.album,
+                            coverBitmap,
+                            CoverColorExtractor.extractColors(coverBitmap),
+                            MusicServicesData(
+                                track.youtubeMusicUrl,
+                                track.youtubeUrl,
+                                track.spotifyUrl,
+                                track.iTunesUrl,
+                                track.yandexMusicUrl
+                            ),
+                            track.previousTracks
+                        )
                     )
-                )
 
-                currentUniqueID = fetchedUniqueID
+                    currentUniqueID = fetchedUniqueID
+                }
+            } catch (e: Exception) {
+                // nothing
             }
 
             delay(10000)
@@ -270,7 +292,7 @@ class PlayerService : Service(), CoroutineScope {
                         this,
                         PlayerNotificationFabric.notificationID,
                         notificationFabric.getNotification(
-                            playerLocalStorage.trackData.value,
+                            trackData,
                             mediaSession?.sessionToken,
                             playerState
                         )
@@ -278,7 +300,13 @@ class PlayerService : Service(), CoroutineScope {
                 }
             }
             .debounce(100)
-            .launchIn(this)
+            .launchIn(testContext)
+    }
+
+    private val testContext = object : CoroutineScope {
+        override val coroutineContext = Executors.newSingleThreadExecutor {
+            Thread(it, "Test thread")
+        }.asCoroutineDispatcher()
     }
 
     override fun onBind(intent: Intent?): IBinder? = null
@@ -293,7 +321,10 @@ class PlayerService : Service(), CoroutineScope {
         override fun onReceive(context: Context, intent: Intent) {
             when (intent.action) {
                 PlayerNotificationFabric.ACTION_PLAYER_PLAY -> currentStation?.let { play(it.url) }
-                PlayerNotificationFabric.ACTION_PLAYER_PAUSE -> pause()
+                PlayerNotificationFabric.ACTION_PLAYER_PAUSE -> {
+                    Log.i("DDDLOG", "broadcastReceiver: ${Thread.currentThread().name}")
+                    pause()
+                }
                 PlayerNotificationFabric.ACTION_PLAYER_STOP -> stopSelf()
             }
         }
@@ -318,6 +349,16 @@ class PlayerService : Service(), CoroutineScope {
                 )
             }
         }
+
+        override fun onPlayerError(error: PlaybackException) {
+            super.onPlayerError(error)
+            Log.e("DDLOG", "onPlayerError", error)
+        }
+
+        override fun onPlayerErrorChanged(error: PlaybackException?) {
+            super.onPlayerErrorChanged(error)
+            Log.e("DDLOG", "onPlayerErrorChanged", error)
+        }
     }
 
     private val mediaSessionCallback = object : MediaSession.Callback() {
@@ -326,6 +367,7 @@ class PlayerService : Service(), CoroutineScope {
         }
 
         override fun onStop() {
+            Log.i("DDDLOG", "mediaSessionCallback.onStop: ${Thread.currentThread().name}")
             pause()
         }
     }

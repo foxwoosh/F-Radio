@@ -2,6 +2,8 @@ package com.foxwoosh.radio.di.modules
 
 import com.foxwoosh.radio.storage.local.player.IPlayerLocalStorage
 import com.foxwoosh.radio.storage.local.player.PlayerLocalStorage
+import com.foxwoosh.radio.storage.remote.lyrics.ILyricsRemoteStorage
+import com.foxwoosh.radio.storage.remote.lyrics.LyricsRemoteStorage
 import com.foxwoosh.radio.storage.remote.ultra.IUltraRemoteStorage
 import com.foxwoosh.radio.storage.remote.ultra.UltraRemoteStorage
 import dagger.Binds
@@ -22,4 +24,9 @@ abstract class StoragesModule {
     abstract fun bindPlayerLocalStorage(
         storage: PlayerLocalStorage
     ): IPlayerLocalStorage
+
+    @Binds
+    abstract fun bindLyricsRemoteStorage(
+        storage: LyricsRemoteStorage
+    ): ILyricsRemoteStorage
 }

@@ -2,9 +2,7 @@ package com.foxwoosh.radio.ui
 
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.interaction.MutableInteractionSource
-import androidx.compose.material.BottomSheetScaffoldState
-import androidx.compose.material.BottomSheetValue
-import androidx.compose.material.ExperimentalMaterialApi
+import androidx.compose.material.*
 import androidx.compose.material.ripple.rememberRipple
 import androidx.compose.runtime.remember
 import androidx.compose.ui.Modifier
@@ -53,4 +51,16 @@ val BottomSheetScaffoldState.currentFraction: Float
                     && targetValue == BottomSheetValue.Expanded -> fraction
             else -> 1f - fraction
         }
+    }
+
+@OptIn(ExperimentalMaterialApi::class)
+val BackdropScaffoldState.currentFraction: Float
+    get() = when {
+        currentValue == BackdropValue.Concealed
+                && targetValue == BackdropValue.Concealed -> 0f
+        currentValue == BackdropValue.Revealed
+                && targetValue == BackdropValue.Revealed -> 1f
+        currentValue == BackdropValue.Concealed
+                && targetValue == BackdropValue.Revealed -> progress.fraction
+        else -> 1f - progress.fraction
     }

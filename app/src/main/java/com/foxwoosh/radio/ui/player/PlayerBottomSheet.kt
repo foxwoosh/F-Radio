@@ -1,4 +1,4 @@
-@file:OptIn(ExperimentalPagerApi::class)
+@file:OptIn(ExperimentalPagerApi::class, ExperimentalMaterialApi::class)
 
 package com.foxwoosh.radio.ui.player
 
@@ -10,11 +10,9 @@ import androidx.compose.foundation.lazy.items
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.verticalScroll
-import androidx.compose.material.Tab
-import androidx.compose.material.TabRow
-import androidx.compose.material.TabRowDefaults
-import androidx.compose.material.Text
+import androidx.compose.material.*
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
@@ -30,6 +28,7 @@ import androidx.compose.ui.unit.dp
 import coil.compose.AsyncImage
 import com.foxwoosh.radio.R
 import com.foxwoosh.radio.storage.models.PreviousTrack
+import com.foxwoosh.radio.ui.currentFraction
 import com.foxwoosh.radio.ui.theme.BlackOverlay
 import com.google.accompanist.pager.ExperimentalPagerApi
 import com.google.accompanist.pager.HorizontalPager
@@ -39,18 +38,35 @@ import kotlinx.coroutines.launch
 
 @Composable
 fun PlayerBottomSheetContent(
-    offset: Float,
+    state: BottomSheetScaffoldState,
     statusBarHeight: Dp,
     backgroundColor: Color,
     primaryTextColor: Color,
     secondaryTextColor: Color,
-    onPageSelected: suspend () -> Unit,
+    onPageBecomesVisible: (page: PlayerBottomSheetPage) -> Unit,
+    onTabClicked: suspend (page: PlayerBottomSheetPage) -> Unit,
     previousTracks: List<PreviousTrack>,
-    lyrics: String
+    lyricsState: LyricsDataState
 ) {
     val pagerState = rememberPagerState()
-    val pages = listOf("Previous", "Lyrics")
     val scope = rememberCoroutineScope()
+    val offset = state.currentFraction
+
+    LaunchedEffect(pagerState.currentPage) {
+        if (state.bottomSheetState.isExpanded) {
+            onPageBecomesVisible(
+                PlayerBottomSheetPage[pagerState.currentPage]
+            )
+        }
+    }
+
+    LaunchedEffect(state.bottomSheetState.isExpanded) {
+        if (state.bottomSheetState.isExpanded) {
+            onPageBecomesVisible(
+                PlayerBottomSheetPage[pagerState.currentPage]
+            )
+        }
+    }
 
     Column(
         Modifier
@@ -80,15 +96,24 @@ fun PlayerBottomSheetContent(
                 .height(56.dp),
             backgroundColor = Color.Transparent
         ) {
-            pages.forEachIndexed { index, title ->
+            PlayerBottomSheetPage.values().forEach {
                 Tab(
-                    text = { Text(title) },
-                    selected = pagerState.currentPage == index,
+                    text = {
+                        Text(
+                            text = stringResource(
+                                id = when (it) {
+                                    PlayerBottomSheetPage.PREVIOUS_TRACKS ->
+                                        R.string.player_page_title_previous_tracks
+                                    PlayerBottomSheetPage.LYRICS ->
+                                        R.string.player_page_title_lyrics
+                                }
+                            )
+                        )
+                    },
+                    selected = pagerState.currentPage == it.ordinal,
                     onClick = {
-                        scope.launch {
-                            pagerState.scrollToPage(index)
-                            onPageSelected()
-                        }
+                        scope.launch { pagerState.animateScrollToPage(it.ordinal) }
+                        scope.launch { onTabClicked(it) }
                     },
                     selectedContentColor = primaryTextColor,
                     unselectedContentColor = secondaryTextColor
@@ -97,15 +122,18 @@ fun PlayerBottomSheetContent(
         }
 
         HorizontalPager(
-            count = pages.size,
+            count = PlayerBottomSheetPage.size,
             state = pagerState,
             modifier = Modifier
                 .fillMaxSize()
                 .alpha(offset)
         ) { pageIndex ->
             when (pageIndex) {
-                0 -> if (previousTracks.isEmpty()) {
-                    Box(Modifier.fillMaxSize(), contentAlignment = Alignment.Center) {
+                PlayerBottomSheetPage.PREVIOUS_TRACKS.ordinal -> if (previousTracks.isEmpty()) {
+                    Box(
+                        modifier = Modifier.fillMaxSize(),
+                        contentAlignment = Alignment.Center
+                    ) {
                         Text(
                             text = stringResource(id = R.string.previous_tracks_no_data),
                             color = primaryTextColor
@@ -119,22 +147,34 @@ fun PlayerBottomSheetContent(
                         modifier = Modifier.fillMaxSize()
                     )
                 }
-                1 -> {
-                    val scrollState = rememberScrollState()
-                    Text(
-                        text = lyrics,
-                        color = primaryTextColor,
-                        modifier = Modifier
-                            .fillMaxSize()
-                            .verticalScroll(scrollState)
-                            .padding(
-                                start = 16.dp,
-                                end = 16.dp,
-                                top = 16.dp,
-                                bottom = 0.dp
+                PlayerBottomSheetPage.LYRICS.ordinal -> {
+                    when (lyricsState) {
+                        is LyricsDataState.Loading -> Box(
+                            modifier = Modifier.fillMaxSize(),
+                            contentAlignment = Alignment.Center
+                        ) {
+                            CircularProgressIndicator(
+                                color = primaryTextColor
                             )
-                            .navigationBarsPadding()
-                    )
+                        }
+                        is LyricsDataState.Ready -> {
+                            val scrollState = rememberScrollState()
+                            Text(
+                                text = lyricsState.lyrics,
+                                color = primaryTextColor,
+                                modifier = Modifier
+                                    .fillMaxSize()
+                                    .verticalScroll(scrollState)
+                                    .padding(
+                                        start = 16.dp,
+                                        end = 16.dp,
+                                        top = 16.dp,
+                                        bottom = 0.dp
+                                    )
+                                    .navigationBarsPadding()
+                            )
+                        }
+                    }
                 }
             }
         }
@@ -185,5 +225,15 @@ fun PreviousTracksList(
 
             }
         }
+    }
+}
+
+enum class PlayerBottomSheetPage {
+    PREVIOUS_TRACKS, LYRICS;
+
+    companion object {
+        operator fun get(index: Int) = values()[index]
+        val size: Int
+            get() = values().size
     }
 }

@@ -1,5 +1,8 @@
 @file:Suppress("UNCHECKED_CAST")
 
+import java.io.FileInputStream
+import java.util.Properties
+
 val composeVersion = rootProject.extra.get("compose_version")
 val datastoreVersion = rootProject.extra.get("datastore_version")
 val hiltVersion = rootProject.extra.get("hilt_version")
@@ -15,6 +18,11 @@ plugins {
     kotlin("plugin.serialization")
 
     id("dagger.hilt.android.plugin")
+}
+
+val p = Properties().apply {
+    load(FileInputStream(rootProject.file("local.properties")))
+
 }
 
 android {
@@ -35,14 +43,16 @@ android {
                 arg("room.schemaLocation", "$projectDir/schemas")
             }
         }
+
+        buildConfigField("String", "MUSIXMATCH_KEY", p.getProperty("musixmatchKey"))
     }
 
     signingConfigs {
         create("main") {
             storeFile = rootProject.file("release-keystore.jks")
-            storePassword = "XXXXXXXXXXXXXXX"
-            keyAlias = "XXXXXXXXXXXXXXX"
-            keyPassword = "XXXXXXXXXXXXXXX"
+            storePassword = p.getProperty("storePassword")
+            keyAlias = p.getProperty("keyAlias")
+            keyPassword = p.getProperty("keyPassword")
         }
     }
 
@@ -113,9 +123,6 @@ dependencies {
     kapt("androidx.room:room-compiler:$roomVersion")
 
     implementation("io.coil-kt:coil-compose:2.1.0")
-
-//    implementation("com.github.bumptech.glide:glide:4.13.2")
-//    kapt("com.github.bumptech.glide:compiler:4.13.2")
 
     implementation("androidx.media3:media3-exoplayer:$exoPlayerVersion")
 
