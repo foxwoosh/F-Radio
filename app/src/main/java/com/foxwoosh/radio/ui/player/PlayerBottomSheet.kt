@@ -135,7 +135,7 @@ fun PlayerBottomSheetContent(
                         contentAlignment = Alignment.Center
                     ) {
                         Text(
-                            text = stringResource(id = R.string.previous_tracks_no_data),
+                            text = stringResource(id = R.string.player_page_no_data_previous_tracks),
                             color = primaryTextColor
                         )
                     }
@@ -149,6 +149,15 @@ fun PlayerBottomSheetContent(
                 }
                 PlayerBottomSheetPage.LYRICS.ordinal -> {
                     when (lyricsState) {
+                        is LyricsDataState.NoData -> Box(
+                            modifier = Modifier.fillMaxSize(),
+                            contentAlignment = Alignment.Center
+                        ) {
+                            Text(
+                                text = stringResource(id = R.string.player_page_no_data_lyrics),
+                                color = primaryTextColor
+                            )
+                        }
                         is LyricsDataState.Loading -> Box(
                             modifier = Modifier.fillMaxSize(),
                             contentAlignment = Alignment.Center

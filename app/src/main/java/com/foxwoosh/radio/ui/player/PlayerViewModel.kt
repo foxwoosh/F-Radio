@@ -1,5 +1,6 @@
 package com.foxwoosh.radio.ui.player
 
+import android.util.Log
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.foxwoosh.radio.player.models.TrackDataState
@@ -19,7 +20,7 @@ class PlayerViewModel @Inject constructor(
     val trackDataFlow = playerLocalStorage.trackData
     val playerStateFlow = playerLocalStorage.playerState
 
-    private val mutableLyricsStateFlow = MutableStateFlow<LyricsDataState>(LyricsDataState.Loading)
+    private val mutableLyricsStateFlow = MutableStateFlow<LyricsDataState>(LyricsDataState.NoData)
     val lyricsStateFlow = mutableLyricsStateFlow.asStateFlow()
 
     private var lastFetchedLyricsTrackID: String? = null
@@ -27,15 +28,24 @@ class PlayerViewModel @Inject constructor(
     init {
         lyricsRemoteStorage
             .lyricsFlow
-            .filter { it.isNotEmpty() }
-            .onEach { mutableLyricsStateFlow.emit(LyricsDataState.Ready(it)) }
+            .onEach {
+                mutableLyricsStateFlow.emit(
+                    if (it.isEmpty()) {
+                        LyricsDataState.NoData
+                    } else {
+                        LyricsDataState.Ready(it)
+                    }
+                )
+            }
             .launchIn(viewModelScope)
     }
 
     fun fetchLyricsForCurrentTrack() {
+        Log.i("DDLOG", "trying to fetch lyrics")
         val trackData = trackDataFlow.value
         if (trackData is TrackDataState.Ready && lastFetchedLyricsTrackID != trackData.id) {
             viewModelScope.launch {
+                Log.i("DDLOG", "fetching lyrics")
                 mutableLyricsStateFlow.emit(LyricsDataState.Loading)
 
                 lyricsRemoteStorage.fetchLyrics(

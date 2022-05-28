@@ -104,6 +104,14 @@ fun PlayerScreen() {
         }
     }
 
+    LaunchedEffect(trackData) {
+        if (bottomSheetScaffoldState.bottomSheetState.isExpanded
+            && trackData is TrackDataState.Ready
+        ) {
+            viewModel.fetchLyricsForCurrentTrack()
+        }
+    }
+
     val animationSpec: AnimationSpec<Color> = tween(colorsChangeDuration)
     val surfaceColor by animateColorAsState(
         targetValue = colors.surfaceColor,
@@ -146,7 +154,6 @@ fun PlayerScreen() {
                                 PlayerBottomSheetPage.LYRICS ->
                                     viewModel.fetchLyricsForCurrentTrack()
                             }
-                            Log.i("DDLOG", "onPageBecomesVisible: $page")
                         }
                     )
                 },
@@ -172,7 +179,7 @@ fun PlayerScreen() {
                     )
 
                     Column(
-                        Modifier.fillMaxSize(),
+                        modifier = Modifier.fillMaxSize(),
                         horizontalAlignment = Alignment.CenterHorizontally
                     ) {
                         CoverWithServices(

@@ -7,7 +7,8 @@
     <string name="player_title_loading">Загрузка…</string>
     <string name="player_select_station_button">Выбрать</string>
     <string name="station_selector_title">Выберите станцию</string>
-    <string name="previous_tracks_no_data">Нет данных</string>
+    <string name="player_page_no_data_previous_tracks">Нет предыдущих треков</string>
+    <string name="player_page_no_data_lyrics">Текст не найден</string>
     <string name="player_page_title_previous_tracks">Прошлые треки</string>
     <string name="player_page_title_lyrics">Текст</string>
 </resources>
