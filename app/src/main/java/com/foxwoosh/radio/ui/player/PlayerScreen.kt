@@ -24,10 +24,14 @@ import androidx.compose.ui.draw.scale
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.ColorFilter
 import androidx.compose.ui.graphics.graphicsLayer
+import androidx.compose.ui.platform.ClipboardManager
+import androidx.compose.ui.platform.LocalClipboardManager
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.res.stringResource
+import androidx.compose.ui.text.AnnotatedString
 import androidx.compose.ui.text.font.FontWeight
+import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.ExperimentalUnitApi
 import androidx.compose.ui.unit.TextUnit
 import androidx.compose.ui.unit.TextUnitType
@@ -36,7 +40,8 @@ import androidx.hilt.navigation.compose.hiltViewModel
 import coil.ImageLoader
 import coil.compose.AsyncImage
 import com.foxwoosh.radio.R
-import com.foxwoosh.radio.Utils
+import com.foxwoosh.radio.copyToClipboard
+import com.foxwoosh.radio.openURL
 import com.foxwoosh.radio.player.PlayerService
 import com.foxwoosh.radio.player.models.MusicServicesData
 import com.foxwoosh.radio.player.models.PlayerColors
@@ -156,11 +161,6 @@ fun PlayerScreen() {
                         secondaryTextColor = secondaryTextColor,
                         previousTracks = previousTracks ?: emptyList(),
                         lyricsState = lyricsState,
-                        onTabClicked = {
-                            if (bottomSheetScaffoldState.bottomSheetState.isCollapsed) {
-                                bottomSheetScaffoldState.bottomSheetState.expand()
-                            }
-                        },
                         onPageBecomesVisible = { page ->
                             when (page) {
                                 PlayerBottomSheetPage.LYRICS ->
@@ -199,24 +199,26 @@ fun PlayerScreen() {
                             musicServices = musicServices,
                             trackDataReady = trackData is TrackDataState.Ready,
                             modifier = Modifier
-                                .weight(0.3f, false)
+                                .fillMaxWidth()
+                                .weight(0.6f)
                         )
-
-                        Spacer(modifier = Modifier.height(24.dp))
 
                         TrackInfo(
                             title = title,
                             primaryTextColor = primaryTextColor,
                             artist = artist,
-                            secondaryTextColor = secondaryTextColor
+                            secondaryTextColor = secondaryTextColor,
+                            modifier = Modifier
+                                .fillMaxWidth()
                         )
-
-                        Spacer(modifier = Modifier.height(32.dp))
 
                         PlaybackController(
                             color = primaryTextColor,
                             playerState = playerState,
-                            selectStation = { scope.launch { backdropStationSelectorState.reveal() } }
+                            selectStation = { scope.launch { backdropStationSelectorState.reveal() } },
+                            modifier = Modifier
+                                .fillMaxWidth()
+                                .weight(0.15f)
                         )
                     }
                 }
@@ -235,7 +237,7 @@ fun CoverWithServices(
     var musicServicesMenuOpened by remember { mutableStateOf(false) }
     val context = LocalContext.current
 
-    Box(modifier.fillMaxWidth()) {
+    Box(modifier) {
         PlayerMusicServices(
             musicServices = musicServices,
             modifier = Modifier
@@ -243,7 +245,7 @@ fun CoverWithServices(
                 .align(Alignment.BottomCenter)
                 .scale(animateFloatAsState(if (musicServicesMenuOpened) 1f else 0f).value),
             musicServiceSelected = { url ->
-                Utils.openURL(context, url)
+                context.openURL(url)
                 musicServicesMenuOpened = false
             }
         )
@@ -285,23 +287,35 @@ fun CoverWithServices(
 }
 
 @Composable
-fun TrackInfo(title: String, primaryTextColor: Color, artist: String, secondaryTextColor: Color) {
-    Text(
-        text = title,
-        color = primaryTextColor,
-        fontSize = TextUnit(24f, TextUnitType.Sp),
-        fontWeight = FontWeight.Bold,
-        maxLines = 1
-    )
+fun TrackInfo(
+    title: String,
+    primaryTextColor: Color,
+    artist: String, secondaryTextColor: Color,
+    modifier: Modifier = Modifier
+) {
+    Column(
+        modifier = modifier,
+        horizontalAlignment = Alignment.CenterHorizontally,
+        verticalArrangement = Arrangement.Center
+    ) {
+        Text(
+            text = title,
+            color = primaryTextColor,
+            fontSize = TextUnit(24f, TextUnitType.Sp),
+            fontWeight = FontWeight.Bold,
+            maxLines = 2,
+            textAlign = TextAlign.Center
+        )
 
-    Spacer(modifier = Modifier.height(8.dp))
+        Spacer(modifier = Modifier.height(8.dp))
 
-    Text(
-        text = artist,
-        color = secondaryTextColor,
-        fontSize = TextUnit(14f, TextUnitType.Sp),
-        fontWeight = FontWeight.Normal
-    )
+        Text(
+            text = artist,
+            color = secondaryTextColor,
+            fontSize = TextUnit(14f, TextUnitType.Sp),
+            fontWeight = FontWeight.Normal
+        )
+    }
 }
 
 @Composable
@@ -313,6 +327,8 @@ fun PlayerMusicServices(
     if (musicServices == null) return
 
     if (musicServices.hasSomething) {
+        val context = LocalContext.current
+
         Row(
             modifier = modifier.animateContentSize(),
             horizontalArrangement = Arrangement.Center
@@ -324,7 +340,10 @@ fun PlayerMusicServices(
                     modifier = Modifier
                         .padding(8.dp)
                         .size(48.dp)
-                        .borderlessClickable { musicServiceSelected(musicServices.youtubeMusic) }
+                        .borderlessClickable(
+                            onClick = { musicServiceSelected(musicServices.youtubeMusic) },
+                            onLongClick = { context.copyToClipboard(musicServices.youtubeMusic) }
+                        )
                 )
             }
             if (!musicServices.youtube.isNullOrEmpty()) {
@@ -334,7 +353,10 @@ fun PlayerMusicServices(
                     modifier = Modifier
                         .padding(8.dp)
                         .size(48.dp)
-                        .borderlessClickable { musicServiceSelected(musicServices.youtube) }
+                        .borderlessClickable(
+                            onClick = { musicServiceSelected(musicServices.youtube) },
+                            onLongClick = { context.copyToClipboard(musicServices.youtube) }
+                        )
                 )
             }
             if (!musicServices.spotify.isNullOrEmpty()) {
@@ -344,7 +366,10 @@ fun PlayerMusicServices(
                     modifier = Modifier
                         .padding(8.dp)
                         .size(48.dp)
-                        .borderlessClickable { musicServiceSelected(musicServices.spotify) }
+                        .borderlessClickable(
+                            onClick = { musicServiceSelected(musicServices.spotify) },
+                            onLongClick = { context.copyToClipboard(musicServices.spotify) }
+                        )
                 )
             }
             if (!musicServices.iTunes.isNullOrEmpty()) {
@@ -354,7 +379,10 @@ fun PlayerMusicServices(
                     modifier = Modifier
                         .padding(8.dp)
                         .size(48.dp)
-                        .borderlessClickable { musicServiceSelected(musicServices.iTunes) }
+                        .borderlessClickable(
+                            onClick = { musicServiceSelected(musicServices.iTunes) },
+                            onLongClick = { context.copyToClipboard(musicServices.iTunes) }
+                        )
                 )
             }
             if (!musicServices.yandexMusic.isNullOrEmpty()) {
@@ -364,7 +392,10 @@ fun PlayerMusicServices(
                     modifier = Modifier
                         .padding(8.dp)
                         .size(48.dp)
-                        .borderlessClickable { musicServiceSelected(musicServices.yandexMusic) }
+                        .borderlessClickable(
+                            onClick = { musicServiceSelected(musicServices.yandexMusic) },
+                            onLongClick = { context.copyToClipboard(musicServices.yandexMusic) }
+                        )
                 )
             }
         }
@@ -381,9 +412,8 @@ fun PlaybackController(
     val context = LocalContext.current
 
     Box(
-        modifier
-            .height(72.dp)
-            .fillMaxWidth(),
+        modifier = modifier
+            .height(72.dp),
         contentAlignment = Alignment.Center
     ) {
         AnimatedVisibility(

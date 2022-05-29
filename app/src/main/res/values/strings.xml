@@ -11,4 +11,5 @@
     <string name="player_page_no_data_lyrics">No lyrics found</string>
     <string name="player_page_title_previous_tracks">Previous tracks</string>
     <string name="player_page_title_lyrics">Lyrics</string>
+    <string name="common_copied_to_clipboard">Copied to clipboard</string>
 </resources>

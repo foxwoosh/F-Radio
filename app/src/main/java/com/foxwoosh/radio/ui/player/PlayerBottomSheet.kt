@@ -28,7 +28,7 @@ import androidx.compose.ui.unit.dp
 import coil.compose.AsyncImage
 import com.foxwoosh.radio.R
 import com.foxwoosh.radio.storage.models.PreviousTrack
-import com.foxwoosh.radio.ui.currentFraction
+import com.foxwoosh.radio.ui.currentOffset
 import com.foxwoosh.radio.ui.theme.BlackOverlay
 import com.google.accompanist.pager.ExperimentalPagerApi
 import com.google.accompanist.pager.HorizontalPager
@@ -44,13 +44,12 @@ fun PlayerBottomSheetContent(
     primaryTextColor: Color,
     secondaryTextColor: Color,
     onPageBecomesVisible: (page: PlayerBottomSheetPage) -> Unit,
-    onTabClicked: suspend (page: PlayerBottomSheetPage) -> Unit,
     previousTracks: List<PreviousTrack>,
     lyricsState: LyricsDataState
 ) {
     val pagerState = rememberPagerState()
     val scope = rememberCoroutineScope()
-    val offset = state.currentFraction
+    val offset = state.currentOffset
 
     LaunchedEffect(pagerState.currentPage) {
         if (state.bottomSheetState.isExpanded) {
@@ -112,8 +111,14 @@ fun PlayerBottomSheetContent(
                     },
                     selected = pagerState.currentPage == it.ordinal,
                     onClick = {
-                        scope.launch { pagerState.animateScrollToPage(it.ordinal) }
-                        scope.launch { onTabClicked(it) }
+                        scope.launch {
+                            if (state.bottomSheetState.isCollapsed) {
+                                state.bottomSheetState.expand()
+                            }
+                            if (pagerState.currentPage != it.ordinal) {
+                                pagerState.animateScrollToPage(it.ordinal)
+                            }
+                        }
                     },
                     selectedContentColor = primaryTextColor,
                     unselectedContentColor = secondaryTextColor
