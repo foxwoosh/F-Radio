@@ -72,7 +72,9 @@ class PlayerService : Service(), CoroutineScope {
         }
     }
 
-    override val coroutineContext = SupervisorJob() + Dispatchers.IO
+    override val coroutineContext = SupervisorJob() + Executors.newSingleThreadExecutor {
+        Thread(it, "FoxyRadioPlayerServiceThread")
+    }.asCoroutineDispatcher()
 
     @Inject
     lateinit var playerLocalStorage: IPlayerLocalStorage
@@ -170,9 +172,9 @@ class PlayerService : Service(), CoroutineScope {
         launch {
             playerLocalStorage.setPlayerTrackData(TrackDataState.Idle)
             playerLocalStorage.setPlayerState(PlayerState.IDLE)
-        }
 
-        coroutineContext.cancel()
+            coroutineContext.cancel()
+        }
 
         super.onDestroy()
     }
@@ -300,13 +302,7 @@ class PlayerService : Service(), CoroutineScope {
                 }
             }
             .debounce(100)
-            .launchIn(testContext)
-    }
-
-    private val testContext = object : CoroutineScope {
-        override val coroutineContext = Executors.newSingleThreadExecutor {
-            Thread(it, "Test thread")
-        }.asCoroutineDispatcher()
+            .launchIn(this)
     }
 
     override fun onBind(intent: Intent?): IBinder? = null
@@ -321,10 +317,7 @@ class PlayerService : Service(), CoroutineScope {
         override fun onReceive(context: Context, intent: Intent) {
             when (intent.action) {
                 PlayerNotificationFabric.ACTION_PLAYER_PLAY -> currentStation?.let { play(it.url) }
-                PlayerNotificationFabric.ACTION_PLAYER_PAUSE -> {
-                    Log.i("DDDLOG", "broadcastReceiver: ${Thread.currentThread().name}")
-                    pause()
-                }
+                PlayerNotificationFabric.ACTION_PLAYER_PAUSE -> pause()
                 PlayerNotificationFabric.ACTION_PLAYER_STOP -> stopSelf()
             }
         }
@@ -367,7 +360,6 @@ class PlayerService : Service(), CoroutineScope {
         }
 
         override fun onStop() {
-            Log.i("DDDLOG", "mediaSessionCallback.onStop: ${Thread.currentThread().name}")
             pause()
         }
     }

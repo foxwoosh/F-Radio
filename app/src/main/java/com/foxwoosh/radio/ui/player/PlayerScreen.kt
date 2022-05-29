@@ -7,7 +7,7 @@
 package com.foxwoosh.radio.ui.player
 
 import android.graphics.Bitmap
-import android.util.Log
+import androidx.activity.compose.BackHandler
 import androidx.annotation.DrawableRes
 import androidx.compose.animation.*
 import androidx.compose.animation.core.*
@@ -44,7 +44,6 @@ import com.foxwoosh.radio.player.models.PlayerState
 import com.foxwoosh.radio.player.models.TrackDataState
 import com.foxwoosh.radio.storage.models.PreviousTrack
 import com.foxwoosh.radio.ui.borderlessClickable
-import com.foxwoosh.radio.ui.currentFraction
 import com.foxwoosh.radio.ui.singleCondition
 import kotlinx.coroutines.launch
 
@@ -59,7 +58,8 @@ fun PlayerScreen() {
     val playerState by viewModel.playerStateFlow.collectAsState()
     val lyricsState by viewModel.lyricsStateFlow.collectAsState()
 
-    val stationSelectorState = rememberBackdropScaffoldState(initialValue = BackdropValue.Concealed)
+    val backdropStationSelectorState =
+        rememberBackdropScaffoldState(initialValue = BackdropValue.Concealed)
     val bottomSheetScaffoldState = rememberBottomSheetScaffoldState()
 
     val scope = rememberCoroutineScope()
@@ -112,6 +112,18 @@ fun PlayerScreen() {
         }
     }
 
+    BackHandler(
+        bottomSheetScaffoldState.bottomSheetState.isExpanded
+                || backdropStationSelectorState.isRevealed
+    ) {
+        if (bottomSheetScaffoldState.bottomSheetState.isExpanded) {
+            scope.launch { bottomSheetScaffoldState.bottomSheetState.collapse() }
+        }
+        if (backdropStationSelectorState.isRevealed) {
+            scope.launch { backdropStationSelectorState.conceal() }
+        }
+    }
+
     val animationSpec: AnimationSpec<Color> = tween(colorsChangeDuration)
     val surfaceColor by animateColorAsState(
         targetValue = colors.surfaceColor,
@@ -131,7 +143,7 @@ fun PlayerScreen() {
             surfaceColor = surfaceColor,
             primaryTextColor = primaryTextColor,
             secondaryTextColor = secondaryTextColor,
-            state = stationSelectorState
+            state = backdropStationSelectorState
         ) {
             BottomSheetScaffold(
                 scaffoldState = bottomSheetScaffoldState,
@@ -172,7 +184,7 @@ fun PlayerScreen() {
                         modifier = Modifier
                             .statusBarsPadding()
                             .borderlessClickable(
-                                onClick = { scope.launch { stationSelectorState.reveal() } }
+                                onClick = { scope.launch { backdropStationSelectorState.reveal() } }
                             )
                             .padding(16.dp),
                         colorFilter = ColorFilter.tint(primaryTextColor)
@@ -204,7 +216,7 @@ fun PlayerScreen() {
                         PlaybackController(
                             color = primaryTextColor,
                             playerState = playerState,
-                            selectStation = { scope.launch { stationSelectorState.reveal() } }
+                            selectStation = { scope.launch { backdropStationSelectorState.reveal() } }
                         )
                     }
                 }
