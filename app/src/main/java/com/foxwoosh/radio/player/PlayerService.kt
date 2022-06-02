@@ -31,16 +31,16 @@ import com.foxwoosh.radio.player.models.Station
 import com.foxwoosh.radio.player.models.TrackDataState
 import com.foxwoosh.radio.storage.local.player.IPlayerLocalStorage
 import com.foxwoosh.radio.storage.remote.ultra.IUltraRemoteStorage
+import com.foxwoosh.radio.websocket.UltraWebSocketProvider
 import dagger.hilt.android.AndroidEntryPoint
 import kotlinx.coroutines.*
 import kotlinx.coroutines.flow.combine
 import kotlinx.coroutines.flow.debounce
 import kotlinx.coroutines.flow.launchIn
+import kotlinx.coroutines.flow.onEach
 import java.util.concurrent.Executors
 import javax.inject.Inject
-import kotlin.coroutines.CoroutineContext
 import android.media.AudioAttributes as AndroidAudioAttributes
-
 
 @AndroidEntryPoint
 class PlayerService : Service(), CoroutineScope {
@@ -115,7 +115,9 @@ class PlayerService : Service(), CoroutineScope {
     }
 
     private var mediaSession: MediaSession? = null
-    private var playerPolling: Job? = null
+//    private var playerPolling: Job? = null
+
+    private val webSocketProvider = UltraWebSocketProvider()
 
     override fun onCreate() {
         super.onCreate()
@@ -149,8 +151,10 @@ class PlayerService : Service(), CoroutineScope {
             )
             play(station.url)
 
-            playerPolling?.cancel()
-            playerPolling = startPlayerPolling()
+            ultraDataRemoteStorage.startFetching()
+
+//            playerPolling?.cancel()
+//            playerPolling = startPlayerPolling()
 
             currentStation = station
         }
@@ -166,8 +170,10 @@ class PlayerService : Service(), CoroutineScope {
 
         unregisterReceiver(broadcastReceiver)
         player.release()
-        playerPolling?.cancel()
-        playerPolling = null
+//        playerPolling?.cancel()
+//        playerPolling = null
+
+        ultraDataRemoteStorage.stopFetching()
 
         launch {
             playerLocalStorage.setPlayerTrackData(TrackDataState.Idle)
@@ -193,48 +199,35 @@ class PlayerService : Service(), CoroutineScope {
         player.stop()
     }
 
-    private fun startPlayerPolling() = launch {
-        playerLocalStorage.setPlayerTrackData(TrackDataState.Loading)
-
-        var currentUniqueID: String? = null
-
-        while (isActive) {
-            try {
-                val fetchedUniqueID = ultraDataRemoteStorage.getUniqueID()
-                if (fetchedUniqueID != currentUniqueID) {
-                    val track = ultraDataRemoteStorage.loadCurrentData()
-                    val coverBitmap = imageProvider.load(track.imageUrl)
-
-                    playerLocalStorage.setPlayerTrackData(
-                        TrackDataState.Ready(
-                            track.id,
-                            track.title,
-                            track.artist,
-                            track.album,
-                            coverBitmap,
-                            CoverColorExtractor.extractColors(coverBitmap),
-                            MusicServicesData(
-                                track.youtubeMusicUrl,
-                                track.youtubeUrl,
-                                track.spotifyUrl,
-                                track.iTunesUrl,
-                                track.yandexMusicUrl
-                            ),
-                            track.previousTracks
-                        )
-                    )
-
-                    currentUniqueID = fetchedUniqueID
-                }
-            } catch (e: Exception) {
-                // nothing
-            }
-
-            delay(10000)
-        }
-    }
-
     private fun subscribeStateChanged() {
+        Log.i("DDLOG", "subscribe socket flow")
+        ultraDataRemoteStorage
+            .trackData
+            .onEach { track ->
+                Log.i("DDLOG", "track flow onEach")
+                val coverBitmap = imageProvider.load(track.imageUrl)
+
+                playerLocalStorage.setPlayerTrackData(
+                    TrackDataState.Ready(
+                        track.id,
+                        track.title,
+                        track.artist,
+                        track.album,
+                        coverBitmap,
+                        CoverColorExtractor.extractColors(coverBitmap),
+                        MusicServicesData(
+                            track.youtubeMusicUrl,
+                            track.youtubeUrl,
+                            track.spotifyUrl,
+                            track.iTunesUrl,
+                            track.yandexMusicUrl
+                        ),
+                        track.previousTracks
+                    )
+                )
+            }
+            .launchIn(this)
+
         playerLocalStorage
             .trackData
             .combine(playerLocalStorage.playerState) { trackData, playerState ->

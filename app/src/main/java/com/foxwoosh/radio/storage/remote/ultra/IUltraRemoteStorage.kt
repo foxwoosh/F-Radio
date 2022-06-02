@@ -1,8 +1,11 @@
 package com.foxwoosh.radio.storage.remote.ultra
 
 import com.foxwoosh.radio.storage.models.Track
+import kotlinx.coroutines.flow.SharedFlow
 
 interface IUltraRemoteStorage {
-    suspend fun loadCurrentData(): Track
-    suspend fun getUniqueID(): String
+    val trackData: SharedFlow<Track>
+
+    fun startFetching()
+    fun stopFetching()
 }
