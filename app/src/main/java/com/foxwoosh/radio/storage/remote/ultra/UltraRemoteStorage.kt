@@ -7,6 +7,7 @@ class UltraRemoteStorage @Inject constructor(
     private val ultraWebSocketProvider: UltraWebSocketProvider
 ) : IUltraRemoteStorage {
 
+    override val dataConnectionState = ultraWebSocketProvider.connectionState
     override val trackData = ultraWebSocketProvider.trackFlow
 
     override fun startFetching() {

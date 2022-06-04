@@ -21,7 +21,9 @@ import androidx.media3.exoplayer.RenderersFactory
 import androidx.media3.exoplayer.audio.MediaCodecAudioRenderer
 import androidx.media3.exoplayer.mediacodec.MediaCodecSelector
 import com.foxwoosh.radio.R
-import com.foxwoosh.radio.image_loader.ImageProvider
+import com.foxwoosh.radio.di.modules.PlayerServiceCoroutineScope
+import com.foxwoosh.radio.domain.IPlayerServiceInteractor
+import com.foxwoosh.radio.image_provider.ImageProvider
 import com.foxwoosh.radio.notifications.NotificationPublisher
 import com.foxwoosh.radio.player.helpers.CoverColorExtractor
 import com.foxwoosh.radio.player.helpers.PlayerNotificationFabric
@@ -31,7 +33,6 @@ import com.foxwoosh.radio.player.models.Station
 import com.foxwoosh.radio.player.models.TrackDataState
 import com.foxwoosh.radio.storage.local.player.IPlayerLocalStorage
 import com.foxwoosh.radio.storage.remote.ultra.IUltraRemoteStorage
-import com.foxwoosh.radio.websocket.UltraWebSocketProvider
 import dagger.hilt.android.AndroidEntryPoint
 import kotlinx.coroutines.*
 import kotlinx.coroutines.flow.combine
@@ -43,7 +44,7 @@ import javax.inject.Inject
 import android.media.AudioAttributes as AndroidAudioAttributes
 
 @AndroidEntryPoint
-class PlayerService : Service(), CoroutineScope {
+class PlayerService : Service() {
 
     companion object {
         private const val KEY_STATION = "0e877531-9b37-477d-853d-357462d88c63"
@@ -72,18 +73,12 @@ class PlayerService : Service(), CoroutineScope {
         }
     }
 
-    override val coroutineContext = SupervisorJob() + Executors.newSingleThreadExecutor {
-        Thread(it, "FoxyRadioPlayerServiceThread")
-    }.asCoroutineDispatcher()
+    @PlayerServiceCoroutineScope
+    @Inject
+    lateinit var playerScope: CoroutineScope
 
     @Inject
-    lateinit var playerLocalStorage: IPlayerLocalStorage
-
-    @Inject
-    lateinit var ultraDataRemoteStorage: IUltraRemoteStorage
-
-    @Inject
-    lateinit var imageProvider: ImageProvider
+    lateinit var playerServiceInteractor: IPlayerServiceInteractor
 
     private val notificationFabric by lazy { PlayerNotificationFabric(this) }
 
@@ -115,9 +110,6 @@ class PlayerService : Service(), CoroutineScope {
     }
 
     private var mediaSession: MediaSession? = null
-//    private var playerPolling: Job? = null
-
-    private val webSocketProvider = UltraWebSocketProvider()
 
     override fun onCreate() {
         super.onCreate()
@@ -144,17 +136,14 @@ class PlayerService : Service(), CoroutineScope {
             startForeground(
                 PlayerNotificationFabric.notificationID,
                 notificationFabric.getNotification(
-                    playerLocalStorage.trackData.value,
-                    mediaSession?.sessionToken,
-                    playerLocalStorage.playerState.value
+                    playerServiceInteractor.trackData.value,
+                    mediaSession,
+                    playerServiceInteractor.playerState.value
                 )
             )
             play(station.url)
 
-            ultraDataRemoteStorage.startFetching()
-
-//            playerPolling?.cancel()
-//            playerPolling = startPlayerPolling()
+            playerServiceInteractor.startFetching(station)
 
             currentStation = station
         }
@@ -165,22 +154,14 @@ class PlayerService : Service(), CoroutineScope {
     override fun onDestroy() {
         Log.i("DDLOG", "destroying service")
 
+        currentStation?.let { playerServiceInteractor.stopFetching(it) }
         isRunning = false
         currentStation = null
 
         unregisterReceiver(broadcastReceiver)
         player.release()
-//        playerPolling?.cancel()
-//        playerPolling = null
 
-        ultraDataRemoteStorage.stopFetching()
-
-        launch {
-            playerLocalStorage.setPlayerTrackData(TrackDataState.Idle)
-            playerLocalStorage.setPlayerState(PlayerState.IDLE)
-
-            coroutineContext.cancel()
-        }
+        playerScope.cancel()
 
         super.onDestroy()
     }
@@ -200,37 +181,9 @@ class PlayerService : Service(), CoroutineScope {
     }
 
     private fun subscribeStateChanged() {
-        Log.i("DDLOG", "subscribe socket flow")
-        ultraDataRemoteStorage
+        playerServiceInteractor
             .trackData
-            .onEach { track ->
-                Log.i("DDLOG", "track flow onEach")
-                val coverBitmap = imageProvider.load(track.imageUrl)
-
-                playerLocalStorage.setPlayerTrackData(
-                    TrackDataState.Ready(
-                        track.id,
-                        track.title,
-                        track.artist,
-                        track.album,
-                        coverBitmap,
-                        CoverColorExtractor.extractColors(coverBitmap),
-                        MusicServicesData(
-                            track.youtubeMusicUrl,
-                            track.youtubeUrl,
-                            track.spotifyUrl,
-                            track.iTunesUrl,
-                            track.yandexMusicUrl
-                        ),
-                        track.previousTracks
-                    )
-                )
-            }
-            .launchIn(this)
-
-        playerLocalStorage
-            .trackData
-            .combine(playerLocalStorage.playerState) { trackData, playerState ->
+            .combine(playerServiceInteractor.playerState) { trackData, playerState ->
                 mediaSession?.setPlaybackState(
                     PlaybackState.Builder()
                         .setActions(
@@ -247,55 +200,20 @@ class PlayerService : Service(), CoroutineScope {
                         .build()
                 )
 
-                val image: Bitmap?
-                val album: String?
-                val artist: String
-                val title: String
-
-                when (trackData) {
-                    TrackDataState.Idle -> {
-                        image = getDrawable(R.drawable.ic_no_music_playing)?.toBitmap()
-                        album = ""
-                        artist = ""
-                        title = getString(R.string.player_title_idle)
-                    }
-                    TrackDataState.Loading -> {
-                        image = getDrawable(R.drawable.ic_no_music_playing)?.toBitmap()
-                        album = ""
-                        artist = ""
-                        title = getString(R.string.player_title_loading)
-                    }
-                    is TrackDataState.Ready -> {
-                        image = trackData.cover
-                        album = trackData.album
-                        artist = trackData.artist
-                        title = trackData.title
-                    }
-                }
-
-                mediaSession?.setMetadata(
-                    MediaMetadata.Builder()
-                        .putBitmap(MediaMetadata.METADATA_KEY_ALBUM_ART, image)
-                        .putString(MediaMetadata.METADATA_KEY_ALBUM, album)
-                        .putString(MediaMetadata.METADATA_KEY_ARTIST, artist)
-                        .putString(MediaMetadata.METADATA_KEY_TITLE, title)
-                        .build()
-                )
-
                 if (playerState != PlayerState.IDLE) {
                     NotificationPublisher.notify(
                         this,
                         PlayerNotificationFabric.notificationID,
                         notificationFabric.getNotification(
                             trackData,
-                            mediaSession?.sessionToken,
+                            mediaSession,
                             playerState
                         )
                     )
                 }
             }
             .debounce(100)
-            .launchIn(this)
+            .launchIn(playerScope)
     }
 
     override fun onBind(intent: Intent?): IBinder? = null
@@ -318,21 +236,17 @@ class PlayerService : Service(), CoroutineScope {
 
     private val playerStateListener = object : Player.Listener {
         override fun onPlaybackStateChanged(playbackState: Int) {
-            launch {
-                playerLocalStorage.setPlayerState(
-                    when (playbackState) {
-                        Player.STATE_BUFFERING -> PlayerState.BUFFERING
-                        Player.STATE_READY -> PlayerState.PLAYING
-                        Player.STATE_IDLE -> if (currentStation == null)
-                            PlayerState.IDLE
-                        else
-                            PlayerState.PAUSED
-                        else -> {
-                            Log.e("PlayerService", "Unsupported player state")
-                            PlayerState.IDLE
-                        }
-                    }
-                )
+            playerServiceInteractor.playerState.value = when (playbackState) {
+                Player.STATE_BUFFERING -> PlayerState.BUFFERING
+                Player.STATE_READY -> PlayerState.PLAYING
+                Player.STATE_IDLE -> if (currentStation == null)
+                    PlayerState.IDLE
+                else
+                    PlayerState.PAUSED
+                else -> {
+                    Log.e("PlayerService", "Unsupported player state")
+                    PlayerState.IDLE
+                }
             }
         }
 

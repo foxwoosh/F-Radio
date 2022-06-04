@@ -5,7 +5,7 @@ data class Track(
     val title: String,
     val artist: String,
     val album: String?,
-    val imageUrl: String,
+    val coverUrl: String,
     val youtubeMusicUrl: String?,
     val youtubeUrl: String?,
     val spotifyUrl: String?,

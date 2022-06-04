@@ -6,6 +6,7 @@ import android.content.Context
 import android.content.Intent
 import android.graphics.Bitmap
 import android.graphics.drawable.Icon
+import android.media.MediaMetadata
 import android.media.session.MediaSession
 import android.os.Build
 import androidx.compose.ui.graphics.Color
@@ -100,7 +101,7 @@ class PlayerNotificationFabric(private val context: Context) {
 
     fun getNotification(
         trackData: TrackDataState,
-        mediaSessionToken: MediaSession.Token?,
+        mediaSession: MediaSession?,
         playerState: PlayerState
     ): Notification {
         val builder = if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
@@ -112,6 +113,7 @@ class PlayerNotificationFabric(private val context: Context) {
         val image: Bitmap?
         val artist: String
         val title: String
+        val album: String?
         val color: Color
 
         when (trackData) {
@@ -119,21 +121,40 @@ class PlayerNotificationFabric(private val context: Context) {
                 image = context.getDrawable(R.drawable.ic_no_music_playing)?.toBitmap()
                 artist = ""
                 title = context.getString(R.string.player_title_idle)
+                album = null
                 color = Color.Black
             }
             TrackDataState.Loading -> {
                 image = context.getDrawable(R.drawable.ic_no_music_playing)?.toBitmap()
                 artist = ""
                 title = context.getString(R.string.player_title_loading)
+                album = null
+                color = Color.Black
+            }
+            TrackDataState.Error -> {
+                image = context.getDrawable(R.drawable.ic_no_music_playing)?.toBitmap()
+                artist = ""
+                title = context.getString(R.string.player_title_error)
+                album = null
                 color = Color.Black
             }
             is TrackDataState.Ready -> {
                 image = trackData.cover
                 artist = trackData.artist
                 title = trackData.title
+                album = trackData.album
                 color = trackData.colors.surfaceColor
             }
         }
+
+        mediaSession?.setMetadata(
+            MediaMetadata.Builder()
+                .putBitmap(MediaMetadata.METADATA_KEY_ALBUM_ART, image)
+                .putString(MediaMetadata.METADATA_KEY_ALBUM, album)
+                .putString(MediaMetadata.METADATA_KEY_ARTIST, artist)
+                .putString(MediaMetadata.METADATA_KEY_TITLE, title)
+                .build()
+        )
 
         builder
             .setColor(color.value.toInt())
@@ -147,7 +168,7 @@ class PlayerNotificationFabric(private val context: Context) {
             .setShowWhen(false)
             .setStyle(
                 Notification.MediaStyle().also {
-                    it.setMediaSession(mediaSessionToken)
+                    it.setMediaSession(mediaSession?.sessionToken)
                     when (playerState) {
                         PlayerState.PLAYING,
                         PlayerState.PAUSED -> it.setShowActionsInCompactView(0, 1)

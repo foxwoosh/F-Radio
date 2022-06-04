@@ -5,6 +5,7 @@
     <string name="notification_action_stop">Стоп</string>
     <string name="player_title_idle">Станция не выбрана</string>
     <string name="player_title_loading">Загрузка…</string>
+    <string name="player_title_error">Ошибка при загрузке информации</string>
     <string name="player_select_station_button">Выбрать</string>
     <string name="station_selector_title">Выберите станцию</string>
     <string name="player_page_no_data_previous_tracks">Нет предыдущих треков</string>

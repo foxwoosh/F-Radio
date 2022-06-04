@@ -1,7 +1,7 @@
 package com.foxwoosh.radio.di.modules
 
-import com.foxwoosh.radio.image_loader.CoilImageProvider
-import com.foxwoosh.radio.image_loader.ImageProvider
+import com.foxwoosh.radio.image_provider.CoilImageProvider
+import com.foxwoosh.radio.image_provider.ImageProvider
 import dagger.Binds
 import dagger.Module
 import dagger.hilt.InstallIn

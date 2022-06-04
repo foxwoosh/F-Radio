@@ -6,6 +6,7 @@ import com.foxwoosh.radio.storage.models.PreviousTrack
 sealed class TrackDataState {
     object Idle : TrackDataState()
     object Loading : TrackDataState()
+    object Error : TrackDataState()
     data class Ready(
         val id: String,
         val title: String,

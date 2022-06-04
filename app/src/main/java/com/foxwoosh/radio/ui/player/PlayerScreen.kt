@@ -97,6 +97,14 @@ fun PlayerScreen() {
             musicServices = null
             previousTracks = null
         }
+        TrackDataState.Error -> {
+            title = context.getString(R.string.player_title_error)
+            artist = ""
+            cover = null
+            colors = PlayerColors.default
+            musicServices = null
+            previousTracks = null
+        }
         is TrackDataState.Ready -> {
             val data = trackData as TrackDataState.Ready
 
