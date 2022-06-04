@@ -1,6 +1,5 @@
 package com.foxwoosh.radio.domain
 
-import android.util.Log
 import com.foxwoosh.radio.di.modules.PlayerServiceCoroutineScope
 import com.foxwoosh.radio.image_provider.ImageProvider
 import com.foxwoosh.radio.player.helpers.CoverColorExtractor
@@ -13,8 +12,6 @@ import com.foxwoosh.radio.storage.remote.ultra.IUltraRemoteStorage
 import com.foxwoosh.radio.websocket.ConnectionState
 import dagger.hilt.android.scopes.ServiceScoped
 import kotlinx.coroutines.CoroutineScope
-import kotlinx.coroutines.flow.MutableStateFlow
-import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.launchIn
 import kotlinx.coroutines.flow.onEach
 import javax.inject.Inject
@@ -36,7 +33,6 @@ class PlayerServiceInteractor @Inject constructor(
             .onEach { track ->
                 val image = imageProvider.load(track.coverUrl)
 
-                Log.i("DDLOG", "emit track data ${track.title} ${track.artist}")
                 playerLocalStorage.trackData.emit(
                     TrackDataState.Ready(
                         id = track.id,

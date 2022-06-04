@@ -17,8 +17,8 @@ class PlayerViewModel @Inject constructor(
     private val lyricsRemoteStorage: ILyricsRemoteStorage
 ) : ViewModel() {
 
-    val trackDataFlow = playerLocalStorage.trackData
-    val playerStateFlow = playerLocalStorage.playerState
+    val trackDataFlow = playerLocalStorage.trackData.asStateFlow()
+    val playerStateFlow = playerLocalStorage.playerState.asStateFlow()
 
     private val mutableLyricsStateFlow = MutableStateFlow<LyricsDataState>(LyricsDataState.NoData)
     val lyricsStateFlow = mutableLyricsStateFlow.asStateFlow()
