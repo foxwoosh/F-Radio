@@ -2,13 +2,13 @@ package com.foxwoosh.radio.storage.remote.lyrics
 
 import com.foxwoosh.radio.BuildConfig
 import com.foxwoosh.radio.api.ApiService
-import kotlinx.coroutines.flow.MutableStateFlow
+import kotlinx.coroutines.flow.MutableSharedFlow
 import javax.inject.Inject
 
 class LyricsRemoteStorage @Inject constructor(
     private val apiService: ApiService
 ) : ILyricsRemoteStorage {
-    override val lyricsFlow = MutableStateFlow("")
+    override val lyricsFlow = MutableSharedFlow<String>()
 
     override suspend fun fetchLyrics(title: String, artist: String) {
         lyricsFlow.emit(

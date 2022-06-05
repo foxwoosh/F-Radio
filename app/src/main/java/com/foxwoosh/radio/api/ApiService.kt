@@ -3,10 +3,7 @@ package com.foxwoosh.radio.api
 import com.foxwoosh.radio.AppJson
 import com.foxwoosh.radio.api.foxy.responses.LyricsResponse
 import com.foxwoosh.radio.api.musixmatch.LyricsMatchResponse
-import com.foxwoosh.radio.api.ultra.responses.CheckIDResponse
-import com.foxwoosh.radio.api.ultra.responses.CurrentTrackResponse
 import com.jakewharton.retrofit2.converter.kotlinx.serialization.asConverterFactory
-import kotlinx.serialization.json.Json
 import okhttp3.MediaType.Companion.toMediaType
 import okhttp3.OkHttpClient
 import retrofit2.Retrofit

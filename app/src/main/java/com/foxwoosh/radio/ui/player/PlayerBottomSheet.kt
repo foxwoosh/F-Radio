@@ -2,24 +2,22 @@
 
 package com.foxwoosh.radio.ui.player
 
-import androidx.compose.foundation.Image
-import androidx.compose.foundation.background
+import androidx.compose.animation.animateContentSize
+import androidx.compose.foundation.*
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
-import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.shape.RoundedCornerShape
-import androidx.compose.foundation.verticalScroll
 import androidx.compose.material.*
-import androidx.compose.runtime.Composable
-import androidx.compose.runtime.LaunchedEffect
-import androidx.compose.runtime.rememberCoroutineScope
+import androidx.compose.runtime.*
+import androidx.compose.runtime.saveable.rememberSaveable
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.alpha
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.ColorFilter
+import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.font.FontWeight
@@ -27,6 +25,8 @@ import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.dp
 import coil.compose.AsyncImage
 import com.foxwoosh.radio.R
+import com.foxwoosh.radio.openURL
+import com.foxwoosh.radio.player.models.MusicServicesData
 import com.foxwoosh.radio.storage.models.PreviousTrack
 import com.foxwoosh.radio.ui.currentOffset
 import com.foxwoosh.radio.ui.theme.BlackOverlay
@@ -203,41 +203,70 @@ fun PreviousTracksList(
     secondaryTextColor: Color,
     modifier: Modifier = Modifier
 ) {
+    val context = LocalContext.current
+
     LazyColumn(
         modifier = modifier,
         contentPadding = WindowInsets.navigationBars.asPaddingValues()
     ) {
-        items(previousTracks + previousTracks) { track ->
-            Row(
+        items(previousTracks) { track ->
+            var servicesOpened by rememberSaveable { mutableStateOf(false) }
+
+            Column(
                 modifier = Modifier
+                    .clickable { servicesOpened = !servicesOpened }
                     .padding(horizontal = 16.dp, vertical = 10.dp)
-                    .fillMaxWidth(),
-                verticalAlignment = Alignment.CenterVertically
+                    .fillMaxWidth()
+                    .animateContentSize(),
             ) {
-                AsyncImage(
-                    model = track.coverUrl,
-                    contentDescription = "Cover",
+                Row(
                     modifier = Modifier
-                        .size(48.dp)
-                        .clip(RoundedCornerShape(8.dp))
-                )
-
-                Spacer(modifier = Modifier.width(12.dp))
-
-                Column(
-                    Modifier.fillMaxWidth()
+                        .fillMaxWidth(),
+                    verticalAlignment = Alignment.CenterVertically
                 ) {
-                    Text(
-                        text = track.title,
-                        color = primaryTextColor,
-                        fontWeight = FontWeight.Bold
+                    AsyncImage(
+                        model = track.coverUrl,
+                        contentDescription = "Cover",
+                        modifier = Modifier
+                            .size(48.dp)
+                            .clip(RoundedCornerShape(8.dp))
                     )
-                    Text(
-                        text = track.artist,
-                        color = secondaryTextColor
-                    )
+
+                    Spacer(modifier = Modifier.width(12.dp))
+
+                    Column(
+                        Modifier.fillMaxWidth()
+                    ) {
+                        Text(
+                            text = track.title,
+                            color = primaryTextColor,
+                            fontWeight = FontWeight.Bold
+                        )
+                        Text(
+                            text = track.artist,
+                            color = secondaryTextColor
+                        )
+                    }
                 }
 
+                if (servicesOpened) {
+                    PlayerMusicServices(
+                        modifier = Modifier
+                            .fillMaxWidth()
+                            .padding(vertical = 10.dp),
+                        musicServices = MusicServicesData(
+                            track.youtubeMusicUrl,
+                            track.youtubeUrl,
+                            track.spotifyUrl,
+                            track.iTunesUrl,
+                            track.yandexMusicUrl
+                        ),
+                        musicServiceSelected = { url ->
+                            context.openURL(url)
+                            servicesOpened = false
+                        }
+                    )
+                }
             }
         }
     }

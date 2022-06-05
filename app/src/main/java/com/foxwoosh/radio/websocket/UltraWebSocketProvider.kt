@@ -128,7 +128,16 @@ class UltraWebSocketProvider @Inject constructor() : CoroutineScope {
                 message.iTunesUrl,
                 message.yandexMusicUrl,
                 message.previousTracks.map {
-                    PreviousTrack(it.title, it.artist, "${message.root}${it.cover}")
+                    PreviousTrack(
+                        it.title,
+                        it.artist,
+                        "${message.root}${it.cover}",
+                        it.youtubeMusicUrl,
+                        it.youtubeUrl,
+                        it.spotifyUrl,
+                        it.itunesUrl,
+                        it.yandexMusicUrl
+                    )
                 }.reversed()
             )
         )
@@ -140,14 +149,8 @@ class UltraWebSocketProvider @Inject constructor() : CoroutineScope {
 
             mutableConnectionState.value = ConnectionState.Connected
 
-            val clientInfoMessage = ParametrizedMessage(
-                ParametrizedMessage.Type.SUBSCRIBE,
-                mapOf(
-                    "info" to "${Build.MANUFACTURER} ${Build.MODEL} ${Build.VERSION.RELEASE}"
-                )
-            )
             webSocket.send(
-                AppJson.encodeToString(clientInfoMessage)
+                AppJson.encodeToString(getClientInfoMessage())
             )
         }
 
@@ -182,4 +185,11 @@ class UltraWebSocketProvider @Inject constructor() : CoroutineScope {
             mutableConnectionState.value = ConnectionState.Failure(t)
         }
     }
+
+    private fun getClientInfoMessage() = ParametrizedMessage(
+        ParametrizedMessage.Type.SUBSCRIBE,
+        mapOf(
+            "info" to "${Build.MANUFACTURER} ${Build.MODEL} ${Build.VERSION.RELEASE}"
+        )
+    )
 }
