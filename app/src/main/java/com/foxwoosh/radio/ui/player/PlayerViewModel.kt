@@ -45,15 +45,18 @@ class PlayerViewModel @Inject constructor(
         val trackData = trackDataFlow.value
         if (trackData is TrackDataState.Ready && lastFetchedLyricsTrackID != trackData.id) {
             viewModelScope.launch {
-                Log.i("DDLOG", "fetching lyrics")
-                mutableLyricsStateFlow.emit(LyricsDataState.Loading)
+                try {
+                    mutableLyricsStateFlow.emit(LyricsDataState.Loading)
 
-                lyricsRemoteStorage.fetchLyrics(
-                    trackData.title,
-                    trackData.artist
-                )
+                    lyricsRemoteStorage.fetchLyrics(
+                        trackData.title,
+                        trackData.artist
+                    )
 
-                lastFetchedLyricsTrackID = trackData.id
+                    lastFetchedLyricsTrackID = trackData.id
+                } catch (e: Exception) {
+                    mutableLyricsStateFlow.emit(LyricsDataState.Error)
+                }
             }
         }
     }

@@ -6,6 +6,7 @@ import android.net.Uri
 import android.provider.Browser
 import android.util.Log
 import android.widget.Toast
+import kotlinx.serialization.json.Json
 
 fun Context.openURL(url: String) {
     val validUrl = if (!url.startsWith("http", true)) {
@@ -34,4 +35,10 @@ fun Context.copyToClipboard(text: String) {
         )
     )
     Toast.makeText(this, R.string.common_copied_to_clipboard, Toast.LENGTH_SHORT).show()
+}
+
+val AppJson = Json {
+    ignoreUnknownKeys = true
+    isLenient = true
+    prettyPrint = true
 }

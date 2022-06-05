@@ -1,13 +1,17 @@
 package com.foxwoosh.radio.websocket
 
+import android.os.Build
 import android.util.Log
+import com.foxwoosh.radio.AppJson
 import com.foxwoosh.radio.storage.models.PreviousTrack
 import com.foxwoosh.radio.storage.models.Track
+import com.foxwoosh.radio.websocket.messages.ParametrizedMessage
 import com.foxwoosh.radio.websocket.messages.UltraSongDataWebSocketMessage
 import com.foxwoosh.radio.websocket.messages.UltraWebSocketMessage
 import kotlinx.coroutines.*
 import kotlinx.coroutines.flow.*
 import kotlinx.serialization.decodeFromString
+import kotlinx.serialization.encodeToString
 import kotlinx.serialization.json.Json
 import kotlinx.serialization.json.jsonObject
 import kotlinx.serialization.json.jsonPrimitive
@@ -15,9 +19,16 @@ import okhttp3.*
 import java.util.concurrent.TimeUnit
 import javax.inject.Inject
 import javax.inject.Singleton
+import kotlin.time.Duration
+import kotlin.time.Duration.Companion.milliseconds
+import kotlin.time.ExperimentalTime
 
 @Singleton
 class UltraWebSocketProvider @Inject constructor() : CoroutineScope {
+
+    private companion object {
+        const val TAG = "UltraWebSocket"
+    }
 
     private val job = SupervisorJob()
     override val coroutineContext = job + Dispatchers.IO
@@ -36,11 +47,40 @@ class UltraWebSocketProvider @Inject constructor() : CoroutineScope {
     private val mutableConnectionState = MutableStateFlow<ConnectionState>(ConnectionState.Initial)
     val connectionState = mutableConnectionState.asStateFlow()
 
+    private val reconnectDelay = 2_000
+    private var reconnectJob: Job? = null
+    private var lastReconnectTry = Duration.ZERO
+
     val isOpened: Boolean
         get() = connectionState.value is ConnectionState.Connected
 
+    init {
+        connectionState
+            .onEach {
+                if (needReconnect(it)) reconnect()
+            }
+            .launchIn(this)
+    }
+
+    private fun needReconnect(status: ConnectionState): Boolean =
+        status is ConnectionState.Failure && reconnectJob == null
+
+    private fun reconnect() {
+        reconnectJob = launch {
+            val currentTime = System.currentTimeMillis().milliseconds
+            val diff = currentTime.minus(lastReconnectTry).inWholeMilliseconds
+            if (diff < reconnectDelay) {
+                delay(reconnectDelay - diff)
+            }
+            lastReconnectTry = System.currentTimeMillis().milliseconds
+
+            connect()
+            reconnectJob = null
+        }
+    }
+
     fun connect() {
-        if (webSocket == null)
+        if (webSocket == null && !isOpened)
             mutableConnectionState.value = ConnectionState.Connecting
 
             webSocket = httpClient.newWebSocket(
@@ -96,16 +136,25 @@ class UltraWebSocketProvider @Inject constructor() : CoroutineScope {
 
     private val listener = object : WebSocketListener() {
         override fun onOpen(webSocket: WebSocket, response: Response) {
-            Log.i("DDLOG", "onOpen")
+            Log.i(TAG, "onOpen")
 
             mutableConnectionState.value = ConnectionState.Connected
+
+            val clientInfoMessage = ParametrizedMessage(
+                ParametrizedMessage.Type.SUBSCRIBE,
+                mapOf(
+                    "info" to "${Build.MANUFACTURER} ${Build.MODEL} ${Build.VERSION.RELEASE}"
+                )
+            )
+            webSocket.send(
+                AppJson.encodeToString(clientInfoMessage)
+            )
         }
 
         override fun onMessage(webSocket: WebSocket, text: String) {
-            Log.i("DDLOG", "onMessage")
+            Log.i(TAG, "onMessage")
 
             launch {
-                Log.i("DDLOG", "onMessageLaunch")
                 when (val response = getResponse(text)) {
                     is UltraSongDataWebSocketMessage -> {
                         handleDataSongMessage(response)
@@ -115,19 +164,19 @@ class UltraWebSocketProvider @Inject constructor() : CoroutineScope {
         }
 
         override fun onClosing(webSocket: WebSocket, code: Int, reason: String) {
-            Log.i("DDLOG", "onClosing $code, $reason")
+            Log.i(TAG, "onClosing $code, $reason")
             webSocket.close(code, reason)
         }
 
         override fun onClosed(webSocket: WebSocket, code: Int, reason: String) {
-            Log.i("DDLOG", "onClosed $code, $reason")
+            Log.i(TAG, "onClosed $code, $reason")
 
             releaseSocket()
             mutableConnectionState.value = ConnectionState.Disconnected(code)
         }
 
         override fun onFailure(webSocket: WebSocket, t: Throwable, response: Response?) {
-            Log.i("DDLOG", "onFailure: ${t.message}")
+            Log.i(TAG, "onFailure: ${t.message}")
 
             releaseSocket()
             mutableConnectionState.value = ConnectionState.Failure(t)

@@ -45,6 +45,7 @@ android {
         }
 
         buildConfigField("String", "MUSIXMATCH_KEY", p.getProperty("musixmatchKey"))
+        buildConfigField("String", "FOXY_KEY", p.getProperty("foxyKey"))
     }
 
     signingConfigs {

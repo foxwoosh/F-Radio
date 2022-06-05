@@ -8,21 +8,22 @@ import javax.inject.Inject
 class LyricsRemoteStorage @Inject constructor(
     private val apiService: ApiService
 ) : ILyricsRemoteStorage {
-    override val lyricsFlow = MutableStateFlow<String>("")
+    override val lyricsFlow = MutableStateFlow("")
 
     override suspend fun fetchLyrics(title: String, artist: String) {
         lyricsFlow.emit(
-            try {
-                apiService
-                    .musixmatch
-                    .getLyrics(BuildConfig.MUSIXMATCH_KEY, title, artist)
-                    .message
-                    .body
-                    .lyrics
-                    .lyrics_body
-            } catch (e: Exception) {
-                ""
-            }
+            apiService
+                .foxy
+                .getLyrics(
+                    BuildConfig.FOXY_KEY,
+                    "abs",
+                    fixQuery("$artist $title")
+                )
+                .lyrics
         )
     }
+
+    private fun fixQuery(query: String) = query
+        .replace(Regex("\\(.*?\\)"),"")
+        .replace("&", "")
 }

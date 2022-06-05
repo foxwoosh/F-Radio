@@ -154,7 +154,8 @@ fun PlayerBottomSheetContent(
                 }
                 PlayerBottomSheetPage.LYRICS.ordinal -> {
                     when (lyricsState) {
-                        is LyricsDataState.NoData -> Box(
+                        is LyricsDataState.NoData,
+                        is LyricsDataState.Error -> Box(
                             modifier = Modifier.fillMaxSize(),
                             contentAlignment = Alignment.Center
                         ) {
