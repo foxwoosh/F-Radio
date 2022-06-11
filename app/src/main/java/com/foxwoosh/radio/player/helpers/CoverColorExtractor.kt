@@ -10,7 +10,6 @@ import com.foxwoosh.radio.ui.theme.Tundora
 
 object CoverColorExtractor {
     fun extractColors(bitmap: Bitmap): PlayerColors {
-        Log.i("DDLOG", Thread.currentThread().name)
         val palette = Palette.Builder(bitmap).generate()
 
         val swatches = getSwatchesInPriorityOrder(palette)
@@ -18,12 +17,19 @@ object CoverColorExtractor {
         val firstSwatch = swatches.getOrNull(0)
         val secondSwatch = swatches.getOrNull(1)
 
+        val surfaceColor = firstSwatch?.rgb?.let { Color(it) }
+            ?: Color.Black
+        val vibrantSurfaceColor = secondSwatch?.rgb?.let { Color(it) }
+            ?: firstSwatch?.rgb?.let { Color(it).adjustBrightness(0.9f) }
+            ?: Tundora
+
         return PlayerColors(
-            firstSwatch?.rgb?.let { Color(it) }
-                ?: Color.Black,
-            secondSwatch?.rgb?.let { Color(it) }
-                ?: firstSwatch?.rgb?.let { Color(it).adjustBrightness(0.9f) }
-                ?: Tundora,
+            surfaceColor,
+            if (surfaceColor == vibrantSurfaceColor) {
+                surfaceColor.adjustBrightness(0.9f)
+            } else {
+                vibrantSurfaceColor
+            },
             firstSwatch?.bodyTextColor?.let { Color(it) }
                 ?: Color.White,
             firstSwatch?.bodyTextColor?.let { Color(it) }

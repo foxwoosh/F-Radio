@@ -5,7 +5,7 @@ import android.graphics.Bitmap
 sealed class TrackDataState {
     object Idle : TrackDataState()
     object Loading : TrackDataState()
-    object Error : TrackDataState()
+    data class Error(val errorText: String) : TrackDataState()
     data class Ready(
         val id: String,
         val title: String,
@@ -13,7 +13,6 @@ sealed class TrackDataState {
         val album: String?,
         val cover: Bitmap,
         val colors: PlayerColors,
-        val musicServices: MusicServicesData,
-//        val previousTracks: List<PreviousTrack>
+        val musicServices: MusicServicesData
     ) : TrackDataState()
 }

@@ -7,6 +7,7 @@
 package com.foxwoosh.radio.ui.player
 
 import android.graphics.Bitmap
+import android.util.Log
 import androidx.activity.compose.BackHandler
 import androidx.annotation.DrawableRes
 import androidx.compose.animation.*
@@ -38,10 +39,7 @@ import com.foxwoosh.radio.R
 import com.foxwoosh.radio.copyToClipboard
 import com.foxwoosh.radio.openURL
 import com.foxwoosh.radio.player.PlayerService
-import com.foxwoosh.radio.player.models.MusicServicesData
-import com.foxwoosh.radio.player.models.PlayerColors
-import com.foxwoosh.radio.player.models.PlayerState
-import com.foxwoosh.radio.player.models.TrackDataState
+import com.foxwoosh.radio.player.models.*
 import com.foxwoosh.radio.ui.borderlessClickable
 import com.foxwoosh.radio.ui.singleCondition
 import kotlinx.coroutines.launch
@@ -51,7 +49,6 @@ private const val trackChangeDuration = 1_000
 
 @Composable
 fun PlayerScreen() {
-    val context = LocalContext.current
     val config = LocalConfiguration.current
     val density = LocalDensity.current
 
@@ -62,8 +59,6 @@ fun PlayerScreen() {
     val previousTracks by viewModel.previousTracksFlow.collectAsState()
     val lyricsState by viewModel.lyricsStateFlow.collectAsState()
 
-    val backdropStationSelectorState =
-        rememberBackdropScaffoldState(initialValue = BackdropValue.Concealed)
     val bottomSheetScaffoldState = rememberBottomSheetScaffoldState()
 
     val scope = rememberCoroutineScope()
@@ -88,7 +83,7 @@ fun PlayerScreen() {
 
     when (trackData) {
         TrackDataState.Idle -> {
-            title = context.getString(R.string.player_title_idle)
+            title = stringResource(R.string.player_title_idle)
             artist = ""
             cover = null
             colors = PlayerColors.default
@@ -98,7 +93,7 @@ fun PlayerScreen() {
             actualBottomSheetPeekHeight = 0.dp
         }
         TrackDataState.Loading -> {
-            title = context.getString(R.string.player_title_loading)
+            title = stringResource(R.string.player_title_loading)
             artist = ""
             cover = null
             colors = PlayerColors.default
@@ -107,8 +102,8 @@ fun PlayerScreen() {
             gradientOffsetY = 0f
             actualBottomSheetPeekHeight = 0.dp
         }
-        TrackDataState.Error -> {
-            title = context.getString(R.string.player_title_error)
+        is TrackDataState.Error -> {
+            title = (trackData as TrackDataState.Error).errorText
             artist = ""
             cover = null
             colors = PlayerColors.default
@@ -150,15 +145,9 @@ fun PlayerScreen() {
         }
     }
 
-    BackHandler(
-        bottomSheetScaffoldState.bottomSheetState.isExpanded
-                || backdropStationSelectorState.isRevealed
-    ) {
+    BackHandler(bottomSheetScaffoldState.bottomSheetState.isExpanded) {
         if (bottomSheetScaffoldState.bottomSheetState.isExpanded) {
             scope.launch { bottomSheetScaffoldState.bottomSheetState.collapse() }
-        }
-        if (backdropStationSelectorState.isRevealed) {
-            scope.launch { backdropStationSelectorState.conceal() }
         }
     }
 
@@ -180,92 +169,69 @@ fun PlayerScreen() {
     )
 
     Surface {
-        PlayerBackdropStationSelector(
-            surfaceColor = surfaceColor,
-            primaryTextColor = primaryTextColor,
-            secondaryTextColor = secondaryTextColor,
-            state = backdropStationSelectorState
-        ) {
-            BottomSheetScaffold(
-                scaffoldState = bottomSheetScaffoldState,
-                sheetContent = {
-                    PlayerBottomSheetContent(
-                        state = bottomSheetScaffoldState,
-                        statusBarHeight = statusBarHeight,
-                        backgroundColor = surfaceColor,
-                        primaryTextColor = primaryTextColor,
-                        secondaryTextColor = secondaryTextColor,
-                        previousTracks = previousTracks,
-                        lyricsState = lyricsState,
-                        onPageBecomesVisible = { page ->
-                            when (page) {
-                                PlayerBottomSheetPage.LYRICS ->
-                                    viewModel.fetchLyricsForCurrentTrack()
-                            }
+        BottomSheetScaffold(
+            scaffoldState = bottomSheetScaffoldState,
+            sheetContent = {
+                PlayerBottomSheetContent(
+                    state = bottomSheetScaffoldState,
+                    statusBarHeight = statusBarHeight,
+                    backgroundColor = surfaceColor,
+                    primaryTextColor = primaryTextColor,
+                    secondaryTextColor = secondaryTextColor,
+                    previousTracks = previousTracks,
+                    lyricsState = lyricsState,
+                    onPageBecomesVisible = { page ->
+                        when (page) {
+                            PlayerBottomSheetPage.LYRICS ->
+                                viewModel.fetchLyricsForCurrentTrack()
                         }
-                    )
-                },
-                sheetShape = RoundedCornerShape(topStart = 12.dp, topEnd = 12.dp),
-                sheetPeekHeight = actualBottomSheetPeekHeight,
-//                drawerElevation = 20.dp
-                sheetElevation = 20.dp
-            ) {
-                Column(
-                    modifier = Modifier
-                        .fillMaxSize()
-                        .background(
-                            brush = Brush.radialGradient(
-                                colors = listOf(vibrantSurfaceColor, surfaceColor),
-                                center = Offset(gradientOffsetX, gradientOffsetY),
-                                tileMode = TileMode.Mirror
-                            )
-                        )
-                        .padding(bottom = defaultBottomSheetPeekHeight)
-                ) {
-                    Image(
-                        painter = painterResource(id = R.drawable.ic_arrow_down),
-                        contentDescription = "Select",
-                        modifier = Modifier
-                            .statusBarsPadding()
-                            .borderlessClickable(
-                                onClick = { scope.launch { backdropStationSelectorState.reveal() } }
-                            )
-                            .padding(16.dp),
-                        colorFilter = ColorFilter.tint(primaryTextColor)
-                    )
-
-                    Column(
-                        modifier = Modifier.fillMaxSize(),
-                        horizontalAlignment = Alignment.CenterHorizontally
-                    ) {
-                        CoverWithServices(
-                            cover = cover,
-                            musicServices = musicServices,
-                            trackDataReady = trackData is TrackDataState.Ready,
-                            modifier = Modifier
-                                .fillMaxWidth()
-                                .weight(0.6f)
-                        )
-
-                        TrackInfo(
-                            title = title,
-                            primaryTextColor = primaryTextColor,
-                            artist = artist,
-                            secondaryTextColor = secondaryTextColor,
-                            modifier = Modifier
-                                .fillMaxWidth()
-                        )
-
-                        PlaybackController(
-                            color = primaryTextColor,
-                            playerState = playerState,
-                            selectStation = { scope.launch { backdropStationSelectorState.reveal() } },
-                            modifier = Modifier
-                                .fillMaxWidth()
-                                .weight(0.15f)
-                        )
                     }
-                }
+                )
+            },
+            sheetShape = RoundedCornerShape(topStart = 12.dp, topEnd = 12.dp),
+            sheetPeekHeight = actualBottomSheetPeekHeight,
+            sheetElevation = 20.dp
+        ) {
+            Column(
+                modifier = Modifier
+                    .fillMaxSize()
+                    .background(
+                        brush = Brush.radialGradient(
+                            colors = listOf(vibrantSurfaceColor, surfaceColor),
+                            center = Offset(gradientOffsetX, gradientOffsetY),
+                            tileMode = TileMode.Mirror
+                        )
+                    )
+                    .padding(bottom = defaultBottomSheetPeekHeight)
+                    .statusBarsPadding(),
+                horizontalAlignment = Alignment.CenterHorizontally,
+                verticalArrangement = Arrangement.Center
+            ) {
+                CoverWithServices(
+                    cover = cover,
+                    musicServices = musicServices,
+                    trackDataReady = trackData is TrackDataState.Ready,
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .weight(0.6f)
+                )
+
+                TrackInfo(
+                    title = title,
+                    primaryTextColor = primaryTextColor,
+                    artist = artist,
+                    secondaryTextColor = secondaryTextColor,
+                    modifier = Modifier
+                        .fillMaxWidth()
+                )
+
+                PlaybackController(
+                    color = primaryTextColor,
+                    playerState = playerState,
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .weight(0.15f)
+                )
             }
         }
     }
@@ -450,7 +416,6 @@ fun PlayerMusicServices(
 fun PlaybackController(
     color: Color,
     playerState: PlayerState,
-    selectStation: () -> Unit,
     modifier: Modifier = Modifier
 ) {
     val context = LocalContext.current
@@ -465,8 +430,11 @@ fun PlaybackController(
             enter = scaleIn(),
             exit = scaleOut()
         ) {
-            OutlinedButton(onClick = selectStation) {
-                Text(text = stringResource(id = R.string.player_select_station_button))
+            OutlinedButton(onClick = { PlayerService.selectSource(context, Station.ULTRA) }) {
+                Text(
+                    text = "Just play the only radio my lazy ass could bring to this application and sorry I don\'t have fucking fantasy to do a cool station selector",
+                    textAlign = TextAlign.Center
+                )
             }
         }
 

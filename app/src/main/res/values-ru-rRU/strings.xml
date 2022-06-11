@@ -12,5 +12,6 @@
     <string name="player_page_no_data_lyrics">Текст не найден</string>
     <string name="player_page_title_previous_tracks">Прошлые треки</string>
     <string name="player_page_title_lyrics">Текст (beta)</string>
+    <string name="player_lyrics_beta_warning">[Тексты песен на данный момент находятся в Бете, а значит они могут отсутствовать или быть неполными. Функционал станет полным позже.]</string>
     <string name="common_copied_to_clipboard">Скопировано в буфер обмена</string>
 </resources>

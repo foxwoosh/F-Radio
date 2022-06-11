@@ -65,7 +65,7 @@ class PlayerServiceInteractor @Inject constructor(
                         playerLocalStorage.trackData.emit(TrackDataState.Loading)
                     }
                     is ConnectionState.Failure -> {
-                        playerLocalStorage.trackData.emit(TrackDataState.Error)
+                        playerLocalStorage.trackData.emit(TrackDataState.Error(state.throwable.message ?: ""))
                     }
                     else -> { /* nothing to emit */ }
                 }

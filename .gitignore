@@ -86,3 +86,4 @@ lint/tmp/
 /app/.gitignore
 /.idea/
 /release-keystore.jks
+/app/release/

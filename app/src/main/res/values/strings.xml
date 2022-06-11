@@ -12,5 +12,6 @@
     <string name="player_page_no_data_lyrics">No lyrics found</string>
     <string name="player_page_title_previous_tracks">Previous tracks</string>
     <string name="player_page_title_lyrics">Lyrics (beta)</string>
+    <string name="player_lyrics_beta_warning">[Lyrics are supported as Beta. This means it could be missing or not full. It will be updated later.]</string>
     <string name="common_copied_to_clipboard">Copied to clipboard</string>
 </resources>

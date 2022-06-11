@@ -57,7 +57,7 @@ class PlayerViewModel @Inject constructor(
 
                     lastFetchedLyricsTrackID = trackData.id
                 } catch (e: Exception) {
-                    mutableLyricsStateFlow.emit(LyricsDataState.Error)
+                    mutableLyricsStateFlow.emit(LyricsDataState.Error(e.message!!))
                 }
             }
         }

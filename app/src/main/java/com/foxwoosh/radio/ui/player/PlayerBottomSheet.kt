@@ -22,6 +22,7 @@ import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.font.FontWeight
+import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.dp
 import coil.compose.AsyncImage
@@ -154,14 +155,16 @@ fun PlayerBottomSheetContent(
                 PlayerBottomSheetPage.LYRICS.ordinal -> {
                     when (lyricsState) {
                         is LyricsDataState.NoData,
-                        is LyricsDataState.Error -> Box(
-                            modifier = Modifier.fillMaxSize(),
-                            contentAlignment = Alignment.Center
-                        ) {
-                            Text(
-                                text = stringResource(id = R.string.player_page_no_data_lyrics),
-                                color = primaryTextColor
-                            )
+                        is LyricsDataState.Error -> {
+                            Box(
+                                modifier = Modifier.fillMaxSize(),
+                                contentAlignment = Alignment.Center
+                            ) {
+                                Text(
+                                    text = lyricsState.toString(),
+                                    color = primaryTextColor
+                                )
+                            }
                         }
                         is LyricsDataState.Loading -> Box(
                             modifier = Modifier.fillMaxSize(),
@@ -173,21 +176,32 @@ fun PlayerBottomSheetContent(
                         }
                         is LyricsDataState.Ready -> {
                             val scrollState = rememberScrollState()
-                            SelectionContainer {
+                            Column(
+                                Modifier
+                                    .fillMaxSize()
+                                    .verticalScroll(scrollState)
+                                    .padding(
+                                        start = 16.dp,
+                                        end = 16.dp,
+                                        top = 16.dp,
+                                        bottom = 0.dp
+                                    )
+                                    .navigationBarsPadding()
+                            ) {
                                 Text(
-                                    text = lyricsState.lyrics,
+                                    text = stringResource(id = R.string.player_lyrics_beta_warning),
                                     color = primaryTextColor,
-                                    modifier = Modifier
-                                        .fillMaxSize()
-                                        .verticalScroll(scrollState)
-                                        .padding(
-                                            start = 16.dp,
-                                            end = 16.dp,
-                                            top = 16.dp,
-                                            bottom = 0.dp
-                                        )
-                                        .navigationBarsPadding()
+                                    fontWeight = FontWeight.Bold,
+                                    textAlign = TextAlign.Center
                                 )
+                                Spacer(modifier = Modifier.height(16.dp))
+                                SelectionContainer {
+                                    Text(
+                                        text = lyricsState.lyrics,
+                                        color = primaryTextColor,
+                                        modifier = Modifier.fillMaxSize()
+                                    )
+                                }
                             }
                         }
                     }

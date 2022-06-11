@@ -28,5 +28,5 @@
     kotlinx.serialization.KSerializer serializer(...);
 }
 
--keep public class com.foxwoosh.radio.api.**
--keep public class com.foxwoosh.radio.websocket.messages.**
+-keep public class com.foxwoosh.radio.api.** { *; }
+-keep public class com.foxwoosh.radio.websocket.messages.** { *; }

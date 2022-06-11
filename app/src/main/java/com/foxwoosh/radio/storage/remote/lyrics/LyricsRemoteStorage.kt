@@ -20,7 +20,6 @@ class LyricsRemoteStorage @Inject constructor(
                 .lyrics
                 .lyrics_body
                 .substringBefore("*****")
-                .plus("\n\n (beta version, full lyrics will come later)")
         )
     }
 
