@@ -3,13 +3,15 @@
 import java.io.FileInputStream
 import java.util.Properties
 
-val composeVersion = rootProject.extra.get("compose_version")
-val datastoreVersion = rootProject.extra.get("datastore_version")
-val hiltVersion = rootProject.extra.get("hilt_version")
-val roomVersion = rootProject.extra.get("room_version")
-val coroutinesVersion = rootProject.extra.get("coroutines_version")
-val lifecycleVersion = rootProject.extra.get("lifecycle_version")
-val exoPlayerVersion = rootProject.extra.get("exo_player_version")
+val composeVersion: String by project
+val datastoreVersion: String by project
+val hiltVersion: String by project
+val hiltComposeVersion: String by project
+val roomVersion: String by project
+val coroutinesVersion: String by project
+val lifecycleVersion: String by project
+val exoPlayerVersion: String by project
+val accompanistVersion: String by project
 
 plugins {
     id("com.android.application")
@@ -22,7 +24,6 @@ plugins {
 
 val p = Properties().apply {
     load(FileInputStream(rootProject.file("local.properties")))
-
 }
 
 android {
@@ -60,6 +61,7 @@ android {
     buildTypes {
         getByName("release") {
             isMinifyEnabled = true
+            isDebuggable = true
             proguardFiles(
                 getDefaultProguardFile("proguard-android-optimize.txt"),
                 "proguard-rules.pro"
@@ -68,6 +70,7 @@ android {
         }
         getByName("debug") {
             isMinifyEnabled = false
+            isDebuggable = true
             proguardFiles(
                 getDefaultProguardFile("proguard-android-optimize.txt"),
                 "proguard-rules.pro"
@@ -87,7 +90,7 @@ android {
         compose = true
     }
     composeOptions {
-        kotlinCompilerExtensionVersion = composeVersion.toString()
+        kotlinCompilerExtensionVersion = composeVersion
     }
     packagingOptions {
         resources {
@@ -97,7 +100,7 @@ android {
 }
 
 dependencies {
-    implementation("androidx.core:core-ktx:1.7.0")
+    implementation("androidx.core:core-ktx:1.8.0")
     implementation("androidx.activity:activity-compose:1.4.0")
     implementation("androidx.palette:palette:1.0.0")
     implementation("androidx.navigation:navigation-compose:2.4.2")
@@ -105,9 +108,8 @@ dependencies {
     implementation("androidx.compose.ui:ui:$composeVersion")
     implementation("androidx.compose.material:material:$composeVersion")
     implementation("androidx.compose.ui:ui-tooling-preview:$composeVersion")
-    implementation("androidx.hilt:hilt-navigation-compose:1.0.0")
-    implementation("com.google.accompanist:accompanist-pager:0.24.9-beta")
-    implementation("com.google.accompanist:accompanist-pager-indicators:0.24.9-beta")
+    implementation("com.google.accompanist:accompanist-pager:$accompanistVersion")
+    implementation("com.google.accompanist:accompanist-pager-indicators:$accompanistVersion")
 
     implementation("androidx.lifecycle:lifecycle-viewmodel-ktx:$lifecycleVersion")
     implementation("androidx.lifecycle:lifecycle-viewmodel-compose:$lifecycleVersion")
@@ -115,6 +117,8 @@ dependencies {
 
     implementation("org.jetbrains.kotlinx:kotlinx-coroutines-android:$coroutinesVersion")
     implementation("org.jetbrains.kotlinx:kotlinx-coroutines-core:$coroutinesVersion")
+
+    implementation("androidx.hilt:hilt-navigation-compose:$hiltComposeVersion")
 
     implementation("com.google.dagger:hilt-android:$hiltVersion")
     kapt("com.google.dagger:hilt-android-compiler:$hiltVersion")

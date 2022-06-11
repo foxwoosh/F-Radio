@@ -1,13 +1,12 @@
 package com.foxwoosh.radio.ui
 
-import com.foxwoosh.radio.R
-import android.widget.Toast
 import androidx.compose.foundation.ExperimentalFoundationApi
 import androidx.compose.foundation.combinedClickable
 import androidx.compose.foundation.interaction.MutableInteractionSource
-import androidx.compose.material.*
+import androidx.compose.material.BottomSheetScaffoldState
+import androidx.compose.material.BottomSheetValue
+import androidx.compose.material.ExperimentalMaterialApi
 import androidx.compose.material.ripple.rememberRipple
-import androidx.compose.runtime.Composable
 import androidx.compose.runtime.remember
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.composed
@@ -56,11 +55,10 @@ fun Modifier.singleCondition(
 @OptIn(ExperimentalMaterialApi::class)
 val BottomSheetScaffoldState.currentOffset: Float
     get() {
-        val fraction = bottomSheetState.progress.fraction
-        val from = bottomSheetState.progress.from
-        val to = bottomSheetState.progress.to
-
-        bottomSheetState.direction
+        val progress = bottomSheetState.progress
+        val fraction = progress.fraction
+        val from = progress.from
+        val to = progress.to
 
         return when {
             from == BottomSheetValue.Collapsed && to == BottomSheetValue.Collapsed -> 0f

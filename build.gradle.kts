@@ -5,17 +5,19 @@ buildscript {
     }
 
     extra.apply {
-        set("compose_version", "1.2.0-beta02")
-        set("datastore_version", "1.0.0")
-        set("hilt_version", "2.38.1")
-        set("room_version", "2.4.2")
-        set("coroutines_version", "1.6.1")
-        set("lifecycle_version", "2.4.1")
-        set("exo_player_version", "1.0.0-alpha03")
+        set("composeVersion", "1.2.0-beta03")
+        set("datastoreVersion", "1.0.0")
+        set("hiltVersion", "2.42")
+        set("hiltComposeVersion", "1.0.0")
+        set("roomVersion", "2.4.2")
+        set("coroutinesVersion", "1.6.1")
+        set("lifecycleVersion", "2.4.1")
+        set("exoPlayerVersion", "1.0.0-alpha03")
+        set("accompanistVersion", "0.24.10-beta")
     }
 
     dependencies {
-        classpath("com.google.dagger:hilt-android-gradle-plugin:2.38.1")
+        classpath("com.google.dagger:hilt-android-gradle-plugin:2.42")
         classpath(kotlin("gradle-plugin", version = "1.6.21"))
         classpath(kotlin("serialization", version = "1.6.21"))
     }
@@ -24,8 +26,8 @@ buildscript {
 // Top-level build file where you can add configuration options common to all sub-projects/modules.
 
 plugins {
-    id("com.android.application") version "7.2.0" apply false
-    id("com.android.library") version "7.2.0" apply false
+    id("com.android.application") version "7.2.1" apply false
+    id("com.android.library") version "7.2.1" apply false
     id("org.jetbrains.kotlin.android") version "1.6.21" apply false
 }
 

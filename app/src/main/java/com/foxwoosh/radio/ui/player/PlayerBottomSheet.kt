@@ -87,7 +87,7 @@ fun PlayerBottomSheetContent(
                 TabRowDefaults.Indicator(
                     modifier = Modifier
                         .pagerTabIndicatorOffset(pagerState, tabPositions),
-                    color = primaryTextColor
+                    color = primaryTextColor.copy(alpha = offset)
                 )
             },
             modifier = Modifier
