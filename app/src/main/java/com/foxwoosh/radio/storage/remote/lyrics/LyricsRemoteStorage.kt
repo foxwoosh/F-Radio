@@ -13,13 +13,14 @@ class LyricsRemoteStorage @Inject constructor(
     override suspend fun fetchLyrics(title: String, artist: String) {
         lyricsFlow.emit(
             apiService
-                .foxy
-                .getLyrics(
-                    BuildConfig.FOXY_KEY,
-                    "abs",
-                    fixQuery("$artist $title")
-                )
+                .musixmatch
+                .getLyrics(BuildConfig.MUSIXMATCH_KEY, title, artist)
+                .message
+                .body
                 .lyrics
+                .lyrics_body
+                .substringBefore("*****")
+                .plus("\n\n (beta version, full lyrics will come later)")
         )
     }
 

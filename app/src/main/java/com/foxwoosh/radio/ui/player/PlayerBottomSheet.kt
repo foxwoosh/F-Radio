@@ -8,6 +8,7 @@ import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
 import androidx.compose.foundation.shape.RoundedCornerShape
+import androidx.compose.foundation.text.selection.SelectionContainer
 import androidx.compose.material.*
 import androidx.compose.runtime.*
 import androidx.compose.runtime.saveable.rememberSaveable
@@ -29,7 +30,6 @@ import com.foxwoosh.radio.openURL
 import com.foxwoosh.radio.player.models.MusicServicesData
 import com.foxwoosh.radio.storage.models.PreviousTrack
 import com.foxwoosh.radio.ui.currentOffset
-import com.foxwoosh.radio.ui.theme.BlackOverlay
 import com.google.accompanist.pager.ExperimentalPagerApi
 import com.google.accompanist.pager.HorizontalPager
 import com.google.accompanist.pager.pagerTabIndicatorOffset
@@ -71,7 +71,6 @@ fun PlayerBottomSheetContent(
         Modifier
             .fillMaxSize()
             .background(backgroundColor)
-            .background(BlackOverlay)
             .padding(top = statusBarHeight * offset),
         horizontalAlignment = Alignment.CenterHorizontally
     ) {
@@ -93,7 +92,7 @@ fun PlayerBottomSheetContent(
             modifier = Modifier
                 .fillMaxWidth()
                 .height(56.dp),
-            backgroundColor = Color.Transparent
+            backgroundColor = backgroundColor
         ) {
             PlayerBottomSheetPage.values().forEach {
                 Tab(
@@ -106,7 +105,7 @@ fun PlayerBottomSheetContent(
                                     PlayerBottomSheetPage.LYRICS ->
                                         R.string.player_page_title_lyrics
                                 }
-                            )
+                            ).uppercase()
                         )
                     },
                     selected = pagerState.currentPage == it.ordinal,
@@ -174,20 +173,22 @@ fun PlayerBottomSheetContent(
                         }
                         is LyricsDataState.Ready -> {
                             val scrollState = rememberScrollState()
-                            Text(
-                                text = lyricsState.lyrics,
-                                color = primaryTextColor,
-                                modifier = Modifier
-                                    .fillMaxSize()
-                                    .verticalScroll(scrollState)
-                                    .padding(
-                                        start = 16.dp,
-                                        end = 16.dp,
-                                        top = 16.dp,
-                                        bottom = 0.dp
-                                    )
-                                    .navigationBarsPadding()
-                            )
+                            SelectionContainer {
+                                Text(
+                                    text = lyricsState.lyrics,
+                                    color = primaryTextColor,
+                                    modifier = Modifier
+                                        .fillMaxSize()
+                                        .verticalScroll(scrollState)
+                                        .padding(
+                                            start = 16.dp,
+                                            end = 16.dp,
+                                            top = 16.dp,
+                                            bottom = 0.dp
+                                        )
+                                        .navigationBarsPadding()
+                                )
+                            }
                         }
                     }
                 }
@@ -205,16 +206,26 @@ fun PreviousTracksList(
 ) {
     val context = LocalContext.current
 
+    var openedServicesHash by rememberSaveable { mutableStateOf(0) }
+
     LazyColumn(
         modifier = modifier,
         contentPadding = WindowInsets.navigationBars.asPaddingValues()
     ) {
-        items(previousTracks) { track ->
-            var servicesOpened by rememberSaveable { mutableStateOf(false) }
-
+        items(
+            items = previousTracks,
+            key = { it.artist + it.title },
+        ) { track ->
+            val trackHash = track.hashCode()
             Column(
                 modifier = Modifier
-                    .clickable { servicesOpened = !servicesOpened }
+                    .clickable {
+                        openedServicesHash = if (openedServicesHash == trackHash) {
+                            0
+                        } else {
+                            trackHash
+                        }
+                    }
                     .padding(horizontal = 16.dp, vertical = 10.dp)
                     .fillMaxWidth()
                     .animateContentSize(),
@@ -249,7 +260,7 @@ fun PreviousTracksList(
                     }
                 }
 
-                if (servicesOpened) {
+                if (trackHash == openedServicesHash) {
                     PlayerMusicServices(
                         modifier = Modifier
                             .fillMaxWidth()
@@ -263,7 +274,7 @@ fun PreviousTracksList(
                         ),
                         musicServiceSelected = { url ->
                             context.openURL(url)
-                            servicesOpened = false
+                            openedServicesHash = 0
                         }
                     )
                 }

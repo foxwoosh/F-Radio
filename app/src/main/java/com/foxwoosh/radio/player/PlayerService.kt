@@ -5,43 +5,28 @@ import android.content.BroadcastReceiver
 import android.content.Context
 import android.content.Intent
 import android.content.IntentFilter
-import android.graphics.Bitmap
-import android.media.MediaMetadata
 import android.media.session.MediaSession
 import android.media.session.PlaybackState
 import android.os.IBinder
 import android.util.Log
-import androidx.core.graphics.drawable.toBitmap
-import androidx.media3.common.AudioAttributes
-import androidx.media3.common.MediaItem
-import androidx.media3.common.PlaybackException
-import androidx.media3.common.Player
+import androidx.media3.common.*
 import androidx.media3.exoplayer.ExoPlayer
 import androidx.media3.exoplayer.RenderersFactory
 import androidx.media3.exoplayer.audio.MediaCodecAudioRenderer
 import androidx.media3.exoplayer.mediacodec.MediaCodecSelector
-import com.foxwoosh.radio.R
 import com.foxwoosh.radio.di.modules.PlayerServiceCoroutineScope
 import com.foxwoosh.radio.domain.IPlayerServiceInteractor
-import com.foxwoosh.radio.image_provider.ImageProvider
 import com.foxwoosh.radio.notifications.NotificationPublisher
-import com.foxwoosh.radio.player.helpers.CoverColorExtractor
 import com.foxwoosh.radio.player.helpers.PlayerNotificationFabric
-import com.foxwoosh.radio.player.models.MusicServicesData
 import com.foxwoosh.radio.player.models.PlayerState
 import com.foxwoosh.radio.player.models.Station
-import com.foxwoosh.radio.player.models.TrackDataState
-import com.foxwoosh.radio.storage.local.player.IPlayerLocalStorage
-import com.foxwoosh.radio.storage.remote.ultra.IUltraRemoteStorage
 import dagger.hilt.android.AndroidEntryPoint
-import kotlinx.coroutines.*
+import kotlinx.coroutines.CoroutineScope
+import kotlinx.coroutines.cancel
 import kotlinx.coroutines.flow.combine
 import kotlinx.coroutines.flow.debounce
 import kotlinx.coroutines.flow.launchIn
-import kotlinx.coroutines.flow.onEach
-import java.util.concurrent.Executors
 import javax.inject.Inject
-import android.media.AudioAttributes as AndroidAudioAttributes
 
 @AndroidEntryPoint
 class PlayerService : Service() {
@@ -97,8 +82,8 @@ class PlayerService : Service() {
         ExoPlayer.Builder(this, audioOnlyRenderersFactory)
             .setAudioAttributes(
                 AudioAttributes.Builder()
-                    .setContentType(AndroidAudioAttributes.CONTENT_TYPE_MUSIC)
-                    .setUsage(AndroidAudioAttributes.USAGE_MEDIA)
+                    .setContentType(C.CONTENT_TYPE_MUSIC)
+                    .setUsage(C.USAGE_MEDIA)
                     .build(),
                 true
             )

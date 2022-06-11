@@ -12,6 +12,7 @@ import com.foxwoosh.radio.storage.remote.ultra.IUltraRemoteStorage
 import com.foxwoosh.radio.websocket.ConnectionState
 import dagger.hilt.android.scopes.ServiceScoped
 import kotlinx.coroutines.CoroutineScope
+import kotlinx.coroutines.delay
 import kotlinx.coroutines.flow.launchIn
 import kotlinx.coroutines.flow.onEach
 import javax.inject.Inject
@@ -47,10 +48,13 @@ class PlayerServiceInteractor @Inject constructor(
                             track.spotifyUrl,
                             track.iTunesUrl,
                             track.yandexMusicUrl
-                        ),
-                        previousTracks = track.previousTracks
+                        )
                     )
                 )
+
+                delay(500)
+
+                playerLocalStorage.previousTracksData.emit(track.previousTracks)
             }.launchIn(scope)
 
         ultraRemoteStorage
@@ -77,6 +81,7 @@ class PlayerServiceInteractor @Inject constructor(
 
     override fun stopFetching(station: Station) {
         playerLocalStorage.trackData.value = TrackDataState.Idle
+        playerLocalStorage.previousTracksData.value = emptyList()
         playerLocalStorage.playerState.value = PlayerState.IDLE
 
         when (station) {

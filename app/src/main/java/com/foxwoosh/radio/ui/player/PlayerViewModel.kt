@@ -6,7 +6,10 @@ import com.foxwoosh.radio.player.models.TrackDataState
 import com.foxwoosh.radio.storage.local.player.IPlayerLocalStorage
 import com.foxwoosh.radio.storage.remote.lyrics.ILyricsRemoteStorage
 import dagger.hilt.android.lifecycle.HiltViewModel
-import kotlinx.coroutines.flow.*
+import kotlinx.coroutines.flow.MutableStateFlow
+import kotlinx.coroutines.flow.asStateFlow
+import kotlinx.coroutines.flow.launchIn
+import kotlinx.coroutines.flow.onEach
 import kotlinx.coroutines.launch
 import javax.inject.Inject
 
@@ -17,6 +20,7 @@ class PlayerViewModel @Inject constructor(
 ) : ViewModel() {
 
     val trackDataFlow = playerLocalStorage.trackData.asStateFlow()
+    val previousTracksFlow = playerLocalStorage.previousTracksData.asStateFlow()
     val playerStateFlow = playerLocalStorage.playerState.asStateFlow()
 
     private val mutableLyricsStateFlow = MutableStateFlow<LyricsDataState>(LyricsDataState.NoData)

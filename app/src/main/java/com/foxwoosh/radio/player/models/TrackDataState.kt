@@ -1,7 +1,6 @@
 package com.foxwoosh.radio.player.models
 
 import android.graphics.Bitmap
-import com.foxwoosh.radio.storage.models.PreviousTrack
 
 sealed class TrackDataState {
     object Idle : TrackDataState()
@@ -15,6 +14,6 @@ sealed class TrackDataState {
         val cover: Bitmap,
         val colors: PlayerColors,
         val musicServices: MusicServicesData,
-        val previousTracks: List<PreviousTrack>
+//        val previousTracks: List<PreviousTrack>
     ) : TrackDataState()
 }

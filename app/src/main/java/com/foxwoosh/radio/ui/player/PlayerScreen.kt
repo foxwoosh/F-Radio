@@ -21,21 +21,16 @@ import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.scale
-import androidx.compose.ui.graphics.Color
-import androidx.compose.ui.graphics.ColorFilter
-import androidx.compose.ui.graphics.graphicsLayer
-import androidx.compose.ui.platform.ClipboardManager
-import androidx.compose.ui.platform.LocalClipboardManager
+import androidx.compose.ui.geometry.Offset
+import androidx.compose.ui.graphics.*
+import androidx.compose.ui.platform.LocalConfiguration
 import androidx.compose.ui.platform.LocalContext
+import androidx.compose.ui.platform.LocalDensity
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.res.stringResource
-import androidx.compose.ui.text.AnnotatedString
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextAlign
-import androidx.compose.ui.unit.ExperimentalUnitApi
-import androidx.compose.ui.unit.TextUnit
-import androidx.compose.ui.unit.TextUnitType
-import androidx.compose.ui.unit.dp
+import androidx.compose.ui.unit.*
 import androidx.hilt.navigation.compose.hiltViewModel
 import coil.ImageLoader
 import coil.compose.AsyncImage
@@ -47,20 +42,24 @@ import com.foxwoosh.radio.player.models.MusicServicesData
 import com.foxwoosh.radio.player.models.PlayerColors
 import com.foxwoosh.radio.player.models.PlayerState
 import com.foxwoosh.radio.player.models.TrackDataState
-import com.foxwoosh.radio.storage.models.PreviousTrack
 import com.foxwoosh.radio.ui.borderlessClickable
 import com.foxwoosh.radio.ui.singleCondition
 import kotlinx.coroutines.launch
+import kotlin.math.absoluteValue
 
-private const val colorsChangeDuration = 1_000
+private const val trackChangeDuration = 1_000
 
 @Composable
 fun PlayerScreen() {
     val context = LocalContext.current
+    val config = LocalConfiguration.current
+    val density = LocalDensity.current
+
     val viewModel = hiltViewModel<PlayerViewModel>()
 
     val trackData by viewModel.trackDataFlow.collectAsState()
     val playerState by viewModel.playerStateFlow.collectAsState()
+    val previousTracks by viewModel.previousTracksFlow.collectAsState()
     val lyricsState by viewModel.lyricsStateFlow.collectAsState()
 
     val backdropStationSelectorState =
@@ -71,14 +70,21 @@ fun PlayerScreen() {
 
     val statusBarHeight = WindowInsets.statusBars.asPaddingValues().calculateTopPadding()
     val navigationBarHeight = WindowInsets.navigationBars.asPaddingValues().calculateBottomPadding()
-    val bottomSheetPeekHeight = 80.dp + navigationBarHeight
+    val defaultBottomSheetPeekHeight = 80.dp + navigationBarHeight
+
+    val colorAnimationSpec: AnimationSpec<Color> = tween(trackChangeDuration)
+    val gradientOffsetAnimationSpec: AnimationSpec<Float> = tween(trackChangeDuration)
+    val bottomSheetPeekHeightAnimationSpec: AnimationSpec<Dp> = spring()
 
     val title: String
     val artist: String
     val cover: Bitmap?
     val colors: PlayerColors
     val musicServices: MusicServicesData?
-    val previousTracks: List<PreviousTrack>?
+
+    val gradientOffsetX: Float
+    val gradientOffsetY: Float
+    val actualBottomSheetPeekHeight: Dp
 
     when (trackData) {
         TrackDataState.Idle -> {
@@ -87,7 +93,9 @@ fun PlayerScreen() {
             cover = null
             colors = PlayerColors.default
             musicServices = null
-            previousTracks = null
+            gradientOffsetX = 0f
+            gradientOffsetY = 0f
+            actualBottomSheetPeekHeight = 0.dp
         }
         TrackDataState.Loading -> {
             title = context.getString(R.string.player_title_loading)
@@ -95,7 +103,9 @@ fun PlayerScreen() {
             cover = null
             colors = PlayerColors.default
             musicServices = null
-            previousTracks = null
+            gradientOffsetX = 0f
+            gradientOffsetY = 0f
+            actualBottomSheetPeekHeight = 0.dp
         }
         TrackDataState.Error -> {
             title = context.getString(R.string.player_title_error)
@@ -103,7 +113,9 @@ fun PlayerScreen() {
             cover = null
             colors = PlayerColors.default
             musicServices = null
-            previousTracks = null
+            gradientOffsetX = 0f
+            gradientOffsetY = 0f
+            actualBottomSheetPeekHeight = 0.dp
         }
         is TrackDataState.Ready -> {
             val data = trackData as TrackDataState.Ready
@@ -113,7 +125,20 @@ fun PlayerScreen() {
             cover = data.cover
             colors = data.colors
             musicServices = data.musicServices
-            previousTracks = data.previousTracks
+            gradientOffsetX = animateFloatAsState(
+                targetValue = data.hashCode().absoluteValue %
+                        with(density) { config.screenWidthDp.dp.toPx() },
+                animationSpec = gradientOffsetAnimationSpec
+            ).value
+            gradientOffsetY = animateFloatAsState(
+                targetValue = data.hashCode().absoluteValue %
+                        with(density) { config.screenHeightDp.dp.toPx() },
+                animationSpec = gradientOffsetAnimationSpec
+            ).value
+            actualBottomSheetPeekHeight = animateDpAsState(
+                targetValue = defaultBottomSheetPeekHeight,
+                animationSpec = bottomSheetPeekHeightAnimationSpec
+            ).value
         }
     }
 
@@ -137,18 +162,21 @@ fun PlayerScreen() {
         }
     }
 
-    val animationSpec: AnimationSpec<Color> = tween(colorsChangeDuration)
     val surfaceColor by animateColorAsState(
         targetValue = colors.surfaceColor,
-        animationSpec = animationSpec
+        animationSpec = colorAnimationSpec
+    )
+    val vibrantSurfaceColor by animateColorAsState(
+        targetValue = colors.vibrantSurfaceColor,
+        animationSpec = colorAnimationSpec
     )
     val primaryTextColor by animateColorAsState(
         targetValue = colors.primaryTextColor,
-        animationSpec = animationSpec
+        animationSpec = colorAnimationSpec
     )
     val secondaryTextColor by animateColorAsState(
         targetValue = colors.secondaryTextColor,
-        animationSpec = animationSpec
+        animationSpec = colorAnimationSpec
     )
 
     Surface {
@@ -167,7 +195,7 @@ fun PlayerScreen() {
                         backgroundColor = surfaceColor,
                         primaryTextColor = primaryTextColor,
                         secondaryTextColor = secondaryTextColor,
-                        previousTracks = previousTracks ?: emptyList(),
+                        previousTracks = previousTracks,
                         lyricsState = lyricsState,
                         onPageBecomesVisible = { page ->
                             when (page) {
@@ -178,13 +206,21 @@ fun PlayerScreen() {
                     )
                 },
                 sheetShape = RoundedCornerShape(topStart = 12.dp, topEnd = 12.dp),
-                sheetPeekHeight = bottomSheetPeekHeight
+                sheetPeekHeight = actualBottomSheetPeekHeight,
+//                drawerElevation = 20.dp
+                sheetElevation = 20.dp
             ) {
                 Column(
                     modifier = Modifier
                         .fillMaxSize()
-                        .background(surfaceColor)
-                        .padding(bottom = bottomSheetPeekHeight)
+                        .background(
+                            brush = Brush.radialGradient(
+                                colors = listOf(vibrantSurfaceColor, surfaceColor),
+                                center = Offset(gradientOffsetX, gradientOffsetY),
+                                tileMode = TileMode.Mirror
+                            )
+                        )
+                        .padding(bottom = defaultBottomSheetPeekHeight)
                 ) {
                     Image(
                         painter = painterResource(id = R.drawable.ic_arrow_down),
@@ -270,7 +306,7 @@ fun CoverWithServices(
         )
 
         val crossfadeLoader = ImageLoader.Builder(context)
-            .crossfade(durationMillis = colorsChangeDuration)
+            .crossfade(durationMillis = trackChangeDuration)
             .build()
         AsyncImage(
             model = cover,

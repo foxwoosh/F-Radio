@@ -1,13 +1,16 @@
 package com.foxwoosh.radio.player.helpers
 
 import android.graphics.Bitmap
+import android.util.Log
 import androidx.compose.ui.graphics.Color
 import androidx.palette.graphics.Palette
+import com.foxwoosh.radio.adjustBrightness
 import com.foxwoosh.radio.player.models.PlayerColors
 import com.foxwoosh.radio.ui.theme.Tundora
 
 object CoverColorExtractor {
     fun extractColors(bitmap: Bitmap): PlayerColors {
+        Log.i("DDLOG", Thread.currentThread().name)
         val palette = Palette.Builder(bitmap).generate()
 
         val swatches = getSwatchesInPriorityOrder(palette)
@@ -16,10 +19,15 @@ object CoverColorExtractor {
         val secondSwatch = swatches.getOrNull(1)
 
         return PlayerColors(
-            firstSwatch?.rgb?.let { Color(it) } ?: Color.Black,
-            secondSwatch?.rgb?.let { Color(it) } ?: Tundora,
-            firstSwatch?.bodyTextColor?.let { Color(it) } ?: Color.White,
-            firstSwatch?.bodyTextColor?.let { Color(it) } ?: Color.White
+            firstSwatch?.rgb?.let { Color(it) }
+                ?: Color.Black,
+            secondSwatch?.rgb?.let { Color(it) }
+                ?: firstSwatch?.rgb?.let { Color(it).adjustBrightness(0.9f) }
+                ?: Tundora,
+            firstSwatch?.bodyTextColor?.let { Color(it) }
+                ?: Color.White,
+            firstSwatch?.bodyTextColor?.let { Color(it) }
+                ?: Color.White
         )
     }
 

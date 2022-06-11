@@ -1,11 +1,12 @@
 package com.foxwoosh.radio
 
 import android.content.*
-import android.content.ClipboardManager
 import android.net.Uri
 import android.provider.Browser
 import android.util.Log
 import android.widget.Toast
+import androidx.annotation.FloatRange
+import androidx.compose.ui.graphics.Color
 import kotlinx.serialization.json.Json
 
 fun Context.openURL(url: String) {
@@ -35,6 +36,17 @@ fun Context.copyToClipboard(text: String) {
         )
     )
     Toast.makeText(this, R.string.common_copied_to_clipboard, Toast.LENGTH_SHORT).show()
+}
+
+fun Color.adjustBrightness(@FloatRange(from = 0.0) factor: Float) : Color {
+    require(factor > 0) { "brightness factor should be greater than 0" }
+
+    return  Color(
+        red = (red * factor).coerceAtMost(255f),
+        green = (green * factor).coerceAtMost(255f),
+        blue = (blue * factor).coerceAtMost(255f),
+        alpha = alpha
+    )
 }
 
 val AppJson = Json {

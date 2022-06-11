@@ -21,7 +21,6 @@ import javax.inject.Inject
 import javax.inject.Singleton
 import kotlin.time.Duration
 import kotlin.time.Duration.Companion.milliseconds
-import kotlin.time.ExperimentalTime
 
 @Singleton
 class UltraWebSocketProvider @Inject constructor() : CoroutineScope {

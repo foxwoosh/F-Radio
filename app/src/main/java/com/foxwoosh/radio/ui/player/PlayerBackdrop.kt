@@ -23,7 +23,6 @@ import com.foxwoosh.radio.ui.theme.BlackOverlay
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.launch
 
-
 @Composable
 fun StationsList(
     primaryTextColor: Color,
@@ -74,6 +73,7 @@ fun PlayerBackdropStationSelector(
         backLayerBackgroundColor = surfaceColor,
         frontLayerScrimColor = BlackOverlay,
         peekHeight = 0.dp,
+        gesturesEnabled = false,
         backLayerContent = {
             StationsList(primaryTextColor) {
                 scope.launch {
