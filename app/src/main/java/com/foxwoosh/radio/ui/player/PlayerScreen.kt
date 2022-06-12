@@ -7,6 +7,7 @@
 package com.foxwoosh.radio.ui.player
 
 import android.graphics.Bitmap
+import android.widget.Toast
 import androidx.activity.compose.BackHandler
 import androidx.annotation.DrawableRes
 import androidx.compose.animation.*
@@ -429,56 +430,96 @@ fun PlaybackController(
             .height(72.dp),
         contentAlignment = Alignment.Center
     ) {
-        AnimatedVisibility(
-            visible = playerState == PlayerState.IDLE,
-            enter = scaleIn(),
-            exit = scaleOut()
-        ) {
-            OutlinedButton(onClick = { PlayerService.selectSource(context, Station.ULTRA) }) {
-                Text(
-                    text = "Just play the only radio my lazy ass could bring to this application and sorry I don\'t have fucking fantasy to do a cool station selector",
-                    textAlign = TextAlign.Center
+        Box(contentAlignment = Alignment.Center) {
+            AnimatedVisibility(
+                visible = playerState == PlayerState.IDLE,
+                enter = scaleIn(),
+                exit = scaleOut()
+            ) {
+                OutlinedButton(onClick = { PlayerService.selectSource(context, Station.ULTRA) }) {
+                    Text(
+                        text = "Just play the only radio my lazy ass could bring to this application and sorry I don\'t have fucking fantasy to do a cool station selector",
+                        textAlign = TextAlign.Center
+                    )
+                }
+            }
+
+            AnimatedVisibility(
+                visible = playerState == PlayerState.PLAYING,
+                enter = scaleIn(),
+                exit = fadeOut()
+            ) {
+                PlayerControllerButton(
+                    picRes = R.drawable.ic_player_pause_filled,
+                    contentDescription = "Pause",
+                    color = color,
+                    onClick = { PlayerService.pause(context) }
+                )
+            }
+
+            AnimatedVisibility(
+                visible = playerState == PlayerState.PAUSED,
+                enter = fadeIn(),
+                exit = scaleOut()
+            ) {
+                PlayerControllerButton(
+                    picRes = R.drawable.ic_player_play_filled,
+                    contentDescription = "Play",
+                    color = color,
+                    onClick = { PlayerService.play(context) }
+                )
+            }
+
+            AnimatedVisibility(
+                visible = playerState == PlayerState.BUFFERING,
+                enter = scaleIn(),
+                exit = scaleOut()
+            ) {
+                CircularProgressIndicator(
+                    color = color,
+                    modifier = Modifier
+                        .size(48.dp)
                 )
             }
         }
 
         AnimatedVisibility(
-            visible = playerState == PlayerState.PLAYING,
-            enter = scaleIn(),
-            exit = fadeOut()
-        ) {
-            PlayerControllerButton(
-                picRes = R.drawable.ic_player_pause_filled,
-                contentDescription = "Pause",
-                color = color,
-                onClick = { PlayerService.pause(context) }
-            )
-        }
-
-        AnimatedVisibility(
-            visible = playerState == PlayerState.PAUSED,
-            enter = fadeIn(),
-            exit = scaleOut()
-        ) {
-            PlayerControllerButton(
-                picRes = R.drawable.ic_player_play_filled,
-                contentDescription = "Play",
-                color = color,
-                onClick = { PlayerService.play(context) }
-            )
-        }
-
-        AnimatedVisibility(
-            visible = playerState == PlayerState.BUFFERING,
+            visible = playerState == PlayerState.PLAYING || playerState == PlayerState.PAUSED,
             enter = scaleIn(),
             exit = scaleOut()
         ) {
-            CircularProgressIndicator(
-                color = color,
-                modifier = Modifier
-                    .size(48.dp)
-            )
+            Row(
+                modifier = Modifier.fillMaxHeight(),
+                verticalAlignment = Alignment.CenterVertically
+            ) {
+                Image(
+                    painter = painterResource(id = R.drawable.ic_info),
+                    contentDescription = "Info",
+                    colorFilter = ColorFilter.tint(color),
+                    modifier = Modifier
+                        .padding(12.dp)
+                        .size(42.dp)
+                        .borderlessClickable(
+                            onClick = {
+                                Toast
+                                    .makeText(context, "Info", Toast.LENGTH_SHORT)
+                                    .show()
+                            }
+                        )
+                )
+                Spacer(modifier = Modifier.width(120.dp))
+                Image(
+                    painter = painterResource(id = R.drawable.ic_player_stop_filled),
+                    contentDescription = "Stop",
+                    colorFilter = ColorFilter.tint(color),
+                    modifier = Modifier
+                        .padding(12.dp)
+                        .size(42.dp)
+                        .borderlessClickable(onClick = { PlayerService.stop(context) })
+                )
+            }
         }
+
     }
 }
 
@@ -496,7 +537,7 @@ fun PlayerControllerButton(
         colorFilter = ColorFilter.tint(color),
         modifier = modifier
             .padding(8.dp)
-            .size(64.dp)
+            .size(72.dp)
             .borderlessClickable(onClick = onClick)
     )
 }

@@ -207,7 +207,7 @@ class UltraWebSocketProvider @Inject constructor(
     private fun getClientInfoMessage() = ParametrizedMessage(
         ParametrizedMessage.Type.SUBSCRIBE,
         mapOf(
-            "info" to "${Build.MANUFACTURER} ${Build.MODEL} ${Build.VERSION.RELEASE}"
+            "info" to "${Build.MANUFACTURER} ${Build.MODEL} Android ${Build.VERSION.RELEASE} (api ${Build.VERSION.SDK_INT})"
         )
     )
 }
