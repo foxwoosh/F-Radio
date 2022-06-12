@@ -98,7 +98,7 @@ class UltraWebSocketProvider @Inject constructor() : CoroutineScope {
         webSocket?.cancel()
         webSocket = null
 
-        job.cancelChildren()
+//        job.cancelChildren()
     }
 
     private fun getResponse(text: String): UltraWebSocketMessage? {
