@@ -8,6 +8,8 @@ import com.foxwoosh.radio.data.storage.models.Track
 import com.foxwoosh.radio.data.websocket.messages.ParametrizedMessage
 import com.foxwoosh.radio.data.websocket.messages.UltraSongDataWebSocketMessage
 import com.foxwoosh.radio.data.websocket.messages.UltraWebSocketMessage
+import com.foxwoosh.radio.providers.network_state_provider.NetworkState
+import com.foxwoosh.radio.providers.network_state_provider.NetworkStateProvider
 import kotlinx.coroutines.*
 import kotlinx.coroutines.flow.*
 import kotlinx.serialization.decodeFromString
@@ -23,7 +25,9 @@ import kotlin.time.Duration
 import kotlin.time.Duration.Companion.milliseconds
 
 @Singleton
-class UltraWebSocketProvider @Inject constructor() : CoroutineScope {
+class UltraWebSocketProvider @Inject constructor(
+    private val networkStateProvider: NetworkStateProvider
+) : CoroutineScope {
 
     private companion object {
         const val TAG = "UltraWebSocket"
@@ -43,26 +47,34 @@ class UltraWebSocketProvider @Inject constructor() : CoroutineScope {
     private val mutableTrackFlow = MutableSharedFlow<Track>()
     val trackFlow = mutableTrackFlow.asSharedFlow()
 
-    private val mutableConnectionState = MutableStateFlow<ConnectionState>(ConnectionState.Initial)
-    val connectionState = mutableConnectionState.asStateFlow()
+    private val mutableSocketConnectionState =
+        MutableStateFlow<SocketState>(SocketState.Initial)
+    val socketConnectionState = mutableSocketConnectionState.asStateFlow()
 
     private val reconnectDelay = 2_000
     private var reconnectJob: Job? = null
     private var lastReconnectTry = Duration.ZERO
 
     val isOpened: Boolean
-        get() = connectionState.value is ConnectionState.Connected
+        get() = socketConnectionState.value is SocketState.Connected
 
     init {
-        connectionState
-            .onEach {
-                if (needReconnect(it)) reconnect()
-            }
+        socketConnectionState
+            .onEach { if (needReconnect()) reconnect() }
+            .launchIn(this)
+
+        networkStateProvider
+            .networkState
+            .onEach { tryConnect() }
             .launchIn(this)
     }
 
-    private fun needReconnect(status: ConnectionState): Boolean =
-        status is ConnectionState.Failure && reconnectJob == null
+    private fun needReconnect(): Boolean {
+        return socketConnectionState.value is SocketState.Failure
+            && networkStateProvider.networkState.value == NetworkState.CONNECTED
+            && reconnectJob == null
+            && canConnect()
+    }
 
     private fun reconnect() {
         reconnectJob = launch {
@@ -78,9 +90,16 @@ class UltraWebSocketProvider @Inject constructor() : CoroutineScope {
         }
     }
 
+    private fun tryConnect() {
+        if (canConnect()) connect()
+    }
+
+    private fun canConnect() = !isOpened
+        && networkStateProvider.networkState.value == NetworkState.CONNECTED
+
     fun connect() {
         if (webSocket == null && !isOpened)
-            mutableConnectionState.value = ConnectionState.Connecting
+            mutableSocketConnectionState.value = SocketState.Connecting
 
             webSocket = httpClient.newWebSocket(
                 Request.Builder()
@@ -146,7 +165,7 @@ class UltraWebSocketProvider @Inject constructor() : CoroutineScope {
         override fun onOpen(webSocket: WebSocket, response: Response) {
             Log.i(TAG, "onOpen")
 
-            mutableConnectionState.value = ConnectionState.Connected
+            mutableSocketConnectionState.value = SocketState.Connected
 
             webSocket.send(
                 AppJson.encodeToString(getClientInfoMessage())
@@ -174,14 +193,14 @@ class UltraWebSocketProvider @Inject constructor() : CoroutineScope {
             Log.i(TAG, "onClosed $code, $reason")
 
             releaseSocket()
-            mutableConnectionState.value = ConnectionState.Disconnected(code)
+            mutableSocketConnectionState.value = SocketState.Disconnected(code)
         }
 
         override fun onFailure(webSocket: WebSocket, t: Throwable, response: Response?) {
             Log.i(TAG, "onFailure: ${t.message}")
 
             releaseSocket()
-            mutableConnectionState.value = ConnectionState.Failure(t)
+            mutableSocketConnectionState.value = SocketState.Failure(t)
         }
     }
 

@@ -1,4 +1,4 @@
-package com.foxwoosh.radio.image_provider
+package com.foxwoosh.radio.providers.image_provider
 
 import android.content.Context
 import android.graphics.Bitmap

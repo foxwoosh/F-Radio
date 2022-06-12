@@ -1,17 +1,20 @@
 package com.foxwoosh.radio.domain
 
 import com.foxwoosh.radio.di.modules.PlayerServiceCoroutineScope
-import com.foxwoosh.radio.image_provider.ImageProvider
+import com.foxwoosh.radio.providers.image_provider.ImageProvider
 import com.foxwoosh.radio.player.helpers.CoverColorExtractor
 import com.foxwoosh.radio.data.storage.local.player.IPlayerLocalStorage
 import com.foxwoosh.radio.data.storage.remote.ultra.IUltraRemoteStorage
-import com.foxwoosh.radio.data.websocket.ConnectionState
+import com.foxwoosh.radio.data.websocket.SocketState
 import com.foxwoosh.radio.player.models.*
 import dagger.hilt.android.scopes.ServiceScoped
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.delay
+import kotlinx.coroutines.flow.debounce
 import kotlinx.coroutines.flow.launchIn
 import kotlinx.coroutines.flow.onEach
+import java.net.SocketException
+import java.net.UnknownHostException
 import javax.inject.Inject
 
 @ServiceScoped
@@ -56,14 +59,21 @@ class PlayerServiceInteractor @Inject constructor(
 
         ultraRemoteStorage
             .dataConnectionState
+            .debounce(300)
             .onEach { state ->
                 when (state) {
-                    is ConnectionState.Connecting -> {
+                    is SocketState.Connecting -> {
                         playerLocalStorage.trackData.emit(TrackDataState.Loading)
                     }
-                    is ConnectionState.Failure -> {
+                    is SocketState.Failure -> {
                         playerLocalStorage.trackData.emit(
-                            TrackDataState.Error(PlayerError.DEFAULT)
+                            TrackDataState.Error(
+                                if (state.throwable is UnknownHostException) {
+                                    PlayerError.NO_INTERNET
+                                } else {
+                                    PlayerError.DEFAULT
+                                }
+                            )
                         )
                     }
                     else -> { /* nothing to emit */ }
