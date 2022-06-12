@@ -5,7 +5,7 @@ import android.graphics.Bitmap
 sealed class TrackDataState {
     object Idle : TrackDataState()
     object Loading : TrackDataState()
-    data class Error(val errorText: String) : TrackDataState()
+    data class Error(val error: PlayerError) : TrackDataState()
     data class Ready(
         val id: String,
         val title: String,

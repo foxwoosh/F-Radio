@@ -5,7 +5,8 @@
     <string name="notification_action_stop">Stop</string>
     <string name="player_title_idle">No station selected</string>
     <string name="player_title_loading">Loading…</string>
-    <string name="player_title_error">Couldn\'t load track data</string>
+    <string name="player_title_error_default">Couldn\'t load track data</string>
+    <string name="player_title_error_no_internet">No internet connection</string>
     <string name="player_select_station_button">Select</string>
     <string name="station_selector_title">Select station</string>
     <string name="player_page_no_data_previous_tracks">No previous tracks</string>

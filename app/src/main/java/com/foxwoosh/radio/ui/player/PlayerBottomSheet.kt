@@ -29,7 +29,7 @@ import coil.compose.AsyncImage
 import com.foxwoosh.radio.R
 import com.foxwoosh.radio.openURL
 import com.foxwoosh.radio.player.models.MusicServicesData
-import com.foxwoosh.radio.storage.models.PreviousTrack
+import com.foxwoosh.radio.data.storage.models.PreviousTrack
 import com.foxwoosh.radio.ui.currentOffset
 import com.google.accompanist.pager.ExperimentalPagerApi
 import com.google.accompanist.pager.HorizontalPager

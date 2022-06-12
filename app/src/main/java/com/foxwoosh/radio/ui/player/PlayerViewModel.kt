@@ -3,8 +3,8 @@ package com.foxwoosh.radio.ui.player
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.foxwoosh.radio.player.models.TrackDataState
-import com.foxwoosh.radio.storage.local.player.IPlayerLocalStorage
-import com.foxwoosh.radio.storage.remote.lyrics.ILyricsRemoteStorage
+import com.foxwoosh.radio.data.storage.local.player.IPlayerLocalStorage
+import com.foxwoosh.radio.data.storage.remote.lyrics.ILyricsRemoteStorage
 import dagger.hilt.android.lifecycle.HiltViewModel
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.asStateFlow

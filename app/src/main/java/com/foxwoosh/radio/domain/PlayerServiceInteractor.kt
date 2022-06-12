@@ -3,13 +3,10 @@ package com.foxwoosh.radio.domain
 import com.foxwoosh.radio.di.modules.PlayerServiceCoroutineScope
 import com.foxwoosh.radio.image_provider.ImageProvider
 import com.foxwoosh.radio.player.helpers.CoverColorExtractor
-import com.foxwoosh.radio.player.models.MusicServicesData
-import com.foxwoosh.radio.player.models.PlayerState
-import com.foxwoosh.radio.player.models.Station
-import com.foxwoosh.radio.player.models.TrackDataState
-import com.foxwoosh.radio.storage.local.player.IPlayerLocalStorage
-import com.foxwoosh.radio.storage.remote.ultra.IUltraRemoteStorage
-import com.foxwoosh.radio.websocket.ConnectionState
+import com.foxwoosh.radio.data.storage.local.player.IPlayerLocalStorage
+import com.foxwoosh.radio.data.storage.remote.ultra.IUltraRemoteStorage
+import com.foxwoosh.radio.data.websocket.ConnectionState
+import com.foxwoosh.radio.player.models.*
 import dagger.hilt.android.scopes.ServiceScoped
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.delay
@@ -65,7 +62,9 @@ class PlayerServiceInteractor @Inject constructor(
                         playerLocalStorage.trackData.emit(TrackDataState.Loading)
                     }
                     is ConnectionState.Failure -> {
-                        playerLocalStorage.trackData.emit(TrackDataState.Error(state.throwable.message ?: ""))
+                        playerLocalStorage.trackData.emit(
+                            TrackDataState.Error(PlayerError.DEFAULT)
+                        )
                     }
                     else -> { /* nothing to emit */ }
                 }

@@ -7,7 +7,6 @@
 package com.foxwoosh.radio.ui.player
 
 import android.graphics.Bitmap
-import android.util.Log
 import androidx.activity.compose.BackHandler
 import androidx.annotation.DrawableRes
 import androidx.compose.animation.*
@@ -103,7 +102,12 @@ fun PlayerScreen() {
             actualBottomSheetPeekHeight = 0.dp
         }
         is TrackDataState.Error -> {
-            title = (trackData as TrackDataState.Error).errorText
+            title = stringResource(
+                id = when ((trackData as TrackDataState.Error).error) {
+                    PlayerError.DEFAULT -> R.string.player_title_error_default
+                    PlayerError.NO_INTERNET -> R.string.player_title_error_no_internet
+                }
+            )
             artist = ""
             cover = null
             colors = PlayerColors.default
@@ -122,12 +126,12 @@ fun PlayerScreen() {
             musicServices = data.musicServices
             gradientOffsetX = animateFloatAsState(
                 targetValue = data.hashCode().absoluteValue %
-                        with(density) { config.screenWidthDp.dp.toPx() },
+                    with(density) { config.screenWidthDp.dp.toPx() },
                 animationSpec = gradientOffsetAnimationSpec
             ).value
             gradientOffsetY = animateFloatAsState(
                 targetValue = data.hashCode().absoluteValue %
-                        with(density) { config.screenHeightDp.dp.toPx() },
+                    with(density) { config.screenHeightDp.dp.toPx() },
                 animationSpec = gradientOffsetAnimationSpec
             ).value
             actualBottomSheetPeekHeight = animateDpAsState(
@@ -261,8 +265,8 @@ fun CoverWithServices(
         )
 
         val smallScaledCover = musicServicesMenuOpened
-                && trackDataReady
-                && musicServices?.hasSomething == true
+            && trackDataReady
+            && musicServices?.hasSomething == true
 
         val scale by animateFloatAsState(
             targetValue = if (smallScaledCover) 0.5f else 1f,

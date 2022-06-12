@@ -1,11 +1,11 @@
 package com.foxwoosh.radio.di.modules
 
-import com.foxwoosh.radio.storage.local.player.IPlayerLocalStorage
-import com.foxwoosh.radio.storage.local.player.PlayerLocalStorage
-import com.foxwoosh.radio.storage.remote.lyrics.ILyricsRemoteStorage
-import com.foxwoosh.radio.storage.remote.lyrics.LyricsRemoteStorage
-import com.foxwoosh.radio.storage.remote.ultra.IUltraRemoteStorage
-import com.foxwoosh.radio.storage.remote.ultra.UltraRemoteStorage
+import com.foxwoosh.radio.data.storage.local.player.IPlayerLocalStorage
+import com.foxwoosh.radio.data.storage.local.player.PlayerLocalStorage
+import com.foxwoosh.radio.data.storage.remote.lyrics.ILyricsRemoteStorage
+import com.foxwoosh.radio.data.storage.remote.lyrics.LyricsRemoteStorage
+import com.foxwoosh.radio.data.storage.remote.ultra.IUltraRemoteStorage
+import com.foxwoosh.radio.data.storage.remote.ultra.UltraRemoteStorage
 import dagger.Binds
 import dagger.Module
 import dagger.hilt.InstallIn

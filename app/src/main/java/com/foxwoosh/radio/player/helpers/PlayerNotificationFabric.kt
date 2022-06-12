@@ -134,7 +134,7 @@ class PlayerNotificationFabric(private val context: Context) {
             is TrackDataState.Error -> {
                 image = context.getDrawable(R.drawable.ic_no_music_playing)?.toBitmap()
                 artist = ""
-                title = context.getString(R.string.player_title_error)
+                title = context.getString(R.string.player_title_error_default)
                 album = null
                 color = Color.Black
             }
