@@ -1,5 +1,6 @@
 package com.foxwoosh.radio.domain
 
+import android.util.Log
 import com.foxwoosh.radio.di.modules.PlayerServiceCoroutineScope
 import com.foxwoosh.radio.providers.image_provider.ImageProvider
 import com.foxwoosh.radio.player.helpers.CoverColorExtractor
@@ -48,6 +49,12 @@ class PlayerServiceInteractor @Inject constructor(
                             track.spotifyUrl,
                             track.iTunesUrl,
                             track.yandexMusicUrl
+                        ),
+                        details = TrackDetails(
+                            track.album,
+                            track.metadata,
+                            track.date,
+                            track.time
                         )
                     )
                 )

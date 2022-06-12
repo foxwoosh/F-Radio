@@ -7,7 +7,6 @@
 package com.foxwoosh.radio.ui.player
 
 import android.graphics.Bitmap
-import android.widget.Toast
 import androidx.activity.compose.BackHandler
 import androidx.annotation.DrawableRes
 import androidx.compose.animation.*
@@ -21,7 +20,9 @@ import androidx.compose.material.*
 import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.draw.clip
 import androidx.compose.ui.draw.scale
+import androidx.compose.ui.draw.shadow
 import androidx.compose.ui.geometry.Offset
 import androidx.compose.ui.graphics.*
 import androidx.compose.ui.platform.LocalConfiguration
@@ -41,6 +42,7 @@ import com.foxwoosh.radio.openURL
 import com.foxwoosh.radio.player.PlayerService
 import com.foxwoosh.radio.player.models.*
 import com.foxwoosh.radio.ui.borderlessClickable
+import com.foxwoosh.radio.ui.longClickable
 import com.foxwoosh.radio.ui.singleCondition
 import kotlinx.coroutines.launch
 import kotlin.math.absoluteValue
@@ -51,6 +53,7 @@ private const val trackChangeDuration = 1_000
 fun PlayerScreen() {
     val config = LocalConfiguration.current
     val density = LocalDensity.current
+    val context = LocalContext.current
 
     val viewModel = hiltViewModel<PlayerViewModel>()
 
@@ -58,6 +61,9 @@ fun PlayerScreen() {
     val playerState by viewModel.playerStateFlow.collectAsState()
     val previousTracks by viewModel.previousTracksFlow.collectAsState()
     val lyricsState by viewModel.lyricsStateFlow.collectAsState()
+
+    var trackDetailsVisible by remember { mutableStateOf(false) }
+    var musicServicesMenuOpened by remember { mutableStateOf(false) }
 
     val bottomSheetScaffoldState = rememberBottomSheetScaffoldState()
 
@@ -69,13 +75,16 @@ fun PlayerScreen() {
 
     val colorAnimationSpec: AnimationSpec<Color> = tween(trackChangeDuration)
     val gradientOffsetAnimationSpec: AnimationSpec<Float> = tween(trackChangeDuration)
-    val bottomSheetPeekHeightAnimationSpec: AnimationSpec<Dp> = spring()
+    val bottomSheetPeekHeightAnimationSpec: AnimationSpec<Dp> = spring(
+        dampingRatio = Spring.DampingRatioMediumBouncy
+    )
 
     val title: String
     val artist: String
     val cover: Bitmap?
     val colors: PlayerColors
     val musicServices: MusicServicesData?
+    val details: TrackDetails?
 
     val gradientOffsetX: Float
     val gradientOffsetY: Float
@@ -88,9 +97,19 @@ fun PlayerScreen() {
             cover = null
             colors = PlayerColors.default
             musicServices = null
-            gradientOffsetX = 0f
-            gradientOffsetY = 0f
+            details = null
+            gradientOffsetX = animateFloatAsState(
+                targetValue = 0f,
+                animationSpec = gradientOffsetAnimationSpec
+            ).value
+            gradientOffsetY = animateFloatAsState(
+                targetValue = 0f,
+                animationSpec = gradientOffsetAnimationSpec
+            ).value
             actualBottomSheetPeekHeight = 0.dp
+
+            trackDetailsVisible = false
+            musicServicesMenuOpened = false
         }
         TrackDataState.Loading -> {
             title = stringResource(R.string.player_title_loading)
@@ -98,6 +117,7 @@ fun PlayerScreen() {
             cover = null
             colors = PlayerColors.default
             musicServices = null
+            details = null
             gradientOffsetX = 0f
             gradientOffsetY = 0f
             actualBottomSheetPeekHeight = 0.dp
@@ -113,6 +133,7 @@ fun PlayerScreen() {
             cover = null
             colors = PlayerColors.default
             musicServices = null
+            details = null
             gradientOffsetX = 0f
             gradientOffsetY = 0f
             actualBottomSheetPeekHeight = 0.dp
@@ -125,6 +146,7 @@ fun PlayerScreen() {
             cover = data.cover
             colors = data.colors
             musicServices = data.musicServices
+            details = data.details
             gradientOffsetX = animateFloatAsState(
                 targetValue = data.hashCode().absoluteValue %
                     with(density) { config.screenWidthDp.dp.toPx() },
@@ -150,9 +172,15 @@ fun PlayerScreen() {
         }
     }
 
-    BackHandler(bottomSheetScaffoldState.bottomSheetState.isExpanded) {
+    BackHandler(
+        bottomSheetScaffoldState.bottomSheetState.isExpanded
+            || trackDetailsVisible
+    ) {
         if (bottomSheetScaffoldState.bottomSheetState.isExpanded) {
             scope.launch { bottomSheetScaffoldState.bottomSheetState.collapse() }
+        }
+        if (trackDetailsVisible) {
+            trackDetailsVisible = false
         }
     }
 
@@ -197,7 +225,7 @@ fun PlayerScreen() {
             sheetPeekHeight = actualBottomSheetPeekHeight,
             sheetElevation = 20.dp
         ) {
-            Column(
+            Box(
                 modifier = Modifier
                     .fillMaxSize()
                     .background(
@@ -207,38 +235,147 @@ fun PlayerScreen() {
                             tileMode = TileMode.Mirror
                         )
                     )
-                    .padding(bottom = defaultBottomSheetPeekHeight)
-                    .statusBarsPadding(),
-                horizontalAlignment = Alignment.CenterHorizontally,
-                verticalArrangement = Arrangement.Center
             ) {
-                CoverWithServices(
-                    cover = cover,
-                    musicServices = musicServices,
-                    trackDataReady = trackData is TrackDataState.Ready,
+                Column(
                     modifier = Modifier
-                        .fillMaxWidth()
-                        .weight(0.6f)
-                )
+                        .fillMaxSize()
+                        .padding(bottom = defaultBottomSheetPeekHeight)
+                        .statusBarsPadding(),
+                    horizontalAlignment = Alignment.CenterHorizontally,
+                    verticalArrangement = Arrangement.Center
+                ) {
+                    CoverWithServices(
+                        cover = cover,
+                        musicServices = musicServices,
+                        trackDataReady = trackData is TrackDataState.Ready,
+                        modifier = Modifier
+                            .fillMaxWidth()
+                            .weight(0.6f),
+                        onServiceSelected = { url ->
+                            context.openURL(url)
+                            musicServicesMenuOpened = false
+                        },
+                        onCoverClicked = { musicServicesMenuOpened = !musicServicesMenuOpened},
+                        servicesOpened = musicServicesMenuOpened
+                    )
 
-                TrackInfo(
-                    title = title,
-                    primaryTextColor = primaryTextColor,
-                    artist = artist,
-                    secondaryTextColor = secondaryTextColor,
-                    modifier = Modifier
-                        .fillMaxWidth()
-                )
+                    TrackInfo(
+                        title = title,
+                        primaryTextColor = primaryTextColor,
+                        artist = artist,
+                        secondaryTextColor = secondaryTextColor,
+                        modifier = Modifier
+                            .fillMaxWidth()
+                    )
 
-                PlaybackController(
-                    color = primaryTextColor,
-                    playerState = playerState,
-                    modifier = Modifier
-                        .fillMaxWidth()
-                        .weight(0.15f)
-                )
+                    PlaybackController(
+                        color = primaryTextColor,
+                        playerState = playerState,
+                        modifier = Modifier
+                            .fillMaxWidth()
+                            .weight(0.15f),
+                        showDetailsAction = { trackDetailsVisible = true }
+                    )
+                }
+
+                if (details != null) {
+                    AnimatedVisibility(
+                        visible = trackDetailsVisible,
+                        enter = slideIn(
+                            animationSpec = spring(
+                                dampingRatio = Spring.DampingRatioMediumBouncy
+                            ),
+                            initialOffset = { size -> IntOffset(-size.width, 0) }
+                        ),
+                        exit = slideOut(
+                            animationSpec = tween(),
+                            targetOffset = { size -> IntOffset(-size.width, 0) }
+                        ),
+                        modifier = Modifier
+                            .align(Alignment.BottomStart)
+                            .padding(
+                                bottom = defaultBottomSheetPeekHeight + 6.dp,
+                                end = 64.dp
+                            ),
+                        content = {
+                            TrackDetails(
+                                details = details,
+                                backgroundColor = vibrantSurfaceColor,
+                                textColor = primaryTextColor,
+                                hideDetailsAction = { trackDetailsVisible = false },
+                            )
+                        }
+                    )
+                }
             }
         }
+    }
+}
+
+@Composable
+fun TrackDetails(
+    details: TrackDetails,
+    backgroundColor: Color,
+    textColor: Color,
+    hideDetailsAction: () -> Unit,
+    modifier: Modifier = Modifier
+) {
+    Row(
+        modifier
+            .clip(RoundedCornerShape(topEnd = 12.dp, bottomEnd = 12.dp))
+            .shadow(12.dp)
+            .background(backgroundColor)
+            .clickable(onClick = hideDetailsAction),
+        verticalAlignment = Alignment.CenterVertically
+    ) {
+        Column(
+            Modifier.weight(0.9f)
+        ) {
+            details.album?.let { TrackDetailsItem(title = "Album", value = it, color = textColor) }
+            TrackDetailsItem(title = "Date", value = details.date, color = textColor)
+            TrackDetailsItem(title = "Time", value = details.time, color = textColor)
+            TrackDetailsItem(title = "Meta", value = details.metadata, color = textColor)
+        }
+        Box(
+            modifier = Modifier
+                .weight(0.1f),
+            contentAlignment = Alignment.Center
+        ) {
+            Image(
+                painter = painterResource(id = R.drawable.ic_arrow_left),
+                contentDescription = "Close details",
+                colorFilter = ColorFilter.tint(textColor)
+            )
+        }
+    }
+}
+
+@Composable
+fun TrackDetailsItem(
+    title: String,
+    value: String,
+    color: Color
+) {
+    val context = LocalContext.current
+
+    Row(
+        Modifier
+            .clickable { context.copyToClipboard(value) }
+            .fillMaxWidth()
+            .padding(horizontal = 16.dp, vertical = 10.dp)
+    ) {
+        Text(
+            text = title,
+            color = color,
+            fontWeight = FontWeight.Bold
+        )
+        Spacer(modifier = Modifier.width(16.dp))
+        Text(
+            text = value,
+            color = color,
+            textAlign = TextAlign.End,
+            modifier = Modifier.weight(0.8f)
+        )
     }
 }
 
@@ -247,9 +384,11 @@ fun CoverWithServices(
     cover: Bitmap?,
     musicServices: MusicServicesData?,
     trackDataReady: Boolean,
-    modifier: Modifier = Modifier
+    modifier: Modifier = Modifier,
+    servicesOpened: Boolean,
+    onCoverClicked: () -> Unit,
+    onServiceSelected: (url: String) -> Unit
 ) {
-    var musicServicesMenuOpened by remember { mutableStateOf(false) }
     val context = LocalContext.current
 
     Box(modifier) {
@@ -258,14 +397,11 @@ fun CoverWithServices(
             modifier = Modifier
                 .fillMaxWidth()
                 .align(Alignment.BottomCenter)
-                .scale(animateFloatAsState(if (musicServicesMenuOpened) 1f else 0f).value),
-            musicServiceSelected = { url ->
-                context.openURL(url)
-                musicServicesMenuOpened = false
-            }
+                .scale(animateFloatAsState(if (servicesOpened) 1f else 0f).value),
+            musicServiceSelected = onServiceSelected
         )
 
-        val smallScaledCover = musicServicesMenuOpened
+        val smallScaledCover = servicesOpened
             && trackDataReady
             && musicServices?.hasSomething == true
 
@@ -295,7 +431,7 @@ fun CoverWithServices(
                     scaleY = scale
                 )
                 .singleCondition(trackDataReady) {
-                    clickable { musicServicesMenuOpened = !musicServicesMenuOpened }
+                    clickable(onClick = onCoverClicked)
                 }
         )
     }
@@ -421,7 +557,8 @@ fun PlayerMusicServices(
 fun PlaybackController(
     color: Color,
     playerState: PlayerState,
-    modifier: Modifier = Modifier
+    modifier: Modifier = Modifier,
+    showDetailsAction: () -> Unit
 ) {
     val context = LocalContext.current
 
@@ -494,18 +631,12 @@ fun PlaybackController(
             ) {
                 Image(
                     painter = painterResource(id = R.drawable.ic_info),
-                    contentDescription = "Info",
+                    contentDescription = "Details",
                     colorFilter = ColorFilter.tint(color),
                     modifier = Modifier
                         .padding(12.dp)
                         .size(42.dp)
-                        .borderlessClickable(
-                            onClick = {
-                                Toast
-                                    .makeText(context, "Info", Toast.LENGTH_SHORT)
-                                    .show()
-                            }
-                        )
+                        .borderlessClickable(onClick = showDetailsAction)
                 )
                 Spacer(modifier = Modifier.width(120.dp))
                 Image(

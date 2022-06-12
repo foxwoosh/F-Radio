@@ -43,6 +43,21 @@ fun Modifier.borderlessClickable(
     )
 }
 
+@OptIn(ExperimentalFoundationApi::class)
+fun Modifier.longClickable(
+    onLongClick: () -> Unit
+): Modifier = composed {
+    val h = LocalHapticFeedback.current
+
+    combinedClickable(
+        onClick = {},
+        onLongClick = {
+            h.performHapticFeedback(HapticFeedbackType.LongPress)
+            onLongClick()
+        }
+    )
+}
+
 fun Modifier.singleCondition(
     condition: Boolean,
     function: Modifier.() -> Modifier

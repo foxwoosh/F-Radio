@@ -85,17 +85,19 @@ class UltraWebSocketProvider @Inject constructor(
             }
             lastReconnectTry = System.currentTimeMillis().milliseconds
 
-            connect()
+            tryConnect()
             reconnectJob = null
         }
     }
 
     private fun tryConnect() {
-        if (canConnect()) connect()
+        if (canConnect()) {
+            connect()
+        }
     }
 
     private fun canConnect() = !isOpened
-        && networkStateProvider.networkState.value == NetworkState.CONNECTED
+        && networkStateProvider.networkState.value != NetworkState.CONNECTED
 
     fun connect() {
         if (webSocket == null && !isOpened)
@@ -133,32 +135,7 @@ class UltraWebSocketProvider @Inject constructor(
     }
 
     private suspend fun handleDataSongMessage(message: UltraSongDataWebSocketMessage) {
-        mutableTrackFlow.emit(
-            Track(
-                message.id,
-                message.title,
-                message.artist,
-                message.album,
-                "${message.root}${message.cover}",
-                message.youtubeMusicUrl,
-                message.youtubeUrl,
-                message.spotifyUrl,
-                message.iTunesUrl,
-                message.yandexMusicUrl,
-                message.previousTracks.map {
-                    PreviousTrack(
-                        it.title,
-                        it.artist,
-                        "${message.root}${it.cover}",
-                        it.youtubeMusicUrl,
-                        it.youtubeUrl,
-                        it.spotifyUrl,
-                        it.itunesUrl,
-                        it.yandexMusicUrl
-                    )
-                }.reversed()
-            )
-        )
+        mutableTrackFlow.emit(message.mapToModel())
     }
 
     private val listener = object : WebSocketListener() {
@@ -167,9 +144,7 @@ class UltraWebSocketProvider @Inject constructor(
 
             mutableSocketConnectionState.value = SocketState.Connected
 
-            webSocket.send(
-                AppJson.encodeToString(getClientInfoMessage())
-            )
+            webSocket.send(AppJson.encodeToString(getClientInfoMessage()))
         }
 
         override fun onMessage(webSocket: WebSocket, text: String) {

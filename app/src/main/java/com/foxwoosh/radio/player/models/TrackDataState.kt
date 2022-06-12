@@ -13,6 +13,7 @@ sealed class TrackDataState {
         val album: String?,
         val cover: Bitmap,
         val colors: PlayerColors,
-        val musicServices: MusicServicesData
+        val musicServices: MusicServicesData,
+        val details: TrackDetails
     ) : TrackDataState()
 }
