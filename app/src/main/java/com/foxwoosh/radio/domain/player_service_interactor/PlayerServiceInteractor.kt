@@ -1,20 +1,19 @@
-package com.foxwoosh.radio.domain
+package com.foxwoosh.radio.domain.player_service_interactor
 
-import android.util.Log
-import com.foxwoosh.radio.di.modules.PlayerServiceCoroutineScope
-import com.foxwoosh.radio.providers.image_provider.ImageProvider
-import com.foxwoosh.radio.player.helpers.CoverColorExtractor
 import com.foxwoosh.radio.data.storage.local.player.IPlayerLocalStorage
 import com.foxwoosh.radio.data.storage.remote.ultra.IUltraRemoteStorage
+import com.foxwoosh.radio.data.websocket.SocketError
 import com.foxwoosh.radio.data.websocket.SocketState
+import com.foxwoosh.radio.di.modules.PlayerServiceCoroutineScope
+import com.foxwoosh.radio.player.helpers.CoverColorExtractor
 import com.foxwoosh.radio.player.models.*
+import com.foxwoosh.radio.providers.image_provider.ImageProvider
 import dagger.hilt.android.scopes.ServiceScoped
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.flow.debounce
 import kotlinx.coroutines.flow.launchIn
 import kotlinx.coroutines.flow.onEach
-import java.net.SocketException
 import java.net.UnknownHostException
 import javax.inject.Inject
 
@@ -76,9 +75,9 @@ class PlayerServiceInteractor @Inject constructor(
                         playerLocalStorage.trackData.emit(
                             TrackDataState.Error(
                                 if (state.throwable is UnknownHostException) {
-                                    PlayerError.NO_INTERNET
+                                    SocketError.NO_INTERNET
                                 } else {
-                                    PlayerError.DEFAULT
+                                    SocketError.DEFAULT
                                 }
                             )
                         )

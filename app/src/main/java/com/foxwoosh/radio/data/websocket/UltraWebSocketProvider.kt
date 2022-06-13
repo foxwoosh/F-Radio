@@ -3,11 +3,10 @@ package com.foxwoosh.radio.data.websocket
 import android.os.Build
 import android.util.Log
 import com.foxwoosh.radio.AppJson
-import com.foxwoosh.radio.data.storage.models.PreviousTrack
-import com.foxwoosh.radio.data.storage.models.Track
 import com.foxwoosh.radio.data.websocket.messages.ParametrizedMessage
 import com.foxwoosh.radio.data.websocket.messages.UltraSongDataWebSocketMessage
 import com.foxwoosh.radio.data.websocket.messages.UltraWebSocketMessage
+import com.foxwoosh.radio.domain.models.Track
 import com.foxwoosh.radio.providers.network_state_provider.NetworkState
 import com.foxwoosh.radio.providers.network_state_provider.NetworkStateProvider
 import kotlinx.coroutines.*
@@ -55,23 +54,34 @@ class UltraWebSocketProvider @Inject constructor(
     private var reconnectJob: Job? = null
     private var lastReconnectTry = Duration.ZERO
 
-    val isOpened: Boolean
+    private val isSocketOpened: Boolean
         get() = socketConnectionState.value is SocketState.Connected
+
+    private val isSocketFailed: Boolean
+        get() = socketConnectionState.value is SocketState.Failure
+
+    private val isNetworkConnected: Boolean
+        get() = networkStateProvider.networkState.value == NetworkState.CONNECTED
 
     init {
         socketConnectionState
-            .onEach { if (needReconnect()) reconnect() }
+            .onEach {
+                if (needReconnect()) {
+                    reconnect()
+                }
+            }
             .launchIn(this)
 
         networkStateProvider
             .networkState
+            .drop(1) // don't need the first collect
             .onEach { tryConnect() }
             .launchIn(this)
     }
 
     private fun needReconnect(): Boolean {
-        return socketConnectionState.value is SocketState.Failure
-            && networkStateProvider.networkState.value == NetworkState.CONNECTED
+        return isSocketFailed
+            && isNetworkConnected
             && reconnectJob == null
             && canConnect()
     }
@@ -96,11 +106,10 @@ class UltraWebSocketProvider @Inject constructor(
         }
     }
 
-    private fun canConnect() = !isOpened
-        && networkStateProvider.networkState.value != NetworkState.CONNECTED
+    private fun canConnect() = !isSocketOpened && isNetworkConnected
 
     fun connect() {
-        if (webSocket == null && !isOpened)
+        if (webSocket == null && !isSocketOpened)
             mutableSocketConnectionState.value = SocketState.Connecting
 
             webSocket = httpClient.newWebSocket(

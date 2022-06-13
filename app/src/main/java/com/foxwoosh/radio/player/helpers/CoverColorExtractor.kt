@@ -1,7 +1,6 @@
 package com.foxwoosh.radio.player.helpers
 
 import android.graphics.Bitmap
-import android.util.Log
 import androidx.compose.ui.graphics.Color
 import androidx.palette.graphics.Palette
 import com.foxwoosh.radio.adjustBrightness

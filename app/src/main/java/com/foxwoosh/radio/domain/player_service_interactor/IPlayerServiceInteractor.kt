@@ -1,4 +1,4 @@
-package com.foxwoosh.radio.domain
+package com.foxwoosh.radio.domain.player_service_interactor
 
 import com.foxwoosh.radio.player.models.PlayerState
 import com.foxwoosh.radio.player.models.Station

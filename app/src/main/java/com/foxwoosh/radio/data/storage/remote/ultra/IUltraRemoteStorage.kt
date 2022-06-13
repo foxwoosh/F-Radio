@@ -1,7 +1,7 @@
 package com.foxwoosh.radio.data.storage.remote.ultra
 
-import com.foxwoosh.radio.data.storage.models.Track
 import com.foxwoosh.radio.data.websocket.SocketState
+import com.foxwoosh.radio.domain.models.Track
 import kotlinx.coroutines.flow.SharedFlow
 import kotlinx.coroutines.flow.StateFlow
 

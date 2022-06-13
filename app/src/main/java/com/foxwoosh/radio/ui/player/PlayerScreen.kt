@@ -38,11 +38,11 @@ import coil.ImageLoader
 import coil.compose.AsyncImage
 import com.foxwoosh.radio.R
 import com.foxwoosh.radio.copyToClipboard
+import com.foxwoosh.radio.data.websocket.SocketError
 import com.foxwoosh.radio.openURL
 import com.foxwoosh.radio.player.PlayerService
 import com.foxwoosh.radio.player.models.*
 import com.foxwoosh.radio.ui.borderlessClickable
-import com.foxwoosh.radio.ui.longClickable
 import com.foxwoosh.radio.ui.singleCondition
 import kotlinx.coroutines.launch
 import kotlin.math.absoluteValue
@@ -125,8 +125,8 @@ fun PlayerScreen() {
         is TrackDataState.Error -> {
             title = stringResource(
                 id = when ((trackData as TrackDataState.Error).error) {
-                    PlayerError.DEFAULT -> R.string.player_title_error_default
-                    PlayerError.NO_INTERNET -> R.string.player_title_error_no_internet
+                    SocketError.DEFAULT -> R.string.player_title_error_default
+                    SocketError.NO_INTERNET -> R.string.player_title_error_no_internet
                 }
             )
             artist = ""

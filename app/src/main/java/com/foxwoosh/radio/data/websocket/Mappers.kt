@@ -1,8 +1,8 @@
 package com.foxwoosh.radio.data.websocket
 
-import com.foxwoosh.radio.data.storage.models.PreviousTrack
-import com.foxwoosh.radio.data.storage.models.Track
 import com.foxwoosh.radio.data.websocket.messages.UltraSongDataWebSocketMessage
+import com.foxwoosh.radio.domain.models.PreviousTrack
+import com.foxwoosh.radio.domain.models.Track
 
 fun UltraSongDataWebSocketMessage.mapToModel() = Track(
     id = id,

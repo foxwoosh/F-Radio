@@ -1,7 +1,7 @@
 package com.foxwoosh.radio.di.modules
 
-import com.foxwoosh.radio.domain.IPlayerServiceInteractor
-import com.foxwoosh.radio.domain.PlayerServiceInteractor
+import com.foxwoosh.radio.domain.player_service_interactor.IPlayerServiceInteractor
+import com.foxwoosh.radio.domain.player_service_interactor.PlayerServiceInteractor
 import dagger.Binds
 import dagger.Module
 import dagger.hilt.InstallIn

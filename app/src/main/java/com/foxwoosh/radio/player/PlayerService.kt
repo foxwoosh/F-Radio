@@ -15,7 +15,7 @@ import androidx.media3.exoplayer.RenderersFactory
 import androidx.media3.exoplayer.audio.MediaCodecAudioRenderer
 import androidx.media3.exoplayer.mediacodec.MediaCodecSelector
 import com.foxwoosh.radio.di.modules.PlayerServiceCoroutineScope
-import com.foxwoosh.radio.domain.IPlayerServiceInteractor
+import com.foxwoosh.radio.domain.player_service_interactor.IPlayerServiceInteractor
 import com.foxwoosh.radio.notifications.NotificationPublisher
 import com.foxwoosh.radio.player.helpers.PlayerNotificationFabric
 import com.foxwoosh.radio.player.models.PlayerState

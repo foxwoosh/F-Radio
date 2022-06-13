@@ -1,4 +1,4 @@
-package com.foxwoosh.radio.data.storage.models
+package com.foxwoosh.radio.domain.models
 
 data class PreviousTrack(
     val title: String,
