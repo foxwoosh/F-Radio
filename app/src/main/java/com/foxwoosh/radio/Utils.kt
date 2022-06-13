@@ -4,10 +4,15 @@ import android.content.*
 import android.net.Uri
 import android.provider.Browser
 import android.util.Log
+import android.view.WindowInsets
 import android.widget.Toast
 import androidx.annotation.FloatRange
 import androidx.compose.ui.graphics.Color
+import androidx.core.view.WindowInsetsCompat
+import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.serialization.json.Json
+
+val Insets = MutableStateFlow(WindowInsetsCompat.CONSUMED)
 
 fun Context.openURL(url: String) {
     val validUrl = if (!url.startsWith("http", true)) {

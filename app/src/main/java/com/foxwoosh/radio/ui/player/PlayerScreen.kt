@@ -33,9 +33,11 @@ import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.*
 import androidx.constraintlayout.compose.ConstraintLayout
+import androidx.core.view.WindowInsetsCompat
 import androidx.hilt.navigation.compose.hiltViewModel
 import coil.ImageLoader
 import coil.compose.AsyncImage
+import com.foxwoosh.radio.Insets
 import com.foxwoosh.radio.R
 import com.foxwoosh.radio.copyToClipboard
 import com.foxwoosh.radio.data.websocket.SocketError
@@ -45,7 +47,6 @@ import com.foxwoosh.radio.player.models.*
 import com.foxwoosh.radio.ui.borderlessClickable
 import com.foxwoosh.radio.ui.singleCondition
 import com.foxwoosh.radio.ui.theme.BlackOverlay_20
-import com.foxwoosh.radio.ui.theme.WhiteOverlay_10
 import com.foxwoosh.radio.ui.theme.WhiteOverlay_20
 import kotlinx.coroutines.launch
 import kotlin.math.absoluteValue
@@ -65,6 +66,7 @@ fun PlayerScreen() {
     val previousTracks by viewModel.previousTracksFlow.collectAsState()
     val lyricsState by viewModel.lyricsStateFlow.collectAsState()
     val station by viewModel.stationFlow.collectAsState()
+    val insets by Insets.collectAsState()
 
     var musicServicesMenuOpened by remember { mutableStateOf(false) }
 
@@ -72,8 +74,12 @@ fun PlayerScreen() {
 
     val scope = rememberCoroutineScope()
 
-    val statusBarHeight = WindowInsets.statusBars.asPaddingValues().calculateTopPadding()
-    val navigationBarHeight = WindowInsets.navigationBars.asPaddingValues().calculateBottomPadding()
+    val statusBarHeight = with(density) {
+        insets.getInsets(WindowInsetsCompat.Type.statusBars()).top.toDp()
+    }
+    val navigationBarHeight = with(density) {
+        insets.getInsets(WindowInsetsCompat.Type.navigationBars()).bottom.toDp()
+    }
     val defaultBottomSheetPeekHeight = 80.dp + navigationBarHeight
 
     val colorAnimationSpec: AnimationSpec<Color> = tween(trackChangeDuration)
@@ -168,6 +174,7 @@ fun PlayerScreen() {
                 PlayerBottomSheetContent(
                     state = bottomSheetScaffoldState,
                     statusBarHeight = statusBarHeight,
+                    navigationBarHeight = navigationBarHeight,
                     backgroundColor = surfaceColor,
                     primaryTextColor = primaryTextColor,
                     secondaryTextColor = secondaryTextColor,
@@ -182,8 +189,7 @@ fun PlayerScreen() {
                 )
             },
             sheetShape = RoundedCornerShape(topStart = 12.dp, topEnd = 12.dp),
-            sheetPeekHeight = actualBottomSheetPeekHeight,
-            sheetElevation = 20.dp
+            sheetPeekHeight = actualBottomSheetPeekHeight
         ) {
             Box(
                 modifier = Modifier
@@ -199,8 +205,10 @@ fun PlayerScreen() {
                 Column(
                     modifier = Modifier
                         .fillMaxSize()
-                        .padding(bottom = defaultBottomSheetPeekHeight)
-                        .statusBarsPadding(),
+                        .padding(
+                            top = statusBarHeight,
+                            bottom = defaultBottomSheetPeekHeight
+                        ),
                     horizontalAlignment = Alignment.CenterHorizontally,
                     verticalArrangement = Arrangement.Center
                 ) {

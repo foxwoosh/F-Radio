@@ -19,13 +19,16 @@ import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.ColorFilter
 import androidx.compose.ui.platform.LocalContext
+import androidx.compose.ui.platform.LocalDensity
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.dp
+import androidx.core.view.WindowInsetsCompat
 import coil.compose.AsyncImage
+import com.foxwoosh.radio.Insets
 import com.foxwoosh.radio.R
 import com.foxwoosh.radio.domain.models.PreviousTrack
 import com.foxwoosh.radio.openURL
@@ -41,6 +44,7 @@ import kotlinx.coroutines.launch
 fun PlayerBottomSheetContent(
     state: BottomSheetScaffoldState,
     statusBarHeight: Dp,
+    navigationBarHeight: Dp,
     backgroundColor: Color,
     primaryTextColor: Color,
     secondaryTextColor: Color,
@@ -149,6 +153,7 @@ fun PlayerBottomSheetContent(
                         previousTracks = previousTracks,
                         primaryTextColor = primaryTextColor,
                         secondaryTextColor = secondaryTextColor,
+                        navigationBarHeight = navigationBarHeight,
                         modifier = Modifier.fillMaxSize()
                     )
                 }
@@ -184,9 +189,8 @@ fun PlayerBottomSheetContent(
                                         start = 16.dp,
                                         end = 16.dp,
                                         top = 16.dp,
-                                        bottom = 0.dp
+                                        bottom = navigationBarHeight
                                     )
-                                    .navigationBarsPadding()
                             ) {
                                 Text(
                                     text = stringResource(id = R.string.player_lyrics_beta_warning),
@@ -216,7 +220,8 @@ fun PreviousTracksList(
     previousTracks: List<PreviousTrack>,
     primaryTextColor: Color,
     secondaryTextColor: Color,
-    modifier: Modifier = Modifier
+    modifier: Modifier = Modifier,
+    navigationBarHeight: Dp
 ) {
     val context = LocalContext.current
 
@@ -224,7 +229,7 @@ fun PreviousTracksList(
 
     LazyColumn(
         modifier = modifier,
-        contentPadding = WindowInsets.navigationBars.asPaddingValues()
+        contentPadding = PaddingValues(bottom = navigationBarHeight)
     ) {
         items(
             items = previousTracks,
