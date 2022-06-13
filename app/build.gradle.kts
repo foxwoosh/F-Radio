@@ -20,6 +20,8 @@ plugins {
     kotlin("plugin.serialization")
 
     id("dagger.hilt.android.plugin")
+    id("com.google.gms.google-services")
+    id("com.google.firebase.crashlytics")
 }
 
 val p = Properties().apply {
@@ -50,7 +52,7 @@ android {
     }
 
     signingConfigs {
-        create("main") {
+        create("release") {
             storeFile = rootProject.file("release-keystore.jks")
             storePassword = p.getProperty("storePassword")
             keyAlias = p.getProperty("keyAlias")
@@ -69,7 +71,7 @@ android {
                 getDefaultProguardFile("proguard-android-optimize.txt"),
                 "proguard-rules.pro"
             )
-            signingConfig = signingConfigs.getByName("main")
+            signingConfig = signingConfigs.getByName("release")
         }
         getByName("debug") {
             isMinifyEnabled = false
@@ -137,6 +139,9 @@ dependencies {
     implementation("com.squareup.retrofit2:retrofit:2.9.0")
     implementation("com.jakewharton.retrofit:retrofit2-kotlinx-serialization-converter:0.8.0")
     implementation("org.jetbrains.kotlinx:kotlinx-serialization-json:1.3.3")
+
+    implementation("com.google.firebase:firebase-crashlytics-ktx:18.2.11")
+    implementation("com.google.firebase:firebase-analytics-ktx:21.0.0")
 
     testImplementation("junit:junit:4.13.2")
     androidTestImplementation("androidx.test.ext:junit:1.1.3")

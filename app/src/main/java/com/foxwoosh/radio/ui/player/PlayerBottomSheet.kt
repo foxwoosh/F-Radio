@@ -161,7 +161,7 @@ fun PlayerBottomSheetContent(
                                 contentAlignment = Alignment.Center
                             ) {
                                 Text(
-                                    text = lyricsState.toString(),
+                                    text = stringResource(id = R.string.player_page_no_data_lyrics),
                                     color = primaryTextColor
                                 )
                             }
