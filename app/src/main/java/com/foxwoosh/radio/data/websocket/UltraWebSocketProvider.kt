@@ -109,7 +109,7 @@ class UltraWebSocketProvider @Inject constructor(
     private fun canConnect() = !isSocketOpened && isNetworkConnected
 
     fun connect() {
-        if (webSocket == null && !isSocketOpened)
+        if (webSocket == null && !isSocketOpened) {
             mutableSocketConnectionState.value = SocketState.Connecting
 
             webSocket = httpClient.newWebSocket(
@@ -118,6 +118,7 @@ class UltraWebSocketProvider @Inject constructor(
                     .build(),
                 listener
             )
+        }
     }
 
     fun disconnect() {
@@ -149,7 +150,7 @@ class UltraWebSocketProvider @Inject constructor(
 
     private val listener = object : WebSocketListener() {
         override fun onOpen(webSocket: WebSocket, response: Response) {
-            Log.i(TAG, "onOpen")
+            Log.i(TAG, "onOpen, ${this@UltraWebSocketProvider.hashCode()}")
 
             mutableSocketConnectionState.value = SocketState.Connected
 

@@ -23,9 +23,7 @@ import com.foxwoosh.radio.player.models.Station
 import dagger.hilt.android.AndroidEntryPoint
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.cancel
-import kotlinx.coroutines.flow.combine
-import kotlinx.coroutines.flow.debounce
-import kotlinx.coroutines.flow.launchIn
+import kotlinx.coroutines.flow.*
 import javax.inject.Inject
 
 @AndroidEntryPoint
@@ -34,7 +32,6 @@ class PlayerService : Service() {
     companion object {
         private const val KEY_STATION = "0e877531-9b37-477d-853d-357462d88c63"
 
-        private var currentStation: Station? = null
         var isRunning = false
             private set
 
@@ -63,7 +60,7 @@ class PlayerService : Service() {
     lateinit var playerScope: CoroutineScope
 
     @Inject
-    lateinit var playerServiceInteractor: IPlayerServiceInteractor
+    lateinit var interactor: IPlayerServiceInteractor
 
     private val notificationFabric by lazy { PlayerNotificationFabric(this) }
 
@@ -117,20 +114,20 @@ class PlayerService : Service() {
     override fun onStartCommand(intent: Intent?, flags: Int, startId: Int): Int {
         val station = intent?.getSerializableExtra(KEY_STATION) as? Station
 
-        if (station != null && currentStation != station) {
+        if (station != null && interactor.station.value != station) {
             startForeground(
                 PlayerNotificationFabric.notificationID,
                 notificationFabric.getNotification(
-                    playerServiceInteractor.trackData.value,
+                    interactor.trackData.value,
                     mediaSession,
-                    playerServiceInteractor.playerState.value
+                    interactor.playerState.value
                 )
             )
             play(station.url)
 
-            playerServiceInteractor.startFetching(station)
+            interactor.startFetching(station)
 
-            currentStation = station
+            interactor.station.value = station
         }
 
         return START_NOT_STICKY
@@ -139,9 +136,9 @@ class PlayerService : Service() {
     override fun onDestroy() {
         Log.i("DDLOG", "destroying service")
 
-        currentStation?.let { playerServiceInteractor.stopFetching(it) }
+        interactor.station.value?.let { interactor.stopFetching(it) }
         isRunning = false
-        currentStation = null
+        interactor.station.value = null
 
         unregisterReceiver(broadcastReceiver)
         player.release()
@@ -166,9 +163,9 @@ class PlayerService : Service() {
     }
 
     private fun subscribeStateChanged() {
-        playerServiceInteractor
+        interactor
             .trackData
-            .combine(playerServiceInteractor.playerState) { trackData, playerState ->
+            .combine(interactor.playerState) { trackData, playerState ->
                 mediaSession?.setPlaybackState(
                     PlaybackState.Builder()
                         .setActions(
@@ -212,7 +209,8 @@ class PlayerService : Service() {
 
         override fun onReceive(context: Context, intent: Intent) {
             when (intent.action) {
-                PlayerNotificationFabric.ACTION_PLAYER_PLAY -> currentStation?.let { play(it.url) }
+                PlayerNotificationFabric.ACTION_PLAYER_PLAY ->
+                    interactor.station.value?.let { play(it.url) }
                 PlayerNotificationFabric.ACTION_PLAYER_PAUSE -> pause()
                 PlayerNotificationFabric.ACTION_PLAYER_STOP -> stopSelf()
             }
@@ -221,10 +219,10 @@ class PlayerService : Service() {
 
     private val playerStateListener = object : Player.Listener {
         override fun onPlaybackStateChanged(playbackState: Int) {
-            playerServiceInteractor.playerState.value = when (playbackState) {
+            interactor.playerState.value = when (playbackState) {
                 Player.STATE_BUFFERING -> PlayerState.BUFFERING
                 Player.STATE_READY -> PlayerState.PLAYING
-                Player.STATE_IDLE -> if (currentStation == null)
+                Player.STATE_IDLE -> if (interactor.station.value == null)
                     PlayerState.IDLE
                 else
                     PlayerState.PAUSED
@@ -248,7 +246,7 @@ class PlayerService : Service() {
 
     private val mediaSessionCallback = object : MediaSession.Callback() {
         override fun onPlay() {
-            currentStation?.let { play(it.url) }
+            interactor.station.value?.let { play(it.url) }
         }
 
         override fun onStop() {

@@ -9,6 +9,7 @@ import kotlinx.coroutines.flow.StateFlow
 interface IPlayerServiceInteractor {
     val trackData: StateFlow<TrackDataState>
     val playerState: MutableStateFlow<PlayerState>
+    val station: MutableStateFlow<Station?>
 
     fun startFetching(station: Station)
     fun stopFetching(station: Station)

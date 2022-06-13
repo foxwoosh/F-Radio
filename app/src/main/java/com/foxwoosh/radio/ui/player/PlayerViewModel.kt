@@ -22,6 +22,7 @@ class PlayerViewModel @Inject constructor(
     val trackDataFlow = playerLocalStorage.trackData.asStateFlow()
     val previousTracksFlow = playerLocalStorage.previousTracksData.asStateFlow()
     val playerStateFlow = playerLocalStorage.playerState.asStateFlow()
+    val stationFlow = playerLocalStorage.station.asStateFlow()
 
     private val mutableLyricsStateFlow = MutableStateFlow<LyricsDataState>(LyricsDataState.NoData)
     val lyricsStateFlow = mutableLyricsStateFlow.asStateFlow()

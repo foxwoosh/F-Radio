@@ -19,7 +19,7 @@ import androidx.compose.ui.unit.dp
 import com.foxwoosh.radio.R
 import com.foxwoosh.radio.player.PlayerService
 import com.foxwoosh.radio.player.models.Station
-import com.foxwoosh.radio.ui.theme.BlackOverlay
+import com.foxwoosh.radio.ui.theme.BlackOverlay_10
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.launch
 
@@ -71,7 +71,7 @@ fun PlayerBackdropStationSelector(
             )
         },
         backLayerBackgroundColor = surfaceColor,
-        frontLayerScrimColor = BlackOverlay,
+        frontLayerScrimColor = BlackOverlay_10,
         peekHeight = 0.dp,
         gesturesEnabled = false,
         backLayerContent = {

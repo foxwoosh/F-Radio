@@ -22,7 +22,6 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.draw.scale
-import androidx.compose.ui.draw.shadow
 import androidx.compose.ui.geometry.Offset
 import androidx.compose.ui.graphics.*
 import androidx.compose.ui.platform.LocalConfiguration
@@ -33,6 +32,7 @@ import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.*
+import androidx.constraintlayout.compose.ConstraintLayout
 import androidx.hilt.navigation.compose.hiltViewModel
 import coil.ImageLoader
 import coil.compose.AsyncImage
@@ -44,6 +44,9 @@ import com.foxwoosh.radio.player.PlayerService
 import com.foxwoosh.radio.player.models.*
 import com.foxwoosh.radio.ui.borderlessClickable
 import com.foxwoosh.radio.ui.singleCondition
+import com.foxwoosh.radio.ui.theme.BlackOverlay_20
+import com.foxwoosh.radio.ui.theme.WhiteOverlay_10
+import com.foxwoosh.radio.ui.theme.WhiteOverlay_20
 import kotlinx.coroutines.launch
 import kotlin.math.absoluteValue
 
@@ -61,8 +64,8 @@ fun PlayerScreen() {
     val playerState by viewModel.playerStateFlow.collectAsState()
     val previousTracks by viewModel.previousTracksFlow.collectAsState()
     val lyricsState by viewModel.lyricsStateFlow.collectAsState()
+    val station by viewModel.stationFlow.collectAsState()
 
-    var trackDetailsVisible by remember { mutableStateOf(false) }
     var musicServicesMenuOpened by remember { mutableStateOf(false) }
 
     val bottomSheetScaffoldState = rememberBottomSheetScaffoldState()
@@ -75,52 +78,25 @@ fun PlayerScreen() {
 
     val colorAnimationSpec: AnimationSpec<Color> = tween(trackChangeDuration)
     val gradientOffsetAnimationSpec: AnimationSpec<Float> = tween(trackChangeDuration)
-    val bottomSheetPeekHeightAnimationSpec: AnimationSpec<Dp> = spring(
-        dampingRatio = Spring.DampingRatioMediumBouncy
-    )
 
     val title: String
-    val artist: String
-    val cover: Bitmap?
-    val colors: PlayerColors
-    val musicServices: MusicServicesData?
-    val details: TrackDetails?
+    var artist = ""
+    var cover: Bitmap? = null
+    var colors = PlayerColors.default
+    var musicServices: MusicServicesData? = null
+    var actualBottomSheetPeekHeight: Dp = 0.dp
 
-    val gradientOffsetX: Float
-    val gradientOffsetY: Float
-    val actualBottomSheetPeekHeight: Dp
+    var gradientOffsetX = 0f
+    var gradientOffsetY = 0f
 
     when (trackData) {
         TrackDataState.Idle -> {
             title = stringResource(R.string.player_title_idle)
-            artist = ""
-            cover = null
-            colors = PlayerColors.default
-            musicServices = null
-            details = null
-            gradientOffsetX = animateFloatAsState(
-                targetValue = 0f,
-                animationSpec = gradientOffsetAnimationSpec
-            ).value
-            gradientOffsetY = animateFloatAsState(
-                targetValue = 0f,
-                animationSpec = gradientOffsetAnimationSpec
-            ).value
-            actualBottomSheetPeekHeight = 0.dp
 
-            trackDetailsVisible = false
             musicServicesMenuOpened = false
         }
         TrackDataState.Loading -> {
             title = stringResource(R.string.player_title_loading)
-            artist = ""
-            cover = null
-            colors = PlayerColors.default
-            musicServices = null
-            details = null
-            gradientOffsetX = 0f
-            gradientOffsetY = 0f
-            actualBottomSheetPeekHeight = 0.dp
         }
         is TrackDataState.Error -> {
             title = stringResource(
@@ -129,14 +105,6 @@ fun PlayerScreen() {
                     SocketError.NO_INTERNET -> R.string.player_title_error_no_internet
                 }
             )
-            artist = ""
-            cover = null
-            colors = PlayerColors.default
-            musicServices = null
-            details = null
-            gradientOffsetX = 0f
-            gradientOffsetY = 0f
-            actualBottomSheetPeekHeight = 0.dp
         }
         is TrackDataState.Ready -> {
             val data = trackData as TrackDataState.Ready
@@ -146,7 +114,7 @@ fun PlayerScreen() {
             cover = data.cover
             colors = data.colors
             musicServices = data.musicServices
-            details = data.details
+
             gradientOffsetX = animateFloatAsState(
                 targetValue = data.hashCode().absoluteValue %
                     with(density) { config.screenWidthDp.dp.toPx() },
@@ -157,10 +125,8 @@ fun PlayerScreen() {
                     with(density) { config.screenHeightDp.dp.toPx() },
                 animationSpec = gradientOffsetAnimationSpec
             ).value
-            actualBottomSheetPeekHeight = animateDpAsState(
-                targetValue = defaultBottomSheetPeekHeight,
-                animationSpec = bottomSheetPeekHeightAnimationSpec
-            ).value
+
+            actualBottomSheetPeekHeight = defaultBottomSheetPeekHeight
         }
     }
 
@@ -172,15 +138,9 @@ fun PlayerScreen() {
         }
     }
 
-    BackHandler(
-        bottomSheetScaffoldState.bottomSheetState.isExpanded
-            || trackDetailsVisible
-    ) {
+    BackHandler(bottomSheetScaffoldState.bottomSheetState.isExpanded) {
         if (bottomSheetScaffoldState.bottomSheetState.isExpanded) {
             scope.launch { bottomSheetScaffoldState.bottomSheetState.collapse() }
-        }
-        if (trackDetailsVisible) {
-            trackDetailsVisible = false
         }
     }
 
@@ -244,6 +204,12 @@ fun PlayerScreen() {
                     horizontalAlignment = Alignment.CenterHorizontally,
                     verticalArrangement = Arrangement.Center
                 ) {
+                    StationSelector(
+                        modifier = Modifier.padding(top = 12.dp),
+                        onSelectStationAction = { PlayerService.selectSource(context, it) },
+                        selectedStation = station
+                    )
+
                     CoverWithServices(
                         cover = cover,
                         musicServices = musicServices,
@@ -255,7 +221,7 @@ fun PlayerScreen() {
                             context.openURL(url)
                             musicServicesMenuOpened = false
                         },
-                        onCoverClicked = { musicServicesMenuOpened = !musicServicesMenuOpened},
+                        onCoverClicked = { musicServicesMenuOpened = !musicServicesMenuOpened },
                         servicesOpened = musicServicesMenuOpened
                     )
 
@@ -273,38 +239,7 @@ fun PlayerScreen() {
                         playerState = playerState,
                         modifier = Modifier
                             .fillMaxWidth()
-                            .weight(0.15f),
-                        showDetailsAction = { trackDetailsVisible = true }
-                    )
-                }
-
-                if (details != null) {
-                    AnimatedVisibility(
-                        visible = trackDetailsVisible,
-                        enter = slideIn(
-                            animationSpec = spring(
-                                dampingRatio = Spring.DampingRatioMediumBouncy
-                            ),
-                            initialOffset = { size -> IntOffset(-size.width, 0) }
-                        ),
-                        exit = slideOut(
-                            animationSpec = tween(),
-                            targetOffset = { size -> IntOffset(-size.width, 0) }
-                        ),
-                        modifier = Modifier
-                            .align(Alignment.BottomStart)
-                            .padding(
-                                bottom = defaultBottomSheetPeekHeight + 6.dp,
-                                end = 64.dp
-                            ),
-                        content = {
-                            TrackDetails(
-                                details = details,
-                                backgroundColor = vibrantSurfaceColor,
-                                textColor = primaryTextColor,
-                                hideDetailsAction = { trackDetailsVisible = false },
-                            )
-                        }
+                            .weight(0.15f)
                     )
                 }
             }
@@ -313,70 +248,46 @@ fun PlayerScreen() {
 }
 
 @Composable
-fun TrackDetails(
-    details: TrackDetails,
-    backgroundColor: Color,
-    textColor: Color,
-    hideDetailsAction: () -> Unit,
+fun StationSelector(
+    selectedStation: Station?,
+    onSelectStationAction: (Station) -> Unit,
     modifier: Modifier = Modifier
 ) {
     Row(
         modifier
-            .clip(RoundedCornerShape(topEnd = 12.dp, bottomEnd = 12.dp))
-            .shadow(12.dp)
-            .background(backgroundColor)
-            .clickable(onClick = hideDetailsAction),
-        verticalAlignment = Alignment.CenterVertically
+            .clip(RoundedCornerShape(12.dp))
+            .background(BlackOverlay_20)
     ) {
-        Column(
-            Modifier.weight(0.9f)
-        ) {
-            details.album?.let { TrackDetailsItem(title = "Album", value = it, color = textColor) }
-            TrackDetailsItem(title = "Date", value = details.date, color = textColor)
-            TrackDetailsItem(title = "Time", value = details.time, color = textColor)
-            TrackDetailsItem(title = "Meta", value = details.metadata, color = textColor)
-        }
-        Box(
-            modifier = Modifier
-                .weight(0.1f),
-            contentAlignment = Alignment.Center
-        ) {
-            Image(
-                painter = painterResource(id = R.drawable.ic_arrow_left),
-                contentDescription = "Close details",
-                colorFilter = ColorFilter.tint(textColor)
-            )
-        }
+        StationButton(
+            station = Station.ULTRA,
+            selected = selectedStation == Station.ULTRA,
+            onSelectStationAction = onSelectStationAction
+        )
+        StationButton(
+            station = Station.ULTRA_HD,
+            selected = selectedStation == Station.ULTRA_HD,
+            onSelectStationAction = onSelectStationAction
+        )
     }
 }
 
 @Composable
-fun TrackDetailsItem(
-    title: String,
-    value: String,
-    color: Color
+fun StationButton(
+    station: Station,
+    selected: Boolean,
+    onSelectStationAction: (Station) -> Unit
 ) {
-    val context = LocalContext.current
-
-    Row(
-        Modifier
-            .clickable { context.copyToClipboard(value) }
-            .fillMaxWidth()
-            .padding(horizontal = 16.dp, vertical = 10.dp)
-    ) {
-        Text(
-            text = title,
-            color = color,
-            fontWeight = FontWeight.Bold
-        )
-        Spacer(modifier = Modifier.width(16.dp))
-        Text(
-            text = value,
-            color = color,
-            textAlign = TextAlign.End,
-            modifier = Modifier.weight(0.8f)
-        )
-    }
+    Text(
+        text = station.stationName,
+        color = Color.White,
+        fontWeight = if (selected) FontWeight.Bold else FontWeight.Normal,
+        modifier = Modifier
+            .clip(RoundedCornerShape(14.dp))
+            .clickable { onSelectStationAction(station) }
+            .singleCondition(selected) { background(WhiteOverlay_20) }
+            .padding(horizontal = 8.dp, vertical = 6.dp),
+        fontSize = 14.sp
+    )
 }
 
 @Composable
@@ -557,30 +468,25 @@ fun PlayerMusicServices(
 fun PlaybackController(
     color: Color,
     playerState: PlayerState,
-    modifier: Modifier = Modifier,
-    showDetailsAction: () -> Unit
+    modifier: Modifier = Modifier
 ) {
     val context = LocalContext.current
 
-    Box(
+    ConstraintLayout(
         modifier = modifier
-            .height(72.dp),
-        contentAlignment = Alignment.Center
+            .height(72.dp)
     ) {
-        Box(contentAlignment = Alignment.Center) {
-            AnimatedVisibility(
-                visible = playerState == PlayerState.IDLE,
-                enter = scaleIn(),
-                exit = scaleOut()
-            ) {
-                OutlinedButton(onClick = { PlayerService.selectSource(context, Station.ULTRA) }) {
-                    Text(
-                        text = "Just play the only radio my lazy ass could bring to this application and sorry I don\'t have fucking fantasy to do a cool station selector",
-                        textAlign = TextAlign.Center
-                    )
-                }
-            }
+        val (centerBox, stopButton) = createRefs()
 
+        Box(
+            contentAlignment = Alignment.Center,
+            modifier = Modifier.constrainAs(centerBox) {
+                start.linkTo(parent.start)
+                end.linkTo(parent.end)
+                top.linkTo(parent.top)
+                bottom.linkTo(parent.bottom)
+            }
+        ) {
             AnimatedVisibility(
                 visible = playerState == PlayerState.PLAYING,
                 enter = scaleIn(),
@@ -623,32 +529,24 @@ fun PlaybackController(
         AnimatedVisibility(
             visible = playerState == PlayerState.PLAYING || playerState == PlayerState.PAUSED,
             enter = scaleIn(),
-            exit = scaleOut()
+            exit = scaleOut(),
+            modifier = Modifier
+                .constrainAs(stopButton) {
+                    start.linkTo(centerBox.end)
+                    top.linkTo(parent.top)
+                    bottom.linkTo(parent.bottom)
+                }
+                .padding(start = 16.dp)
         ) {
-            Row(
-                modifier = Modifier.fillMaxHeight(),
-                verticalAlignment = Alignment.CenterVertically
-            ) {
-                Image(
-                    painter = painterResource(id = R.drawable.ic_info),
-                    contentDescription = "Details",
-                    colorFilter = ColorFilter.tint(color),
-                    modifier = Modifier
-                        .padding(12.dp)
-                        .size(42.dp)
-                        .borderlessClickable(onClick = showDetailsAction)
-                )
-                Spacer(modifier = Modifier.width(120.dp))
-                Image(
-                    painter = painterResource(id = R.drawable.ic_player_stop_filled),
-                    contentDescription = "Stop",
-                    colorFilter = ColorFilter.tint(color),
-                    modifier = Modifier
-                        .padding(12.dp)
-                        .size(42.dp)
-                        .borderlessClickable(onClick = { PlayerService.stop(context) })
-                )
-            }
+            Image(
+                painter = painterResource(id = R.drawable.ic_player_stop_filled),
+                contentDescription = "Stop",
+                colorFilter = ColorFilter.tint(color),
+                modifier = Modifier
+                    .padding(12.dp)
+                    .size(42.dp)
+                    .borderlessClickable(onClick = { PlayerService.stop(context) })
+            )
         }
 
     }

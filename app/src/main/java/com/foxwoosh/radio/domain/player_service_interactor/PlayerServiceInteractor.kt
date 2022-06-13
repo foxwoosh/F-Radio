@@ -11,6 +11,7 @@ import com.foxwoosh.radio.providers.image_provider.ImageProvider
 import dagger.hilt.android.scopes.ServiceScoped
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.delay
+import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.debounce
 import kotlinx.coroutines.flow.launchIn
 import kotlinx.coroutines.flow.onEach
@@ -27,6 +28,7 @@ class PlayerServiceInteractor @Inject constructor(
 
     override val trackData = playerLocalStorage.trackData
     override val playerState = playerLocalStorage.playerState
+    override val station = playerLocalStorage.station
 
     init {
         ultraRemoteStorage
@@ -65,7 +67,7 @@ class PlayerServiceInteractor @Inject constructor(
 
         ultraRemoteStorage
             .dataConnectionState
-            .debounce(300)
+//            .debounce(300)
             .onEach { state ->
                 when (state) {
                     is SocketState.Connecting -> {
