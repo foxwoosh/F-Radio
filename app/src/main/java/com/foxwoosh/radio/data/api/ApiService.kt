@@ -51,9 +51,8 @@ class ApiService @Inject constructor() {
     interface FoxyApi {
         @GET("lyrics")
         suspend fun getLyrics(
-            @Query("k") key: String,
-            @Query("s") source: String,
-            @Query("q") query: String
+            @Query("artist") artist: String,
+            @Query("title") title: String
         ): LyricsResponse
     }
 }
