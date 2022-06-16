@@ -13,14 +13,18 @@ class CoilImageProvider @Inject constructor(
     @ApplicationContext private val context: Context
 ) : ImageProvider {
 
-    override suspend fun load(url: String): Bitmap {
-        val loader = ImageLoader(context)
-        val request = ImageRequest.Builder(context)
-            .data(url)
-            .allowHardware(false) // Disable hardware bitmaps.
-            .build()
+    override suspend fun load(url: String): Bitmap? {
+        return try {
+            val loader = ImageLoader(context)
+            val request = ImageRequest.Builder(context)
+                .data(url)
+                .allowHardware(false) // Disable hardware bitmaps.
+                .build()
 
-        val result = (loader.execute(request) as SuccessResult).drawable
-        return (result as BitmapDrawable).bitmap
+            val result = (loader.execute(request) as SuccessResult).drawable
+            return (result as BitmapDrawable).bitmap
+        } catch (e: Exception) {
+            null
+        }
     }
 }

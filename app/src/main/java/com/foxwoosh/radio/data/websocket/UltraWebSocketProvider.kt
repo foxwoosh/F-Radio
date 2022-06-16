@@ -13,7 +13,6 @@ import kotlinx.coroutines.*
 import kotlinx.coroutines.flow.*
 import kotlinx.serialization.decodeFromString
 import kotlinx.serialization.encodeToString
-import kotlinx.serialization.json.Json
 import kotlinx.serialization.json.jsonObject
 import kotlinx.serialization.json.jsonPrimitive
 import okhttp3.*
@@ -50,7 +49,9 @@ class UltraWebSocketProvider @Inject constructor(
         MutableStateFlow<SocketState>(SocketState.Initial)
     val socketConnectionState = mutableSocketConnectionState.asStateFlow()
 
-    private val reconnectDelay = 2_000
+    private var closedByUser = false
+
+    private val reconnectDelay = 5_000
     private var reconnectJob: Job? = null
     private var lastReconnectTry = Duration.ZERO
 
@@ -81,6 +82,7 @@ class UltraWebSocketProvider @Inject constructor(
 
     private fun needReconnect(): Boolean {
         return isSocketFailed
+            && !closedByUser
             && isNetworkConnected
             && reconnectJob == null
             && canConnect()
@@ -106,10 +108,12 @@ class UltraWebSocketProvider @Inject constructor(
         }
     }
 
-    private fun canConnect() = !isSocketOpened && isNetworkConnected
+    private fun canConnect() = !closedByUser && !isSocketOpened && isNetworkConnected
 
     fun connect() {
         if (webSocket == null && !isSocketOpened) {
+            closedByUser = false
+
             mutableSocketConnectionState.value = SocketState.Connecting
 
             webSocket = httpClient.newWebSocket(
@@ -122,6 +126,7 @@ class UltraWebSocketProvider @Inject constructor(
     }
 
     fun disconnect() {
+        closedByUser = true
         webSocket?.close(1000, "Bye")
     }
 
@@ -134,12 +139,12 @@ class UltraWebSocketProvider @Inject constructor(
 
     private fun getResponse(text: String): UltraWebSocketMessage? {
         val type = UltraWebSocketResponseType.fromValue(
-            Json.parseToJsonElement(text).jsonObject["type"]?.jsonPrimitive?.content
+            AppJson.parseToJsonElement(text).jsonObject["type"]?.jsonPrimitive?.content
         )
 
         return when (type) {
             UltraWebSocketResponseType.SONG_DATA ->
-                Json.decodeFromString<UltraSongDataWebSocketMessage>(text)
+                AppJson.decodeFromString<UltraSongDataWebSocketMessage>(text)
             else -> null
         }
     }

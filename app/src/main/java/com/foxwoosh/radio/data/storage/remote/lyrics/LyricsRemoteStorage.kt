@@ -11,16 +11,11 @@ class LyricsRemoteStorage @Inject constructor(
 ) : ILyricsRemoteStorage {
     override val lyricsFlow = MutableSharedFlow<String>()
 
-    private val fixQueryRegex = Regex("\\(.*?\\)")
-
     override suspend fun fetchLyrics(title: String, artist: String) {
         lyricsFlow.emit(
             apiService
                 .foxy
-                .getLyrics(
-                    fixQuery(artist),
-                    fixQuery(title)
-                )
+                .getLyrics(artist, title)
                 .lyrics
         )
     }
@@ -33,8 +28,4 @@ class LyricsRemoteStorage @Inject constructor(
         .lyrics
         .lyrics_body
         .substringBefore("*****")
-
-    private fun fixQuery(query: String) = query
-        .replace(fixQueryRegex,"")
-        .replace("&", " ")
 }

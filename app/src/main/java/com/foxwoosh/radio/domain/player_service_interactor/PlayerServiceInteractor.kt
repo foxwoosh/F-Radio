@@ -43,7 +43,8 @@ class PlayerServiceInteractor @Inject constructor(
                         artist = track.artist,
                         album = track.album,
                         cover = image,
-                        colors = CoverColorExtractor.extractColors(image),
+                        colors = image?.let { CoverColorExtractor.extractColors(it) }
+                            ?: PlayerColors.default,
                         musicServices = MusicServicesData(
                             track.youtubeMusicUrl,
                             track.youtubeUrl,
@@ -67,7 +68,6 @@ class PlayerServiceInteractor @Inject constructor(
 
         ultraRemoteStorage
             .dataConnectionState
-//            .debounce(300)
             .onEach { state ->
                 when (state) {
                     is SocketState.Connecting -> {

@@ -7,6 +7,7 @@
 package com.foxwoosh.radio.ui.player
 
 import android.graphics.Bitmap
+import android.util.Log
 import androidx.activity.compose.BackHandler
 import androidx.annotation.DrawableRes
 import androidx.compose.animation.*
@@ -24,6 +25,7 @@ import androidx.compose.ui.draw.clip
 import androidx.compose.ui.draw.scale
 import androidx.compose.ui.geometry.Offset
 import androidx.compose.ui.graphics.*
+import androidx.compose.ui.layout.onGloballyPositioned
 import androidx.compose.ui.platform.LocalConfiguration
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.platform.LocalDensity
@@ -240,6 +242,7 @@ fun PlayerScreen() {
                         secondaryTextColor = secondaryTextColor,
                         modifier = Modifier
                             .fillMaxWidth()
+                            .padding(horizontal = 12.dp)
                     )
 
                     PlaybackController(
@@ -263,7 +266,7 @@ fun StationSelector(
 ) {
     Row(
         modifier
-            .clip(RoundedCornerShape(12.dp))
+            .clip(RoundedCornerShape(14.dp))
             .background(BlackOverlay_20)
     ) {
         StationButton(
@@ -311,12 +314,19 @@ fun CoverWithServices(
     val context = LocalContext.current
 
     Box(modifier) {
+        val servicesScale by animateFloatAsState(if (servicesOpened) 1f else 0f)
+        var coverSize by remember { mutableStateOf(IntSize(0, 0)) }
+
         PlayerMusicServices(
             musicServices = musicServices,
             modifier = Modifier
                 .fillMaxWidth()
-                .align(Alignment.BottomCenter)
-                .scale(animateFloatAsState(if (servicesOpened) 1f else 0f).value),
+                .align(Alignment.Center)
+                .graphicsLayer {
+                    scaleX = servicesScale
+                    scaleY = servicesScale
+                    translationY = (coverSize.height / 2f) * servicesScale
+                },
             musicServiceSelected = onServiceSelected
         )
 
@@ -342,6 +352,11 @@ fun CoverWithServices(
                 .fillMaxSize()
                 .padding(horizontal = 32.dp)
                 .aspectRatio(1f)
+                .onGloballyPositioned {
+                    if (coverSize != it.size) {
+                        coverSize = it.size
+                    }
+                }
                 .graphicsLayer(
                     shadowElevation = animateFloatAsState(
                         if (smallScaledCover) 30f else 0f
@@ -409,7 +424,7 @@ fun PlayerMusicServices(
                     contentDescription = "Youtube Music",
                     modifier = Modifier
                         .padding(8.dp)
-                        .size(48.dp)
+                        .size(42.dp)
                         .borderlessClickable(
                             onClick = { musicServiceSelected(musicServices.youtubeMusic) },
                             onLongClick = { context.copyToClipboard(musicServices.youtubeMusic) }
@@ -422,7 +437,7 @@ fun PlayerMusicServices(
                     contentDescription = "Youtube",
                     modifier = Modifier
                         .padding(8.dp)
-                        .size(48.dp)
+                        .size(42.dp)
                         .borderlessClickable(
                             onClick = { musicServiceSelected(musicServices.youtube) },
                             onLongClick = { context.copyToClipboard(musicServices.youtube) }
@@ -435,7 +450,7 @@ fun PlayerMusicServices(
                     contentDescription = "Spotify",
                     modifier = Modifier
                         .padding(8.dp)
-                        .size(48.dp)
+                        .size(42.dp)
                         .borderlessClickable(
                             onClick = { musicServiceSelected(musicServices.spotify) },
                             onLongClick = { context.copyToClipboard(musicServices.spotify) }
@@ -448,7 +463,7 @@ fun PlayerMusicServices(
                     contentDescription = "iTunes",
                     modifier = Modifier
                         .padding(8.dp)
-                        .size(48.dp)
+                        .size(42.dp)
                         .borderlessClickable(
                             onClick = { musicServiceSelected(musicServices.iTunes) },
                             onLongClick = { context.copyToClipboard(musicServices.iTunes) }
@@ -461,7 +476,7 @@ fun PlayerMusicServices(
                     contentDescription = "Yandex Music",
                     modifier = Modifier
                         .padding(8.dp)
-                        .size(48.dp)
+                        .size(42.dp)
                         .borderlessClickable(
                             onClick = { musicServiceSelected(musicServices.yandexMusic) },
                             onLongClick = { context.copyToClipboard(musicServices.yandexMusic) }

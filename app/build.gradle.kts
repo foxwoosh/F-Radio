@@ -35,8 +35,8 @@ android {
         applicationId = "com.foxwoosh.radio"
         minSdk = 21
         targetSdk = 32
-        versionCode = 2
-        versionName = "0.0.2"
+        versionCode = 1
+        versionName = "0.0.1"
 
         testInstrumentationRunner = "androidx.test.runner.AndroidJUnitRunner"
         vectorDrawables.useSupportLibrary = false
@@ -49,6 +49,8 @@ android {
 
         buildConfigField("String", "MUSIXMATCH_KEY", p.getProperty("musixmatchKey"))
         buildConfigField("String", "FOXY_KEY", p.getProperty("foxyKey"))
+
+        resourceConfigurations += arrayOf("en", "ru")
     }
 
     signingConfigs {
