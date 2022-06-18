@@ -39,11 +39,9 @@ import androidx.core.view.WindowInsetsCompat
 import androidx.hilt.navigation.compose.hiltViewModel
 import coil.ImageLoader
 import coil.compose.AsyncImage
-import com.foxwoosh.radio.Insets
+import com.foxwoosh.radio.*
 import com.foxwoosh.radio.R
-import com.foxwoosh.radio.copyToClipboard
 import com.foxwoosh.radio.data.websocket.SocketError
-import com.foxwoosh.radio.openURL
 import com.foxwoosh.radio.player.PlayerService
 import com.foxwoosh.radio.player.models.*
 import com.foxwoosh.radio.ui.borderlessClickable
@@ -135,14 +133,6 @@ fun PlayerScreen() {
             ).value
 
             actualBottomSheetPeekHeight = defaultBottomSheetPeekHeight
-        }
-    }
-
-    LaunchedEffect(trackData) {
-        if (bottomSheetScaffoldState.bottomSheetState.isExpanded
-            && trackData is TrackDataState.Ready
-        ) {
-            viewModel.fetchLyricsForCurrentTrack()
         }
     }
 
@@ -254,6 +244,20 @@ fun PlayerScreen() {
                     )
                 }
             }
+        }
+    }
+
+    LaunchedEffect(trackData) {
+        if (bottomSheetScaffoldState.bottomSheetState.isExpanded
+            && trackData is TrackDataState.Ready
+        ) {
+            viewModel.fetchLyricsForCurrentTrack()
+        }
+
+        Log.i("DDLOG", "launched")
+        if (MainActivity.wait) {
+            Log.i("DDLOG", "conditioned")
+            MainActivity.wait = false
         }
     }
 }

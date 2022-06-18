@@ -1,9 +1,18 @@
 package com.foxwoosh.radio
 
+import android.animation.AnimatorSet
+import android.animation.ObjectAnimator
+import android.animation.ValueAnimator
 import android.os.Bundle
+import android.os.Handler
 import android.view.View
+import android.view.ViewTreeObserver
+import android.view.animation.LinearInterpolator
 import androidx.activity.ComponentActivity
 import androidx.activity.compose.setContent
+import androidx.core.animation.doOnEnd
+import androidx.core.os.postDelayed
+import androidx.core.splashscreen.SplashScreen.Companion.installSplashScreen
 import androidx.core.view.OnApplyWindowInsetsListener
 import androidx.core.view.ViewCompat
 import androidx.core.view.WindowCompat
@@ -19,7 +28,14 @@ import dagger.hilt.android.AndroidEntryPoint
 
 @AndroidEntryPoint
 class MainActivity : ComponentActivity() {
+
+    companion object {
+        var wait = true
+    }
+
     override fun onCreate(savedInstanceState: Bundle?) {
+        initiateSplash()
+
         super.onCreate(savedInstanceState)
 
         WindowCompat.setDecorFitsSystemWindows(window, false)
@@ -50,5 +66,27 @@ class MainActivity : ComponentActivity() {
                 }
             }
         }
+    }
+
+    private fun initiateSplash() {
+        var animationCompleted = false
+        val s = installSplashScreen()
+
+        s.setOnExitAnimationListener { viewProvider ->
+            val a = ValueAnimator.ofFloat(1f, 0f).apply {
+                addUpdateListener {
+                    viewProvider.view.alpha = it.animatedValue as Float
+                }
+                interpolator = LinearInterpolator()
+                doOnEnd {
+                    animationCompleted = true
+                    viewProvider.remove()
+                }
+            }
+
+            a.start()
+        }
+
+        s.setKeepOnScreenCondition { wait && !animationCompleted }
     }
 }
