@@ -7,7 +7,6 @@
 package com.foxwoosh.radio.ui.player
 
 import android.graphics.Bitmap
-import android.util.Log
 import androidx.activity.compose.BackHandler
 import androidx.annotation.DrawableRes
 import androidx.compose.animation.*
@@ -22,7 +21,6 @@ import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
-import androidx.compose.ui.draw.scale
 import androidx.compose.ui.geometry.Offset
 import androidx.compose.ui.graphics.*
 import androidx.compose.ui.layout.onGloballyPositioned
@@ -52,6 +50,8 @@ import kotlinx.coroutines.launch
 import kotlin.math.absoluteValue
 
 private const val trackChangeDuration = 1_000
+private val bottomSheetShape = RoundedCornerShape(topStart = 12.dp, topEnd = 12.dp)
+private val stationSelectorShape = RoundedCornerShape(14.dp)
 
 @Composable
 fun PlayerScreen() {
@@ -92,8 +92,8 @@ fun PlayerScreen() {
     var musicServices: MusicServicesData? = null
     var actualBottomSheetPeekHeight: Dp = 0.dp
 
-    var gradientOffsetX = 0f
-    var gradientOffsetY = 0f
+    var gradientOffsetValueX by remember { mutableStateOf(0f) }
+    var gradientOffsetValueY by remember { mutableStateOf(0f) }
 
     when (trackData) {
         TrackDataState.Idle -> {
@@ -121,16 +121,10 @@ fun PlayerScreen() {
             colors = data.colors
             musicServices = data.musicServices
 
-            gradientOffsetX = animateFloatAsState(
-                targetValue = data.hashCode().absoluteValue %
-                    with(density) { config.screenWidthDp.dp.toPx() },
-                animationSpec = gradientOffsetAnimationSpec
-            ).value
-            gradientOffsetY = animateFloatAsState(
-                targetValue = data.hashCode().absoluteValue %
-                    with(density) { config.screenHeightDp.dp.toPx() },
-                animationSpec = gradientOffsetAnimationSpec
-            ).value
+            gradientOffsetValueX = data.hashCode().absoluteValue %
+                with(density) { config.screenWidthDp.dp.toPx() }
+            gradientOffsetValueY = data.hashCode().absoluteValue %
+                with(density) { config.screenHeightDp.dp.toPx() }
 
             actualBottomSheetPeekHeight = defaultBottomSheetPeekHeight
         }
@@ -159,6 +153,15 @@ fun PlayerScreen() {
         animationSpec = colorAnimationSpec
     )
 
+    val gradientOffsetX by animateFloatAsState(
+        targetValue = gradientOffsetValueX,
+        animationSpec = gradientOffsetAnimationSpec
+    )
+    val gradientOffsetY by animateFloatAsState(
+        targetValue = gradientOffsetValueY,
+        animationSpec = gradientOffsetAnimationSpec
+    )
+
     Surface {
         BottomSheetScaffold(
             scaffoldState = bottomSheetScaffoldState,
@@ -180,7 +183,7 @@ fun PlayerScreen() {
                     }
                 )
             },
-            sheetShape = RoundedCornerShape(topStart = 12.dp, topEnd = 12.dp),
+            sheetShape = bottomSheetShape,
             sheetPeekHeight = actualBottomSheetPeekHeight
         ) {
             Box(
@@ -254,10 +257,8 @@ fun PlayerScreen() {
             viewModel.fetchLyricsForCurrentTrack()
         }
 
-        Log.i("DDLOG", "launched")
-        if (MainActivity.wait) {
-            Log.i("DDLOG", "conditioned")
-            MainActivity.wait = false
+        if (MainActivity.waitForInitialDrawing) {
+            MainActivity.waitForInitialDrawing = false
         }
     }
 }
@@ -270,7 +271,7 @@ fun StationSelector(
 ) {
     Row(
         modifier
-            .clip(RoundedCornerShape(14.dp))
+            .clip(stationSelectorShape)
             .background(BlackOverlay_20)
     ) {
         StationButton(
@@ -297,7 +298,7 @@ fun StationButton(
         color = Color.White,
         fontWeight = if (selected) FontWeight.Bold else FontWeight.Normal,
         modifier = Modifier
-            .clip(RoundedCornerShape(14.dp))
+            .clip(stationSelectorShape)
             .clickable { onSelectStationAction(station) }
             .singleCondition(selected) { background(WhiteOverlay_20) }
             .padding(horizontal = 8.dp, vertical = 6.dp),

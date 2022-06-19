@@ -2,7 +2,6 @@ package com.foxwoosh.radio.data.storage.remote.lyrics
 
 import com.foxwoosh.radio.BuildConfig
 import com.foxwoosh.radio.data.api.ApiService
-import com.foxwoosh.radio.data.api.foxy.responses.LyricsResponse
 import kotlinx.coroutines.flow.MutableSharedFlow
 import javax.inject.Inject
 

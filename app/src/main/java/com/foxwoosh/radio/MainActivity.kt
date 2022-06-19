@@ -1,8 +1,6 @@
 package com.foxwoosh.radio
 
 import android.animation.ValueAnimator
-import android.app.PictureInPictureParams
-import android.os.Build
 import android.os.Bundle
 import android.view.animation.LinearInterpolator
 import androidx.activity.ComponentActivity
@@ -24,23 +22,18 @@ import dagger.hilt.android.AndroidEntryPoint
 class MainActivity : ComponentActivity() {
 
     companion object {
-        var wait = true
+        var waitForInitialDrawing = true
     }
 
     override fun onCreate(savedInstanceState: Bundle?) {
-//        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.S) {
-            initiateSplash()
-//        }
+        initiateSplash()
 
         super.onCreate(savedInstanceState)
 
         WindowCompat.setDecorFitsSystemWindows(window, false)
 
-        ViewCompat.setOnApplyWindowInsetsListener(
-            window.decorView
-        ) { _, insets ->
-            Insets.value = insets
-            insets
+        ViewCompat.setOnApplyWindowInsetsListener(window.decorView) { _, insets ->
+            insets.also { Insets.value = it }
         }
 
         setContent {
@@ -74,6 +67,7 @@ class MainActivity : ComponentActivity() {
                     viewProvider.view.alpha = it.animatedValue as Float
                 }
                 interpolator = LinearInterpolator()
+                duration = 1000
                 doOnEnd {
                     animationCompleted = true
                     viewProvider.remove()
@@ -83,6 +77,6 @@ class MainActivity : ComponentActivity() {
             a.start()
         }
 
-        s.setKeepOnScreenCondition { wait && !animationCompleted }
+        s.setKeepOnScreenCondition { waitForInitialDrawing && !animationCompleted }
     }
 }
