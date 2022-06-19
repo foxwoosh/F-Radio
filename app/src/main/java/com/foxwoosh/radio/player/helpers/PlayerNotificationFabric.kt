@@ -161,7 +161,7 @@ class PlayerNotificationFabric(private val context: Context) {
             .setContentTitle(title)
             .setContentText(artist)
             .setLargeIcon(image)
-            .setSmallIcon(R.drawable.ic_foxy_radio_logo)
+            .setSmallIcon(R.drawable.ic_foxy_radio_notification)
             .setVisibility(Notification.VISIBILITY_PUBLIC)
             .setAutoCancel(false)
             .setOngoing(playerState != PlayerState.IDLE)

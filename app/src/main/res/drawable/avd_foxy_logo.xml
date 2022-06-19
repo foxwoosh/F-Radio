@@ -154,6 +154,10 @@
             </group>
             <group
                 android:name="zipper"
+                android:scaleX="0.6"
+                android:scaleY="0.6"
+                android:pivotX="96"
+                android:pivotY="96"
                 android:translateY="-96">
                 <path
                     android:name="path_27"
@@ -167,16 +171,16 @@
             <set>
                 <objectAnimator
                     android:propertyName="scaleX"
-                    android:duration="350"
+                    android:duration="500"
                     android:valueFrom="0"
-                    android:valueTo="1"
+                    android:valueTo="0.8"
                     android:valueType="floatType"
                     android:interpolator="@android:anim/overshoot_interpolator"/>
                 <objectAnimator
                     android:propertyName="scaleY"
-                    android:duration="350"
+                    android:duration="500"
                     android:valueFrom="0"
-                    android:valueTo="1"
+                    android:valueTo="0.8"
                     android:valueType="floatType"
                     android:interpolator="@android:anim/overshoot_interpolator"/>
             </set>
@@ -187,18 +191,18 @@
             <set>
                 <objectAnimator
                     android:propertyName="scaleX"
-                    android:startOffset="150"
-                    android:duration="350"
+                    android:startOffset="250"
+                    android:duration="400"
                     android:valueFrom="0"
-                    android:valueTo="1"
+                    android:valueTo="0.6"
                     android:valueType="floatType"
                     android:interpolator="@android:anim/overshoot_interpolator"/>
                 <objectAnimator
                     android:propertyName="scaleY"
-                    android:startOffset="150"
-                    android:duration="350"
+                    android:startOffset="250"
+                    android:duration="400"
                     android:valueFrom="0"
-                    android:valueTo="1"
+                    android:valueTo="0.6"
                     android:valueType="floatType"
                     android:interpolator="@android:anim/overshoot_interpolator"/>
             </set>
@@ -208,8 +212,8 @@
         <aapt:attr name="android:animation">
             <objectAnimator
                 android:propertyName="translateY"
-                android:startOffset="350"
-                android:duration="400"
+                android:startOffset="250"
+                android:duration="500"
                 android:valueFrom="-96"
                 android:valueTo="0"
                 android:valueType="floatType"

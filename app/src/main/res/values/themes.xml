@@ -6,4 +6,15 @@
         <item name="android:statusBarColor">@color/system_bars_color</item>
         <item name="android:navigationBarColor">@color/system_bars_color</item>
     </style>
+
+    <style name="AppTheme.Launch.Base" parent="Theme.SplashScreen">
+        <item name="windowSplashScreenBackground">#FF404040</item>
+        <item name="postSplashScreenTheme">@style/AppTheme</item>
+    </style>
+
+    <style name="AppTheme.Launch" parent="AppTheme.Launch.Base">
+        <item name="windowSplashScreenBackground">#FF404040</item>
+        <item name="windowSplashScreenAnimatedIcon">@drawable/ic_foxy_radio_splash</item>
+        <item name="postSplashScreenTheme">@style/AppTheme</item>
+    </style>
 </resources>

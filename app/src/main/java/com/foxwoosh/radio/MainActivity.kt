@@ -1,22 +1,16 @@
 package com.foxwoosh.radio
 
-import android.animation.AnimatorSet
-import android.animation.ObjectAnimator
 import android.animation.ValueAnimator
+import android.app.PictureInPictureParams
+import android.os.Build
 import android.os.Bundle
-import android.os.Handler
-import android.view.View
-import android.view.ViewTreeObserver
 import android.view.animation.LinearInterpolator
 import androidx.activity.ComponentActivity
 import androidx.activity.compose.setContent
 import androidx.core.animation.doOnEnd
-import androidx.core.os.postDelayed
 import androidx.core.splashscreen.SplashScreen.Companion.installSplashScreen
-import androidx.core.view.OnApplyWindowInsetsListener
 import androidx.core.view.ViewCompat
 import androidx.core.view.WindowCompat
-import androidx.core.view.WindowInsetsCompat
 import androidx.navigation.compose.NavHost
 import androidx.navigation.compose.composable
 import androidx.navigation.compose.rememberNavController
@@ -34,7 +28,9 @@ class MainActivity : ComponentActivity() {
     }
 
     override fun onCreate(savedInstanceState: Bundle?) {
-        initiateSplash()
+//        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.S) {
+            initiateSplash()
+//        }
 
         super.onCreate(savedInstanceState)
 
