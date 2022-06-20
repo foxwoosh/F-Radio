@@ -3,6 +3,7 @@ package com.foxwoosh.radio.data.websocket
 import android.os.Build
 import android.util.Log
 import com.foxwoosh.radio.AppJson
+import com.foxwoosh.radio.BuildConfig
 import com.foxwoosh.radio.data.websocket.messages.ParametrizedMessage
 import com.foxwoosh.radio.data.websocket.messages.UltraSongDataWebSocketMessage
 import com.foxwoosh.radio.data.websocket.messages.UltraWebSocketMessage
@@ -198,10 +199,9 @@ class UltraWebSocketProvider @Inject constructor(
         ParametrizedMessage.Type.SUBSCRIBE,
 
         mapOf(
-            "d_ma" to Build.MANUFACTURER,
-            "d_mo" to Build.MODEL,
-            "os" to "Android",
-            "o_v" to "${Build.VERSION.RELEASE} (API ${Build.VERSION.SDK_INT})"
+            "Device:" to "${Build.MANUFACTURER} ${Build.MODEL}",
+            "OS" to "Android ${Build.VERSION.RELEASE} (API ${Build.VERSION.SDK_INT})",
+            "App version" to "${BuildConfig.VERSION_NAME} (${BuildConfig.VERSION_CODE})",
         )
     )
 }
