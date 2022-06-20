@@ -199,7 +199,7 @@ class UltraWebSocketProvider @Inject constructor(
         ParametrizedMessage.Type.SUBSCRIBE,
 
         mapOf(
-            "Device:" to "${Build.MANUFACTURER} ${Build.MODEL}",
+            "Device" to "${Build.MANUFACTURER} ${Build.MODEL}",
             "OS" to "Android ${Build.VERSION.RELEASE} (API ${Build.VERSION.SDK_INT})",
             "App version" to "${BuildConfig.VERSION_NAME} (${BuildConfig.VERSION_CODE})",
         )
