@@ -27,6 +27,7 @@ import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.dp
 import coil.compose.AsyncImage
 import com.foxwoosh.radio.R
+import com.foxwoosh.radio.adjustBrightness
 import com.foxwoosh.radio.domain.models.PreviousTrack
 import com.foxwoosh.radio.openURL
 import com.foxwoosh.radio.player.models.MusicServicesData
@@ -155,55 +156,86 @@ fun PlayerBottomSheetContent(
                     )
                 }
                 PlayerBottomSheetPage.LYRICS.ordinal -> {
-                    when (lyricsState) {
-                        is LyricsDataState.NoData,
-                        is LyricsDataState.Error -> {
-                            Box(
-                                modifier = Modifier.fillMaxSize(),
-                                contentAlignment = Alignment.Center
-                            ) {
-                                Text(
-                                    text = stringResource(id = R.string.player_page_no_data_lyrics),
-                                    color = primaryTextColor
-                                )
-                            }
-                        }
-                        is LyricsDataState.Loading -> Box(
-                            modifier = Modifier.fillMaxSize(),
-                            contentAlignment = Alignment.Center
-                        ) {
-                            CircularProgressIndicator(
-                                color = primaryTextColor
-                            )
-                        }
-                        is LyricsDataState.Ready -> {
-                            val scrollState = rememberScrollState()
-                            Column(
-                                Modifier
-                                    .fillMaxSize()
-                                    .verticalScroll(scrollState)
-                                    .padding(
-                                        start = 16.dp,
-                                        end = 16.dp,
-                                        top = 16.dp,
-                                        bottom = navigationBarHeight
-                                    )
-                            ) {
-                                Text(
-                                    text = stringResource(id = R.string.player_lyrics_beta_warning),
-                                    color = primaryTextColor,
-                                    fontWeight = FontWeight.Bold,
-                                    textAlign = TextAlign.Center
-                                )
-                                Spacer(modifier = Modifier.height(16.dp))
-                                SelectionContainer {
-                                    Text(
-                                        text = lyricsState.lyrics,
-                                        color = primaryTextColor,
-                                        modifier = Modifier.fillMaxSize()
-                                    )
-                                }
-                            }
+                    LyricsPage(
+                        backgroundColor = backgroundColor,
+                        primaryTextColor = primaryTextColor,
+                        secondaryTextColor = secondaryTextColor,
+                        navigationBarHeight = navigationBarHeight,
+                        lyricsState = lyricsState
+                    )
+                }
+            }
+        }
+    }
+}
+
+@Composable
+fun LyricsPage(
+    backgroundColor: Color,
+    primaryTextColor: Color,
+    secondaryTextColor: Color,
+    navigationBarHeight: Dp,
+    lyricsState: LyricsDataState
+) {
+    Scaffold(backgroundColor = backgroundColor) {
+        when (lyricsState) {
+            is LyricsDataState.NoData,
+            is LyricsDataState.Error -> {
+                Box(
+                    modifier = Modifier.fillMaxSize(),
+                    contentAlignment = Alignment.Center
+                ) {
+                    Text(
+                        text = stringResource(id = R.string.player_page_no_data_lyrics),
+                        color = primaryTextColor
+                    )
+                }
+            }
+            is LyricsDataState.Loading -> Box(
+                modifier = Modifier.fillMaxSize(),
+                contentAlignment = Alignment.Center
+            ) {
+                CircularProgressIndicator(
+                    color = primaryTextColor
+                )
+            }
+            is LyricsDataState.Ready -> {
+                val scrollState = rememberScrollState()
+
+                Column(
+                    Modifier
+                        .fillMaxSize()
+                        .verticalScroll(scrollState)
+                        .padding(
+                            start = 16.dp,
+                            end = 16.dp,
+                            top = 16.dp,
+                            bottom = navigationBarHeight
+                        )
+                ) {
+                    Text(
+                        text = stringResource(id = R.string.player_lyrics_beta_warning),
+                        color = primaryTextColor,
+                        fontWeight = FontWeight.Bold,
+                        textAlign = TextAlign.Center
+                    )
+                    Spacer(modifier = Modifier.height(16.dp))
+                    SelectionContainer {
+                        Text(
+                            text = lyricsState.lyrics,
+                            color = primaryTextColor,
+                            modifier = Modifier.fillMaxSize()
+                        )
+                    }
+                    Spacer(modifier = Modifier.height(16.dp))
+
+                    Column(
+                        modifier = Modifier.fillMaxWidth(),
+                        horizontalAlignment = Alignment.CenterHorizontally
+                    ) {
+                        Text(text = "Something wrong with lyrics?")
+                        Button(onClick = { /*TODO*/ }) {
+                            Text(text = "Click here to report!")
                         }
                     }
                 }

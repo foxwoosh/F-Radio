@@ -7,7 +7,9 @@ import android.content.Intent
 import android.content.IntentFilter
 import android.media.session.MediaSession
 import android.media.session.PlaybackState
+import android.os.Bundle
 import android.os.IBinder
+import android.os.ResultReceiver
 import android.util.Log
 import androidx.media3.common.*
 import androidx.media3.exoplayer.ExoPlayer
@@ -33,9 +35,6 @@ class PlayerService : Service() {
 
     companion object {
         private const val KEY_STATION = "0e877531-9b37-477d-853d-357462d88c63"
-
-        var isRunning = false
-            private set
 
         fun selectSource(context: Context, station: Station) {
             context.startService(
@@ -98,8 +97,6 @@ class PlayerService : Service() {
     override fun onCreate() {
         super.onCreate()
 
-        isRunning = true
-
         registerReceiver(
             broadcastReceiver,
             broadcastReceiver.filter
@@ -136,11 +133,10 @@ class PlayerService : Service() {
     }
 
     override fun onDestroy() {
-        Log.i("DDLOG", "destroying service")
-
         interactor.station.value?.let { interactor.stopFetching(it) }
-        isRunning = false
         interactor.station.value = null
+
+        mediaSession?.isActive = false
 
         unregisterReceiver(broadcastReceiver)
         player.release()
@@ -152,9 +148,13 @@ class PlayerService : Service() {
 
     private fun play(url: String) {
         val mediaItem = MediaItem.fromUri(url)
+
+        player.playWhenReady = true
         player.setMediaItem(mediaItem)
         player.prepare()
         player.play()
+
+        mediaSession?.isActive = true
     }
 
     /**
@@ -170,12 +170,22 @@ class PlayerService : Service() {
             .combine(interactor.playerState) { trackData, playerState ->
                 mediaSession?.setPlaybackState(
                     PlaybackState.Builder()
+                        .setState(
+                            when (playerState) {
+                                PlayerState.PLAYING -> PlaybackState.STATE_PLAYING
+                                PlayerState.BUFFERING -> PlaybackState.STATE_BUFFERING
+                                PlayerState.PAUSED -> PlaybackState.STATE_PAUSED
+                                PlayerState.IDLE -> PlaybackState.STATE_STOPPED
+                            },
+                            0,
+                            1f
+                        )
                         .setActions(
                             when (playerState) {
                                 PlayerState.PLAYING -> {
-                                    PlaybackState.ACTION_PAUSE or PlaybackState.ACTION_STOP
+                                    PlaybackState.ACTION_PAUSE
                                 }
-                                PlayerState.IDLE -> {
+                                PlayerState.PAUSED -> {
                                     PlaybackState.ACTION_PLAY
                                 }
                                 else -> 0
@@ -235,14 +245,12 @@ class PlayerService : Service() {
             }
         }
 
-        override fun onPlayerError(error: PlaybackException) {
-            super.onPlayerError(error)
-            Log.e("DDLOG", "onPlayerError", error)
-        }
+        override fun onPlayWhenReadyChanged(playWhenReady: Boolean, reason: Int) {
+            super.onPlayWhenReadyChanged(playWhenReady, reason)
 
-        override fun onPlayerErrorChanged(error: PlaybackException?) {
-            super.onPlayerErrorChanged(error)
-            Log.e("DDLOG", "onPlayerErrorChanged", error)
+            if (!playWhenReady) {
+                pause()
+            }
         }
     }
 
@@ -252,6 +260,10 @@ class PlayerService : Service() {
         }
 
         override fun onStop() {
+            pause()
+        }
+
+        override fun onPause() {
             pause()
         }
     }
