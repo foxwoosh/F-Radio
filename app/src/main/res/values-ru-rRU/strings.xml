@@ -1,19 +1,21 @@
 <?xml version="1.0" encoding="utf-8"?>
 <resources>
+    <string name="common_copied_to_clipboard">Скопировано в буфер обмена</string>
+
     <string name="notification_channel_audio_player">Аудио плеер</string>
     <string name="notification_action_play">Воспроизвести</string>
     <string name="notification_action_stop">Стоп</string>
     <string name="notification_action_pause">Пауза</string>
+
     <string name="player_title_idle">Станция не выбрана</string>
     <string name="player_title_loading">Загрузка…</string>
     <string name="player_title_error_default">Ошибка при загрузке информации</string>
     <string name="player_title_error_no_internet">Нет соединения</string>
-    <string name="player_select_station_button">Выбрать</string>
-    <string name="station_selector_title">Выберите станцию</string>
     <string name="player_page_no_data_previous_tracks">Нет предыдущих треков</string>
     <string name="player_page_no_data_lyrics">Текст не найден</string>
     <string name="player_page_title_previous_tracks">Прошлые треки</string>
     <string name="player_page_title_lyrics">Текст (beta)</string>
-    <string name="player_lyrics_beta_warning">[Тексты песен на данный момент находятся в Бете, а значит они могут отсутствовать или быть неполными. Функционал станет полным позже.]</string>
-    <string name="common_copied_to_clipboard">Скопировано в буфер обмена</string>
+
+    <string name="settings_hello">Привет,</string>
+    <string name="settings_stranger">незнакомец!</string>
 </resources>

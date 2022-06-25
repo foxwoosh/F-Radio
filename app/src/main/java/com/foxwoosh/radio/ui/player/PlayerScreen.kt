@@ -17,6 +17,8 @@ import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.*
+import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.filled.Settings
 import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
@@ -33,17 +35,17 @@ import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.*
 import androidx.constraintlayout.compose.ConstraintLayout
-import androidx.core.view.WindowInsetsCompat
 import androidx.hilt.navigation.compose.hiltViewModel
 import coil.ImageLoader
 import coil.compose.AsyncImage
-import com.foxwoosh.radio.*
+import com.foxwoosh.radio.MainActivity
 import com.foxwoosh.radio.R
+import com.foxwoosh.radio.copyToClipboard
 import com.foxwoosh.radio.data.websocket.SocketError
+import com.foxwoosh.radio.openURL
 import com.foxwoosh.radio.player.PlayerService
 import com.foxwoosh.radio.player.models.*
-import com.foxwoosh.radio.ui.borderlessClickable
-import com.foxwoosh.radio.ui.singleCondition
+import com.foxwoosh.radio.ui.*
 import com.foxwoosh.radio.ui.theme.BlackOverlay_20
 import com.foxwoosh.radio.ui.theme.WhiteOverlay_20
 import kotlinx.coroutines.launch
@@ -54,7 +56,9 @@ private val bottomSheetShape = RoundedCornerShape(topStart = 12.dp, topEnd = 12.
 private val stationSelectorShape = RoundedCornerShape(14.dp)
 
 @Composable
-fun PlayerScreen() {
+fun PlayerScreen(
+    navigateToSettings: () -> Unit
+) {
     val config = LocalConfiguration.current
     val density = LocalDensity.current
     val context = LocalContext.current
@@ -73,14 +77,7 @@ fun PlayerScreen() {
     val bottomSheetScaffoldState = rememberBottomSheetScaffoldState()
 
     val scope = rememberCoroutineScope()
-
-    val statusBarHeight = with(density) {
-        insets.getInsets(WindowInsetsCompat.Type.statusBars()).top.toDp()
-    }
-    val navigationBarHeight = with(density) {
-        insets.getInsets(WindowInsetsCompat.Type.navigationBars()).bottom.toDp()
-    }
-    val defaultBottomSheetPeekHeight = 80.dp + navigationBarHeight
+    val defaultBottomSheetPeekHeight = 80.dp + insets.navigationBar
 
     val colorAnimationSpec: AnimationSpec<Color> = tween(trackChangeDuration)
     val gradientOffsetAnimationSpec: AnimationSpec<Float> = tween(trackChangeDuration)
@@ -162,90 +159,98 @@ fun PlayerScreen() {
         animationSpec = gradientOffsetAnimationSpec
     )
 
-    Surface {
-        BottomSheetScaffold(
-            scaffoldState = bottomSheetScaffoldState,
-            sheetContent = {
-                PlayerBottomSheetContent(
-                    state = bottomSheetScaffoldState,
-                    statusBarHeight = statusBarHeight,
-                    navigationBarHeight = navigationBarHeight,
-                    backgroundColor = surfaceColor,
-                    primaryTextColor = primaryTextColor,
-                    secondaryTextColor = secondaryTextColor,
-                    previousTracks = previousTracks,
-                    lyricsState = lyricsState,
-                    onPageBecomesVisible = { page ->
-                        when (page) {
-                            PlayerBottomSheetPage.LYRICS ->
-                                viewModel.fetchLyricsForCurrentTrack()
-                        }
+    BottomSheetScaffold(
+        scaffoldState = bottomSheetScaffoldState,
+        sheetContent = {
+            PlayerBottomSheetContent(
+                state = bottomSheetScaffoldState,
+                statusBarHeight = insets.statusBar,
+                navigationBarHeight = insets.navigationBar,
+                backgroundColor = surfaceColor,
+                primaryTextColor = primaryTextColor,
+                secondaryTextColor = secondaryTextColor,
+                previousTracks = previousTracks,
+                lyricsState = lyricsState,
+                onPageBecomesVisible = { page ->
+                    when (page) {
+                        PlayerBottomSheetPage.LYRICS ->
+                            viewModel.fetchLyricsForCurrentTrack()
                     }
+                }
+            )
+        },
+        sheetShape = bottomSheetShape,
+        sheetPeekHeight = actualBottomSheetPeekHeight
+    ) {
+        Box(
+            modifier = Modifier
+                .fillMaxSize()
+                .background(
+                    brush = Brush.radialGradient(
+                        colors = listOf(vibrantSurfaceColor, surfaceColor),
+                        center = Offset(gradientOffsetX, gradientOffsetY),
+                        tileMode = TileMode.Mirror
+                    )
                 )
-            },
-            sheetShape = bottomSheetShape,
-            sheetPeekHeight = actualBottomSheetPeekHeight
         ) {
-            Box(
+            Column(
                 modifier = Modifier
                     .fillMaxSize()
-                    .background(
-                        brush = Brush.radialGradient(
-                            colors = listOf(vibrantSurfaceColor, surfaceColor),
-                            center = Offset(gradientOffsetX, gradientOffsetY),
-                            tileMode = TileMode.Mirror
-                        )
-                    )
+                    .padding(
+                        top = insets.statusBar,
+                        bottom = defaultBottomSheetPeekHeight
+                    ),
+                horizontalAlignment = Alignment.CenterHorizontally,
+                verticalArrangement = Arrangement.Center
             ) {
-                Column(
-                    modifier = Modifier
-                        .fillMaxSize()
-                        .padding(
-                            top = statusBarHeight,
-                            bottom = defaultBottomSheetPeekHeight
-                        ),
-                    horizontalAlignment = Alignment.CenterHorizontally,
-                    verticalArrangement = Arrangement.Center
-                ) {
+                Box(modifier = Modifier.fillMaxWidth()) {
                     StationSelector(
-                        modifier = Modifier.padding(top = 12.dp),
+                        modifier = Modifier
+                            .align(Alignment.Center),
                         onSelectStationAction = { PlayerService.selectSource(context, it) },
                         selectedStation = station
                     )
 
-                    CoverWithServices(
-                        cover = cover,
-                        musicServices = musicServices,
-                        trackDataReady = trackData is TrackDataState.Ready,
-                        modifier = Modifier
-                            .fillMaxWidth()
-                            .weight(0.6f),
-                        onServiceSelected = { url ->
-                            context.openURL(url)
-                            musicServicesMenuOpened = false
-                        },
-                        onCoverClicked = { musicServicesMenuOpened = !musicServicesMenuOpened },
-                        servicesOpened = musicServicesMenuOpened
-                    )
-
-                    TrackInfo(
-                        title = title,
-                        primaryTextColor = primaryTextColor,
-                        artist = artist,
-                        secondaryTextColor = secondaryTextColor,
-                        modifier = Modifier
-                            .fillMaxWidth()
-                            .padding(horizontal = 12.dp)
-                    )
-
-                    PlaybackController(
-                        color = primaryTextColor,
-                        playerState = playerState,
-                        modifier = Modifier
-                            .fillMaxWidth()
-                            .weight(0.15f)
-                    )
+                    IconButton(
+                        onClick = { navigateToSettings() },
+                        modifier = Modifier.align(Alignment.CenterEnd)
+                    ) {
+                        Icon(Icons.Filled.Settings, contentDescription = "Settings")
+                    }
                 }
+
+                CoverWithServices(
+                    cover = cover,
+                    musicServices = musicServices,
+                    trackDataReady = trackData is TrackDataState.Ready,
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .weight(0.6f),
+                    onServiceSelected = { url ->
+                        context.openURL(url)
+                        musicServicesMenuOpened = false
+                    },
+                    onCoverClicked = { musicServicesMenuOpened = !musicServicesMenuOpened },
+                    servicesOpened = musicServicesMenuOpened
+                )
+
+                TrackInfo(
+                    title = title,
+                    primaryTextColor = primaryTextColor,
+                    artist = artist,
+                    secondaryTextColor = secondaryTextColor,
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .padding(horizontal = 12.dp)
+                )
+
+                PlaybackController(
+                    color = primaryTextColor,
+                    playerState = playerState,
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .weight(0.15f)
+                )
             }
         }
     }

@@ -1,3 +1,5 @@
+@file:OptIn(ExperimentalAnimationApi::class)
+
 package com.foxwoosh.radio
 
 import android.animation.ValueAnimator
@@ -5,17 +7,22 @@ import android.os.Bundle
 import android.view.animation.LinearInterpolator
 import androidx.activity.ComponentActivity
 import androidx.activity.compose.setContent
+import androidx.compose.animation.*
+import androidx.compose.animation.core.tween
+import androidx.compose.ui.unit.IntOffset
 import androidx.core.animation.doOnEnd
 import androidx.core.splashscreen.SplashScreen.Companion.installSplashScreen
 import androidx.core.view.ViewCompat
 import androidx.core.view.WindowCompat
-import androidx.navigation.compose.NavHost
-import androidx.navigation.compose.composable
-import androidx.navigation.compose.rememberNavController
 import com.foxwoosh.radio.ui.AppDestination
+import com.foxwoosh.radio.ui.Insets
 import com.foxwoosh.radio.ui.login.LoginScreen
 import com.foxwoosh.radio.ui.player.PlayerScreen
+import com.foxwoosh.radio.ui.settings.SettingsScreen
 import com.foxwoosh.radio.ui.theme.FoxyRadioTheme
+import com.google.accompanist.navigation.animation.AnimatedNavHost
+import com.google.accompanist.navigation.animation.composable
+import com.google.accompanist.navigation.animation.rememberAnimatedNavController
 import dagger.hilt.android.AndroidEntryPoint
 
 @AndroidEntryPoint
@@ -38,19 +45,38 @@ class MainActivity : ComponentActivity() {
 
         setContent {
             FoxyRadioTheme {
-                val navController = rememberNavController()
+                val navController = rememberAnimatedNavController()
 
-                NavHost(
+                AnimatedNavHost(
                     navController = navController,
                     startDestination = AppDestination.Player.route
                 ) {
                     composable(route = AppDestination.Login.route) {
-                        LoginScreen {
-                            navController.navigate(AppDestination.Player.route)
-                        }
+                        LoginScreen(
+                            navigateToPlayer = { navController.navigate(AppDestination.Player) }
+                        )
                     }
                     composable(route = AppDestination.Player.route) {
-                        PlayerScreen()
+                        PlayerScreen(
+                            navigateToSettings = { navController.navigate(AppDestination.Settings) }
+                        )
+                    }
+                    composable(
+                        route = AppDestination.Settings.route,
+                        enterTransition = {
+                            slideIntoContainer(
+                                AnimatedContentScope.SlideDirection.Up,
+                                tween(300)
+                            )
+                        },
+                        popExitTransition = {
+                            slideOutOfContainer(
+                                AnimatedContentScope.SlideDirection.Down,
+                                tween(200)
+                            )
+                        }
+                    ) {
+                        SettingsScreen()
                     }
                 }
             }

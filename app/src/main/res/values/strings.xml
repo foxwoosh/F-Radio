@@ -1,19 +1,22 @@
 <resources>
     <string name="app_name" translatable="false">Foxy Radio</string>
+
+    <string name="common_copied_to_clipboard">Copied to clipboard</string>
+
     <string name="notification_channel_audio_player">Audio Player</string>
     <string name="notification_action_play">Play</string>
     <string name="notification_action_stop">Stop</string>
     <string name="notification_action_pause">Pause</string>
+
     <string name="player_title_idle">No station selected</string>
     <string name="player_title_loading">Loading…</string>
     <string name="player_title_error_default">Couldn\'t load track data</string>
     <string name="player_title_error_no_internet">No internet connection</string>
-    <string name="player_select_station_button">Select</string>
-    <string name="station_selector_title">Select station</string>
     <string name="player_page_no_data_previous_tracks">No previous tracks</string>
     <string name="player_page_no_data_lyrics">No lyrics found</string>
     <string name="player_page_title_previous_tracks">Previous tracks</string>
     <string name="player_page_title_lyrics">Lyrics (beta)</string>
-    <string name="player_lyrics_beta_warning">[Lyrics are supported as Beta. This means it could be missing or not full. It will be updated later.]</string>
-    <string name="common_copied_to_clipboard">Copied to clipboard</string>
+
+    <string name="settings_hello">Hi</string>
+    <string name="settings_stranger">Stranger!</string>
 </resources>

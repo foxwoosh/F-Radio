@@ -213,13 +213,6 @@ fun LyricsPage(
                             bottom = navigationBarHeight
                         )
                 ) {
-                    Text(
-                        text = stringResource(id = R.string.player_lyrics_beta_warning),
-                        color = primaryTextColor,
-                        fontWeight = FontWeight.Bold,
-                        textAlign = TextAlign.Center
-                    )
-                    Spacer(modifier = Modifier.height(16.dp))
                     SelectionContainer {
                         Text(
                             text = lyricsState.lyrics,
@@ -227,17 +220,27 @@ fun LyricsPage(
                             modifier = Modifier.fillMaxSize()
                         )
                     }
-                    Spacer(modifier = Modifier.height(16.dp))
-
-                    Column(
-                        modifier = Modifier.fillMaxWidth(),
-                        horizontalAlignment = Alignment.CenterHorizontally
-                    ) {
-                        Text(text = "Something wrong with lyrics?")
-                        Button(onClick = { /*TODO*/ }) {
-                            Text(text = "Click here to report!")
-                        }
-                    }
+//                    Spacer(modifier = Modifier.height(16.dp))
+//
+//                    Column(
+//                        modifier = Modifier.fillMaxWidth(),
+//                        horizontalAlignment = Alignment.CenterHorizontally
+//                    ) {
+//                        Text(
+//                            text = "Something wrong with lyrics?",
+//                            color = secondaryTextColor,
+//                            fontWeight = FontWeight.Medium
+//                        )
+//                        Button(
+//                            onClick = { /*TODO*/ },
+//                            colors = ButtonDefaults.buttonColors(
+//                                backgroundColor = secondaryTextColor,
+//                                contentColor = backgroundColor
+//                            )
+//                        ) {
+//                            Text(text = "Click here to report!")
+//                        }
+//                    }
                 }
             }
         }

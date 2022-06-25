@@ -8,10 +8,10 @@ import android.widget.Toast
 import androidx.annotation.FloatRange
 import androidx.compose.ui.graphics.Color
 import androidx.core.view.WindowInsetsCompat
+import androidx.navigation.NavHostController
+import com.foxwoosh.radio.ui.AppDestination
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.serialization.json.Json
-
-val Insets = MutableStateFlow(WindowInsetsCompat.CONSUMED)
 
 fun Context.openURL(url: String) {
     val validUrl = if (!url.startsWith("http", true)) {
@@ -51,6 +51,10 @@ fun Color.adjustBrightness(@FloatRange(from = 0.0) factor: Float) : Color {
         blue = (blue * factor).coerceAtMost(255f),
         alpha = alpha
     )
+}
+
+fun NavHostController.navigate(destination: AppDestination) {
+    navigate(destination.route)
 }
 
 val AppJson = Json {
