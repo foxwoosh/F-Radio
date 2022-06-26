@@ -1,6 +1,7 @@
 package com.foxwoosh.radio.data.api
 
 import com.foxwoosh.radio.AppJson
+import com.foxwoosh.radio.BuildConfig
 import com.foxwoosh.radio.data.api.foxy.requests.LoginRequest
 import com.foxwoosh.radio.data.api.foxy.requests.RegisterRequest
 import com.foxwoosh.radio.data.api.foxy.responses.AuthResponse
@@ -22,6 +23,12 @@ import javax.inject.Singleton
 @Singleton
 class ApiService @Inject constructor() {
 
+    private val baseUrl = StringBuilder()
+        .append(if (BuildConfig.DEBUG) "http://" else "https://")
+        .append(BuildConfig.BASE_URL)
+        .append("/")
+        .toString()
+
     private val client = OkHttpClient.Builder()
         .connectTimeout(10, TimeUnit.SECONDS)
         .readTimeout(30, TimeUnit.SECONDS)
@@ -38,7 +45,7 @@ class ApiService @Inject constructor() {
         .create()
 
     val foxy: FoxyApi = Retrofit.Builder()
-        .baseUrl("https://foxwoosh.space/")
+        .baseUrl(baseUrl)
         .client(client)
         .addConverterFactory(converterFactory)
         .build()
@@ -50,7 +57,7 @@ class ApiService @Inject constructor() {
             @Query("apikey") key: String,
             @Query("q_track") title: String,
             @Query("q_artist") artist: String
-        ) : LyricsMatchResponse
+        ): LyricsMatchResponse
     }
 
     interface FoxyApi {

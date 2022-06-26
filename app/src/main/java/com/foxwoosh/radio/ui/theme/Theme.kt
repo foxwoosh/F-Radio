@@ -7,7 +7,7 @@ import androidx.compose.runtime.Composable
 import androidx.compose.ui.graphics.Color
 
 private val LightColorPalette = lightColors(
-    primary = Tundora,
+    primary = FoxyDark,
     onPrimary = Color.White,
     onBackground = Color.White,
     onSurface = Color.White,

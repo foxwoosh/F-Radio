@@ -1,3 +1,5 @@
+@file:OptIn(ExperimentalPagerApi::class)
+
 package com.foxwoosh.radio.ui.settings
 
 import androidx.compose.foundation.layout.*
@@ -17,6 +19,10 @@ import androidx.hilt.navigation.compose.hiltViewModel
 import com.foxwoosh.radio.R
 import com.foxwoosh.radio.ui.*
 import com.foxwoosh.radio.ui.theme.CodGray
+import com.google.accompanist.pager.ExperimentalPagerApi
+import com.google.accompanist.pager.HorizontalPager
+import com.google.accompanist.pager.pagerTabIndicatorOffset
+import com.google.accompanist.pager.rememberPagerState
 import kotlinx.coroutines.launch
 
 @Composable
@@ -64,14 +70,14 @@ fun SettingsScreen() {
                 fontWeight = FontWeight.Medium
             )
             Text(
-                text = (user?.name ?: stringResource(id = R.string.settings_stranger)) + " \uD83E\uDD8A",
+                text = (user?.name ?: stringResource(id = R.string.settings_stranger))
+                    + " \uD83E\uDD8A",
                 color = Color.White,
                 fontSize = 24.sp,
                 fontWeight = FontWeight.Normal
             )
 
             Spacer(modifier = Modifier.height(64.dp))
-
 
             var login by rememberSaveable { mutableStateOf("") }
             var password by rememberSaveable { mutableStateOf("") }
@@ -91,7 +97,10 @@ fun SettingsScreen() {
                 singleLine = true,
                 onValueChange = { password = it },
                 keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Password),
-                visualTransformation = PasswordVisualTransformation()
+                visualTransformation = PasswordVisualTransformation(),
+                colors = TextFieldDefaults.textFieldColors(
+
+                )
             )
 
             Spacer(modifier = Modifier.height(16.dp))
@@ -105,4 +114,57 @@ fun SettingsScreen() {
             }
         }
     }
+}
+
+@Composable
+fun AuthForm() {
+    val pagerState = rememberPagerState()
+
+    TabRow(
+        selectedTabIndex = pagerState.currentPage,
+        indicator = { tabPositions ->
+            TabRowDefaults.Indicator(
+                modifier = Modifier
+                    .pagerTabIndicatorOffset(pagerState, tabPositions),
+            )
+        },
+        modifier = Modifier
+            .fillMaxWidth()
+            .height(56.dp)
+    ) {
+        AuthPage.values().forEach {
+            Tab(
+                text = {
+                    Text(
+                        text = stringResource(
+                            id = when (it) {
+                                AuthPage.LOGIN ->
+                                    R.string.settings_page_login
+                                AuthPage.REGISTER ->
+                                    R.string.settings_page_register
+                            }
+                        ).uppercase()
+                    )
+                },
+                selected = pagerState.currentPage == it.ordinal,
+                onClick = {}
+            )
+        }
+    }
+
+    HorizontalPager(
+        count = AuthPage.values().size,
+        state = pagerState,
+        modifier = Modifier
+            .fillMaxSize()
+    ) { pageIndex ->
+        when (pageIndex) {
+            AuthPage.LOGIN.ordinal -> {}
+            AuthPage.REGISTER.ordinal -> {}
+        }
+    }
+}
+
+private enum class AuthPage {
+    LOGIN, REGISTER
 }

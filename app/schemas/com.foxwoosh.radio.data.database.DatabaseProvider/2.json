@@ -2,7 +2,7 @@
   "formatVersion": 1,
   "database": {
     "version": 2,
-    "identityHash": "a149c25cf2c77b26a27e8776a1457eed",
+    "identityHash": "4abed0ee2366089fb62f2750d2ae06c2",
     "entities": [
       {
         "tableName": "favorite_tracks",
@@ -87,9 +87,15 @@
         "foreignKeys": []
       },
       {
-        "tableName": "user",
-        "createSql": "CREATE TABLE IF NOT EXISTS `${TABLE_NAME}` (`id` INTEGER NOT NULL, `login` TEXT NOT NULL, `name` TEXT NOT NULL, `email` TEXT NOT NULL, PRIMARY KEY(`id`))",
+        "tableName": "current_user",
+        "createSql": "CREATE TABLE IF NOT EXISTS `${TABLE_NAME}` (`key` INTEGER NOT NULL, `id` INTEGER NOT NULL, `name` TEXT NOT NULL, `login` TEXT NOT NULL, `email` TEXT NOT NULL, PRIMARY KEY(`key`))",
         "fields": [
+          {
+            "fieldPath": "key",
+            "columnName": "key",
+            "affinity": "INTEGER",
+            "notNull": true
+          },
           {
             "fieldPath": "id",
             "columnName": "id",
@@ -97,14 +103,14 @@
             "notNull": true
           },
           {
-            "fieldPath": "login",
-            "columnName": "login",
+            "fieldPath": "name",
+            "columnName": "name",
             "affinity": "TEXT",
             "notNull": true
           },
           {
-            "fieldPath": "name",
-            "columnName": "name",
+            "fieldPath": "login",
+            "columnName": "login",
             "affinity": "TEXT",
             "notNull": true
           },
@@ -117,7 +123,7 @@
         ],
         "primaryKey": {
           "columnNames": [
-            "id"
+            "key"
           ],
           "autoGenerate": false
         },
@@ -128,7 +134,7 @@
     "views": [],
     "setupQueries": [
       "CREATE TABLE IF NOT EXISTS room_master_table (id INTEGER PRIMARY KEY,identity_hash TEXT)",
-      "INSERT OR REPLACE INTO room_master_table (id,identity_hash) VALUES(42, 'a149c25cf2c77b26a27e8776a1457eed')"
+      "INSERT OR REPLACE INTO room_master_table (id,identity_hash) VALUES(42, '4abed0ee2366089fb62f2750d2ae06c2')"
     ]
   }
 }

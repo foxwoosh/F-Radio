@@ -35,6 +35,12 @@ class UltraWebSocketProvider @Inject constructor(
     private val job = SupervisorJob()
     override val coroutineContext = job + Dispatchers.IO
 
+    private val url = StringBuilder()
+        .append(if (BuildConfig.DEBUG) "ws://" else "wss://")
+        .append(BuildConfig.BASE_URL)
+        .append("/ultra")
+        .toString()
+
     private val httpClient = OkHttpClient.Builder()
         .connectTimeout(10, TimeUnit.SECONDS)
         .readTimeout(5, TimeUnit.SECONDS)
@@ -119,7 +125,7 @@ class UltraWebSocketProvider @Inject constructor(
 
             webSocket = httpClient.newWebSocket(
                 Request.Builder()
-                    .url("wss://foxwoosh.space/ultra")
+                    .url(url)
                     .build(),
                 listener
             )

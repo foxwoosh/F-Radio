@@ -16,3 +16,4 @@ val Tutu = Color(0xFFFFFEFF)
 
 val Foxy = Color(0xFFFFAB88)
 val FoxyLight = Color(0xFFFFDC92)
+val FoxyDark = Color(0xFFD5620A)

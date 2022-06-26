@@ -4,9 +4,9 @@ import com.foxwoosh.radio.domain.models.CurrentUser
 import kotlinx.coroutines.flow.Flow
 
 interface IUserLocalStorage {
-    val user: Flow<CurrentUser?>
+    val currentUser: Flow<CurrentUser?>
 
     suspend fun saveToken(token: String)
 
-    suspend fun saveUser(id: Long, login: String, name: String, email: String)
+    suspend fun saveCurrentUser(user: CurrentUser)
 }

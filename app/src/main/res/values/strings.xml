@@ -20,4 +20,6 @@
     <string name="settings_hello">Hi</string>
     <string name="settings_stranger">Stranger!</string>
     <string name="settings_error_registration">Something wrong, please try again later</string>
+    <string name="settings_page_login">Login</string>
+    <string name="settings_page_register">Register</string>
 </resources>

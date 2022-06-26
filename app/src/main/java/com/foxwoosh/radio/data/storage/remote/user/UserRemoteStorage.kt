@@ -4,7 +4,6 @@ import com.foxwoosh.radio.data.api.ApiService
 import com.foxwoosh.radio.data.api.foxy.requests.LoginRequest
 import com.foxwoosh.radio.data.api.foxy.requests.RegisterRequest
 import com.foxwoosh.radio.domain.models.CurrentUser
-import com.foxwoosh.radio.md5
 import javax.inject.Inject
 
 class UserRemoteStorage @Inject constructor(
@@ -12,7 +11,7 @@ class UserRemoteStorage @Inject constructor(
 ) : IUserRemoteStorage {
     override suspend fun register(
         login: String,
-        password: String,
+        passwordHash: String,
         name: String,
         email: String,
         onTokenReceived: suspend (String) -> Unit
@@ -22,7 +21,7 @@ class UserRemoteStorage @Inject constructor(
             .register(
                 RegisterRequest(
                     login,
-                    password.md5(),
+                    passwordHash,
                     email,
                     name
                 )
@@ -35,15 +34,15 @@ class UserRemoteStorage @Inject constructor(
 
     override suspend fun login(
         login: String,
-        password: String,
-        onTokenReceived: (String) -> Unit
+        passwordHash: String,
+        onTokenReceived: suspend (String) -> Unit
     ): CurrentUser {
         val response = apiService
             .foxy
             .login(
                 LoginRequest(
                     login,
-                    password.md5()
+                    passwordHash
                 )
             )
 

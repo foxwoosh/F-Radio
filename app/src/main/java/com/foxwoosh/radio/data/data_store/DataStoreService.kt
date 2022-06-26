@@ -1,7 +1,9 @@
 package com.foxwoosh.radio.data.data_store
 
 import android.content.Context
+import androidx.datastore.preferences.core.Preferences
 import androidx.datastore.preferences.core.edit
+import androidx.datastore.preferences.core.longPreferencesKey
 import androidx.datastore.preferences.core.stringPreferencesKey
 import androidx.datastore.preferences.preferencesDataStore
 import dagger.hilt.android.qualifiers.ApplicationContext
@@ -18,14 +20,28 @@ class DataStoreService @Inject constructor(
     private val Context.dataStore by preferencesDataStore(DataStoreKeys.SETTINGS)
 
     suspend fun saveString(key: String, value: String) {
-        appContext.dataStore.edit { data ->
-            data[stringPreferencesKey(key)] = value
-        }
+        saveValue(stringPreferencesKey(key), value)
     }
 
     suspend fun getString(key: String): String? {
-        return appContext.dataStore.data.map { data ->
-            data[stringPreferencesKey(key)]
-        }.firstOrNull()
+        return getValue(stringPreferencesKey(key))
+    }
+
+    suspend fun saveLong(key: String, value: Long) {
+        saveValue(longPreferencesKey(key), value)
+    }
+
+    suspend fun getLong(key: String): Long? {
+        return getValue(longPreferencesKey(key))
+    }
+
+    private suspend fun <T> saveValue(key: Preferences.Key<T>, value: T) {
+        appContext.dataStore.edit { data ->
+            data[key] = value
+        }
+    }
+
+    private suspend fun <T> getValue(key: Preferences.Key<T>): T? {
+        return appContext.dataStore.data.map { data -> data[key] }.firstOrNull()
     }
 }

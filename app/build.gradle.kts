@@ -67,13 +67,13 @@ android {
             isMinifyEnabled = true
             isShrinkResources = true
 
-//            isDebuggable = true
-
             proguardFiles(
                 getDefaultProguardFile("proguard-android-optimize.txt"),
                 "proguard-rules.pro"
             )
             signingConfig = signingConfigs.getByName("release")
+
+            buildConfigField("String", "BASE_URL", p.getProperty("baseUrlProduction"))
         }
         getByName("debug") {
             isMinifyEnabled = false
@@ -81,6 +81,8 @@ android {
                 getDefaultProguardFile("proguard-android-optimize.txt"),
                 "proguard-rules.pro"
             )
+
+            buildConfigField("String", "BASE_URL", p.getProperty("baseUrlDebug"))
         }
     }
 

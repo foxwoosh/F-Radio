@@ -5,7 +5,7 @@ import com.foxwoosh.radio.domain.models.CurrentUser
 interface IUserRemoteStorage {
     suspend fun register(
         login: String,
-        password: String,
+        passwordHash: String,
         name: String,
         email: String,
         onTokenReceived: suspend (String) -> Unit
@@ -13,7 +13,7 @@ interface IUserRemoteStorage {
 
     suspend fun login(
         login: String,
-        password: String,
-        onTokenReceived: (String) -> Unit
+        passwordHash: String,
+        onTokenReceived: suspend (String) -> Unit
     ): CurrentUser
 }

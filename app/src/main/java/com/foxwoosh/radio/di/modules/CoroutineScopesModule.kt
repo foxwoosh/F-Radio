@@ -5,6 +5,7 @@ import dagger.Provides
 import dagger.hilt.InstallIn
 import dagger.hilt.android.components.ServiceComponent
 import dagger.hilt.android.scopes.ServiceScoped
+import dagger.hilt.android.scopes.ViewModelScoped
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.SupervisorJob
@@ -17,9 +18,20 @@ class CoroutineScopesModule {
     @Provides
     @PlayerServiceCoroutineScope
     @ServiceScoped
-    fun provide() = CoroutineScope(SupervisorJob() + Dispatchers.IO)
+    fun providePlayerServiceCoroutineScope() =
+        CoroutineScope(SupervisorJob() + Dispatchers.IO)
+
+    @Provides
+    @SettingsInteractorScope
+    @ViewModelScoped
+    fun provideSettingsInteractorScope() =
+        CoroutineScope(SupervisorJob() + Dispatchers.IO)
 }
 
 @Qualifier
 @Retention(AnnotationRetention.BINARY)
 annotation class PlayerServiceCoroutineScope
+
+@Qualifier
+@Retention(AnnotationRetention.BINARY)
+annotation class SettingsInteractorScope

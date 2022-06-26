@@ -18,11 +18,13 @@ class DatabaseService @Inject constructor(
         "database.db"
     ).build()
 
-    suspend fun write(block: DatabaseProvider.() -> Unit) {
+    suspend fun write(block: suspend DatabaseProvider.() -> Unit) {
         withContext(Dispatchers.IO) {
             block(db)
         }
     }
 
-    val user = db.user()
+    fun <T> read(block: DatabaseProvider.() -> T): T {
+        return block(db)
+    }
 }
