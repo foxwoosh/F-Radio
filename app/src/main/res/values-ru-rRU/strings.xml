@@ -18,7 +18,15 @@
 
     <string name="settings_hello">Привет,</string>
     <string name="settings_stranger">незнакомец!</string>
+    <string name="settings_stranger_description">(Познакомимся? Жми сюда!)</string>
     <string name="settings_error_registration">Что-то пошло не так, попробуй позднее</string>
-    <string name="settings_page_login">Войти</string>
-    <string name="settings_page_register">Зарегистрироваться</string>
+    <string name="settings_page_title_login">Вход</string>
+    <string name="settings_page_title_registration">Регистрация</string>
+    <string name="settings_auth_button_login">Войти</string>
+    <string name="settings_auth_button_register">Зарегистрироваться</string>
+
+    <string name="settings_auth_field_login">Логин</string>
+    <string name="settings_auth_field_password">Пароль</string>
+    <string name="settings_auth_field_name">Имя или никнейм</string>
+    <string name="settings_auth_field_email">Email</string>
 </resources>

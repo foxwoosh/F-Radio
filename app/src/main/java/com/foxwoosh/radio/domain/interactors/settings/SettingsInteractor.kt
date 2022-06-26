@@ -2,10 +2,8 @@ package com.foxwoosh.radio.domain.interactors.settings
 
 import com.foxwoosh.radio.data.storage.local.user.IUserLocalStorage
 import com.foxwoosh.radio.data.storage.remote.user.IUserRemoteStorage
-import com.foxwoosh.radio.di.modules.SettingsInteractorScope
 import com.foxwoosh.radio.md5
 import dagger.hilt.android.scopes.ViewModelScoped
-import kotlinx.coroutines.CoroutineScope
 import javax.inject.Inject
 
 @ViewModelScoped

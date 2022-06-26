@@ -19,7 +19,15 @@
 
     <string name="settings_hello">Hi</string>
     <string name="settings_stranger">Stranger!</string>
+    <string name="settings_stranger_description">(Wanna be friends? Tap here!)</string>
     <string name="settings_error_registration">Something wrong, please try again later</string>
-    <string name="settings_page_login">Login</string>
-    <string name="settings_page_register">Register</string>
+    <string name="settings_page_title_login">Login</string>
+    <string name="settings_page_title_registration">Registration</string>
+    <string name="settings_auth_button_login">Login</string>
+    <string name="settings_auth_button_register">Register</string>
+
+    <string name="settings_auth_field_login">Login</string>
+    <string name="settings_auth_field_password">Password</string>
+    <string name="settings_auth_field_name">Name or nickname</string>
+    <string name="settings_auth_field_email">Email</string>
 </resources>

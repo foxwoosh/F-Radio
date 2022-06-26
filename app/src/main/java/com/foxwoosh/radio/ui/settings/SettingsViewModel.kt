@@ -30,4 +30,16 @@ class SettingsViewModel @Inject constructor(
             }
         }
     }
+
+    fun login(login: String, password: String) {
+        viewModelScope.launch {
+            try {
+                interactor.login(login, password)
+            } catch (e: Exception) {
+                mutableEventFlow.emit(
+                    SettingsEvent.Error(R.string.settings_error_registration)
+                )
+            }
+        }
+    }
 }
