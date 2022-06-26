@@ -19,3 +19,15 @@ inline val WindowInsetsCompat.navigationBar: Dp
     get() = with(LocalDensity.current) {
         getInsets(WindowInsetsCompat.Type.navigationBars()).bottom.toDp()
     }
+
+inline val WindowInsetsCompat.systemBottom: Dp
+    @Composable
+    get() = with(LocalDensity.current) {
+        val ime = getInsets(WindowInsetsCompat.Type.ime()).bottom
+
+        if (ime == 0) {
+            getInsets(WindowInsetsCompat.Type.systemBars()).bottom
+        } else {
+            ime
+        }.toDp()
+    }

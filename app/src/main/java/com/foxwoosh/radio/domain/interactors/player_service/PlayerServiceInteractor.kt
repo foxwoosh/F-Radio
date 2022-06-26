@@ -1,4 +1,4 @@
-package com.foxwoosh.radio.domain.player_service_interactor
+package com.foxwoosh.radio.domain.interactors.player_service
 
 import com.foxwoosh.radio.data.storage.local.player.IPlayerLocalStorage
 import com.foxwoosh.radio.data.storage.remote.ultra.IUltraRemoteStorage

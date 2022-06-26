@@ -7,11 +7,11 @@ import android.util.Log
 import android.widget.Toast
 import androidx.annotation.FloatRange
 import androidx.compose.ui.graphics.Color
-import androidx.core.view.WindowInsetsCompat
 import androidx.navigation.NavHostController
 import com.foxwoosh.radio.ui.AppDestination
-import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.serialization.json.Json
+import java.math.BigInteger
+import java.security.MessageDigest
 
 fun Context.openURL(url: String) {
     val validUrl = if (!url.startsWith("http", true)) {
@@ -42,10 +42,10 @@ fun Context.copyToClipboard(text: String) {
     Toast.makeText(this, R.string.common_copied_to_clipboard, Toast.LENGTH_SHORT).show()
 }
 
-fun Color.adjustBrightness(@FloatRange(from = 0.0) factor: Float) : Color {
+fun Color.adjustBrightness(@FloatRange(from = 0.0) factor: Float): Color {
     require(factor > 0) { "brightness factor should be greater than 0" }
 
-    return  Color(
+    return Color(
         red = (red * factor).coerceAtMost(255f),
         green = (green * factor).coerceAtMost(255f),
         blue = (blue * factor).coerceAtMost(255f),
@@ -56,6 +56,11 @@ fun Color.adjustBrightness(@FloatRange(from = 0.0) factor: Float) : Color {
 fun NavHostController.navigate(destination: AppDestination) {
     navigate(destination.route)
 }
+
+fun String.md5() = BigInteger(
+    1,
+    MessageDigest.getInstance("MD5").digest(toByteArray())
+).toString(16).padStart(32, '0')
 
 val AppJson = Json {
     ignoreUnknownKeys = true

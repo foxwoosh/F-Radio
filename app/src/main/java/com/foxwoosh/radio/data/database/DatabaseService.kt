@@ -3,6 +3,8 @@ package com.foxwoosh.radio.data.database
 import android.content.Context
 import androidx.room.Room
 import dagger.hilt.android.qualifiers.ApplicationContext
+import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.withContext
 import javax.inject.Inject
 import javax.inject.Singleton
 
@@ -10,11 +12,17 @@ import javax.inject.Singleton
 class DatabaseService @Inject constructor(
     @ApplicationContext appContext: Context
 ) {
-    val db = Room.databaseBuilder(
+    private val db = Room.databaseBuilder(
         appContext,
         DatabaseProvider::class.java,
         "database.db"
     ).build()
 
+    suspend fun write(block: DatabaseProvider.() -> Unit) {
+        withContext(Dispatchers.IO) {
+            block(db)
+        }
+    }
 
+    val user = db.user()
 }

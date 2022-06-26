@@ -22,12 +22,10 @@ import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.font.FontWeight
-import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.dp
 import coil.compose.AsyncImage
 import com.foxwoosh.radio.R
-import com.foxwoosh.radio.adjustBrightness
 import com.foxwoosh.radio.domain.models.PreviousTrack
 import com.foxwoosh.radio.openURL
 import com.foxwoosh.radio.player.models.MusicServicesData

@@ -1,6 +1,9 @@
 package com.foxwoosh.radio.data.api
 
 import com.foxwoosh.radio.AppJson
+import com.foxwoosh.radio.data.api.foxy.requests.LoginRequest
+import com.foxwoosh.radio.data.api.foxy.requests.RegisterRequest
+import com.foxwoosh.radio.data.api.foxy.responses.AuthResponse
 import com.foxwoosh.radio.data.api.foxy.responses.LyricsResponse
 import com.foxwoosh.radio.data.api.musixmatch.LyricsMatchResponse
 import com.jakewharton.retrofit2.converter.kotlinx.serialization.asConverterFactory
@@ -8,7 +11,9 @@ import okhttp3.MediaType.Companion.toMediaType
 import okhttp3.OkHttpClient
 import retrofit2.Retrofit
 import retrofit2.create
+import retrofit2.http.Body
 import retrofit2.http.GET
+import retrofit2.http.POST
 import retrofit2.http.Query
 import java.util.concurrent.TimeUnit
 import javax.inject.Inject
@@ -54,5 +59,15 @@ class ApiService @Inject constructor() {
             @Query("artist") artist: String,
             @Query("title") title: String
         ): LyricsResponse
+
+        @POST("$V1/register")
+        suspend fun register(@Body body: RegisterRequest): AuthResponse
+
+        @POST("$V1/login")
+        suspend fun login(@Body body: LoginRequest): AuthResponse
+    }
+
+    private companion object {
+        const val V1 = "v1"
     }
 }

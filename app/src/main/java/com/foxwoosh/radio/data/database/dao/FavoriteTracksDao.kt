@@ -6,7 +6,8 @@ import com.foxwoosh.radio.data.database.models.FavoriteTrackDb
 import kotlinx.coroutines.flow.Flow
 
 @Dao
-interface FavoriteTracksDao {
+interface FavoriteTracksDao : AppDao<FavoriteTrackDb> {
+
     @Query("SELECT * FROM favorite_tracks")
     fun getAll(): Flow<List<FavoriteTrackDb>>
 }

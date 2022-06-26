@@ -18,4 +18,5 @@
 
     <string name="settings_hello">Привет,</string>
     <string name="settings_stranger">незнакомец!</string>
+    <string name="settings_error_registration">Что-то пошло не так, попробуй позднее</string>
 </resources>
