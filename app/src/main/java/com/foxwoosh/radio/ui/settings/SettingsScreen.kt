@@ -25,6 +25,8 @@ import androidx.compose.ui.unit.sp
 import androidx.hilt.navigation.compose.hiltViewModel
 import com.foxwoosh.radio.R
 import com.foxwoosh.radio.ui.*
+import com.foxwoosh.radio.ui.settings.model.AuthFieldsState
+import com.foxwoosh.radio.ui.settings.model.SettingsEvent
 import com.foxwoosh.radio.ui.theme.CodGray
 import com.foxwoosh.radio.ui.theme.dp16
 import com.foxwoosh.radio.ui.theme.dp32
@@ -40,11 +42,12 @@ fun SettingsScreen() {
 
     val viewModel = hiltViewModel<SettingsViewModel>()
     val user by viewModel.userState.collectAsState(null)
+    val authFieldsState by viewModel.authFieldsState.collectAsState()
 
     val snackbarHostState = remember { SnackbarHostState() }
     var authFormVisible by remember { mutableStateOf(false) }
 
-    viewModel.eventFlow.collectAsEffect {
+    viewModel.events.collectAsEffect {
         when (it) {
             is SettingsEvent.Error -> scope.launch {
                 snackbarHostState.showSnackbar(context.getString(it.errorTextResId))
@@ -132,7 +135,8 @@ fun SettingsScreen() {
                     onNameChange = { name = it },
                     onEmailChange = { email = it },
                     onLogin = { viewModel.login(login, password) },
-                    onRegister = { viewModel.register(login, password, name, email) }
+                    onRegister = { viewModel.register(login, password, name, email) },
+                    state = authFieldsState
                 )
             }
         }
@@ -152,7 +156,8 @@ fun AuthForm(
     onNameChange: (String) -> Unit,
     onEmailChange: (String) -> Unit,
     onLogin: () -> Unit,
-    onRegister: () -> Unit
+    onRegister: () -> Unit,
+    state: AuthFieldsState
 ) {
     Column(
         modifier = Modifier
@@ -175,7 +180,8 @@ fun AuthForm(
             onValueChange = { if (it.length <= 20) onLoginChange(it) },
             keyboardOptions = KeyboardOptions(
                 imeAction = ImeAction.Next
-            )
+            ),
+            isError = state.loginError
         )
 
         Spacer(modifier = Modifier.height(dp16))
@@ -218,6 +224,7 @@ fun AuthForm(
                     )
                 }
             },
+            isError = state.passwordError
         )
 
         Spacer(modifier = Modifier.height(dp16))
@@ -231,7 +238,8 @@ fun AuthForm(
                 singleLine = true,
                 onValueChange = { onNameChange(it) },
                 modifier = Modifier.padding(bottom = dp16),
-                keyboardOptions = KeyboardOptions(imeAction = ImeAction.Next)
+                keyboardOptions = KeyboardOptions(imeAction = ImeAction.Next),
+                isError = state.nameError
             )
         }
 
@@ -245,7 +253,8 @@ fun AuthForm(
                 onValueChange = { onEmailChange(it) },
                 modifier = Modifier.padding(bottom = dp16),
                 keyboardOptions = KeyboardOptions(imeAction = ImeAction.Done),
-                keyboardActions = KeyboardActions(onDone = { onRegister() })
+                keyboardActions = KeyboardActions(onDone = { onRegister() }),
+                isError = state.emailError
             )
         }
 

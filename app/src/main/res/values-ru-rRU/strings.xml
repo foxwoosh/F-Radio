@@ -1,6 +1,7 @@
 <?xml version="1.0" encoding="utf-8"?>
 <resources>
     <string name="common_copied_to_clipboard">Скопировано в буфер обмена</string>
+    <string name="common_error">Что-то пошло не так, попробуй позднее</string>
 
     <string name="notification_channel_audio_player">Аудио плеер</string>
     <string name="notification_action_play">Воспроизвести</string>
@@ -19,11 +20,17 @@
     <string name="settings_hello">Привет,</string>
     <string name="settings_stranger">незнакомец!</string>
     <string name="settings_stranger_description">(Познакомимся? Жми сюда!)</string>
-    <string name="settings_error_registration">Что-то пошло не так, попробуй позднее</string>
     <string name="settings_page_title_login">Вход</string>
     <string name="settings_page_title_registration">Регистрация</string>
     <string name="settings_auth_button_login">Войти</string>
     <string name="settings_auth_button_register">Зарегистрироваться</string>
+
+    <string name="settings_auth_error_login_verification">Логин должен быть от 5 до 20 символов и состоять только из букв и цифр</string>
+    <string name="settings_auth_error_login_conflict">Такой логин уже существует</string>
+    <string name="settings_auth_error_password_verification">Пароль должен быть от 5 до 16 символов</string>
+    <string name="settings_auth_error_name_verification">Имя не может быть пустым</string>
+    <string name="settings_auth_error_email_verification">Неверный формат email</string>
+    <string name="settings_auth_error_wrong_credentials">Неверный логин или пароль</string>
 
     <string name="settings_auth_field_login">Логин</string>
     <string name="settings_auth_field_password">Пароль</string>

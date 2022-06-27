@@ -2,6 +2,7 @@
     <string name="app_name" translatable="false">Foxy Radio</string>
 
     <string name="common_copied_to_clipboard">Copied to clipboard</string>
+    <string name="common_error">Something went wrong, try again later</string>
 
     <string name="notification_channel_audio_player">Audio Player</string>
     <string name="notification_action_play">Play</string>
@@ -20,11 +21,17 @@
     <string name="settings_hello">Hi</string>
     <string name="settings_stranger">Stranger!</string>
     <string name="settings_stranger_description">(Wanna be friends? Tap here!)</string>
-    <string name="settings_error_registration">Something wrong, please try again later</string>
     <string name="settings_page_title_login">Login</string>
     <string name="settings_page_title_registration">Registration</string>
     <string name="settings_auth_button_login">Login</string>
     <string name="settings_auth_button_register">Register</string>
+
+    <string name="settings_auth_error_login_verification">Login should have 5–20 symbols (letters and numbers only)</string>
+    <string name="settings_auth_error_login_conflict">Login already exists</string>
+    <string name="settings_auth_error_password_verification">Password should have 5–16 symbols</string>
+    <string name="settings_auth_error_name_verification">Name should not be empty</string>
+    <string name="settings_auth_error_email_verification">Wrong email format</string>
+    <string name="settings_auth_error_wrong_credentials">Wrong login or password</string>
 
     <string name="settings_auth_field_login">Login</string>
     <string name="settings_auth_field_password">Password</string>
