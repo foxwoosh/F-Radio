@@ -5,7 +5,7 @@ buildscript {
     }
 
     extra.apply {
-        set("composeVersion", "1.1.1")
+        set("composeVersion", "1.2.0-rc02")
         set("datastoreVersion", "1.0.0")
         set("hiltVersion", "2.42")
         set("hiltComposeVersion", "1.0.0")
@@ -13,15 +13,17 @@ buildscript {
         set("coroutinesVersion", "1.6.1")
         set("lifecycleVersion", "2.4.1")
         set("exoPlayerVersion", "1.0.0-alpha03")
-        set("accompanistVersion", "0.23.1")
+        set("accompanistVersion", "0.24.12-rc")
     }
 
     dependencies {
         classpath("com.google.dagger:hilt-android-gradle-plugin:2.42")
-        classpath("com.google.gms:google-services:4.3.10")
-        classpath("com.google.firebase:firebase-crashlytics-gradle:2.9.0")
-        classpath(kotlin("gradle-plugin", version = "1.6.10"))
-        classpath(kotlin("serialization", version = "1.6.10"))
+        classpath("com.google.gms:google-services:4.3.12")
+        classpath("com.google.firebase:firebase-crashlytics-gradle:2.9.1")
+
+        val kotlinVersion = "1.6.21"
+        classpath(kotlin("gradle-plugin", version = kotlinVersion))
+        classpath(kotlin("serialization", version = kotlinVersion))
     }
 }
 
