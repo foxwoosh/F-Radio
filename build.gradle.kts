@@ -6,6 +6,8 @@ buildscript {
 
     extra.apply {
         set("composeVersion", "1.2.0-rc02")
+        set("composeCompilerVersion", "1.2.0")
+        set("accompanistVersion", "0.24.12-rc")
         set("datastoreVersion", "1.0.0")
         set("hiltVersion", "2.42")
         set("hiltComposeVersion", "1.0.0")
@@ -13,7 +15,6 @@ buildscript {
         set("coroutinesVersion", "1.6.1")
         set("lifecycleVersion", "2.4.1")
         set("exoPlayerVersion", "1.0.0-alpha03")
-        set("accompanistVersion", "0.24.12-rc")
     }
 
     dependencies {

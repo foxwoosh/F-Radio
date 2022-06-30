@@ -20,7 +20,7 @@ class PlayerViewModel @Inject constructor(
 ) : ViewModel() {
 
     val trackDataFlow = playerLocalStorage.trackData.asStateFlow()
-    val previousTracksFlow = playerLocalStorage.previousTracksData.asStateFlow()
+    val previousTracksFlow = playerLocalStorage.previousTracks.asStateFlow()
     val playerStateFlow = playerLocalStorage.playerState.asStateFlow()
     val stationFlow = playerLocalStorage.station.asStateFlow()
 

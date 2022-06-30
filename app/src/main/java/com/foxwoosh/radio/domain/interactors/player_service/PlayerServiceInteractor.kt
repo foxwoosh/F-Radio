@@ -5,6 +5,7 @@ import com.foxwoosh.radio.data.storage.remote.ultra.IUltraRemoteStorage
 import com.foxwoosh.radio.data.websocket.SocketError
 import com.foxwoosh.radio.data.websocket.SocketState
 import com.foxwoosh.radio.di.modules.PlayerServiceCoroutineScope
+import com.foxwoosh.radio.domain.models.Track
 import com.foxwoosh.radio.player.helpers.CoverColorExtractor
 import com.foxwoosh.radio.player.models.*
 import com.foxwoosh.radio.providers.image_provider.ImageProvider
@@ -13,6 +14,7 @@ import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.flow.launchIn
 import kotlinx.coroutines.flow.onEach
+import kotlinx.coroutines.flow.update
 import java.net.UnknownHostException
 import javax.inject.Inject
 
@@ -27,6 +29,8 @@ class PlayerServiceInteractor @Inject constructor(
     override val trackData = playerLocalStorage.trackData
     override val playerState = playerLocalStorage.playerState
     override val station = playerLocalStorage.station
+
+    private var previousTrack: Track? = null
 
     init {
         ultraRemoteStorage
@@ -59,9 +63,13 @@ class PlayerServiceInteractor @Inject constructor(
                     )
                 )
 
-                delay(500)
+                previousTrack?.let { previous ->
+                    playerLocalStorage.previousTracks.update {
+                        listOf(previous) + it
+                    }
+                }
 
-                playerLocalStorage.previousTracksData.emit(track.previousTracks)
+                previousTrack = track
             }.launchIn(scope)
 
         ultraRemoteStorage
@@ -82,6 +90,10 @@ class PlayerServiceInteractor @Inject constructor(
                             )
                         )
                     }
+                    is SocketState.Disconnected -> {
+                        playerLocalStorage.trackData.emit(TrackDataState.Idle)
+                        previousTrack = null
+                    }
                     else -> { /* nothing to emit */ }
                 }
             }.launchIn(scope)
@@ -96,7 +108,7 @@ class PlayerServiceInteractor @Inject constructor(
 
     override fun stopFetching(station: Station) {
         playerLocalStorage.trackData.value = TrackDataState.Idle
-        playerLocalStorage.previousTracksData.value = emptyList()
+        playerLocalStorage.previousTracks.value = emptyList()
         playerLocalStorage.playerState.value = PlayerState.IDLE
 
         when (station) {

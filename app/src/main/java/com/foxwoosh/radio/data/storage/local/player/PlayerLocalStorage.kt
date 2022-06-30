@@ -1,6 +1,6 @@
 package com.foxwoosh.radio.data.storage.local.player
 
-import com.foxwoosh.radio.domain.models.PreviousTrack
+import com.foxwoosh.radio.domain.models.Track
 import com.foxwoosh.radio.player.models.PlayerState
 import com.foxwoosh.radio.player.models.Station
 import com.foxwoosh.radio.player.models.TrackDataState
@@ -12,6 +12,6 @@ import javax.inject.Singleton
 class PlayerLocalStorage @Inject constructor() : IPlayerLocalStorage {
     override val station = MutableStateFlow<Station?>(null)
     override val trackData = MutableStateFlow<TrackDataState>(TrackDataState.Idle)
-    override val previousTracksData = MutableStateFlow<List<PreviousTrack>>(emptyList())
+    override val previousTracks = MutableStateFlow<List<Track>>(emptyList())
     override val playerState = MutableStateFlow(PlayerState.IDLE)
 }

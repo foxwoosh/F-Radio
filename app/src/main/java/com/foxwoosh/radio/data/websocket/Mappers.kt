@@ -18,18 +18,18 @@ fun UltraSongDataWebSocketMessage.mapToModel() = Track(
     spotifyUrl = spotifyUrl,
     iTunesUrl = iTunesUrl,
     yandexMusicUrl = yandexMusicUrl,
-    previousTracks = previousTracks.map {
-        PreviousTrack(
-            it.title,
-            it.artist,
-            "${root}${it.cover}",
-            it.date,
-            it.time,
-            it.youtubeMusicUrl,
-            it.youtubeUrl,
-            it.spotifyUrl,
-            it.itunesUrl,
-            it.yandexMusicUrl
-        )
-    }.reversed()
+//    previousTracks = previousTracks.map {
+//        PreviousTrack(
+//            it.title,
+//            it.artist,
+//            "${root}${it.cover}",
+//            it.date,
+//            it.time,
+//            it.youtubeMusicUrl,
+//            it.youtubeUrl,
+//            it.spotifyUrl,
+//            it.itunesUrl,
+//            it.yandexMusicUrl
+//        )
+//    }.reversed()
 )

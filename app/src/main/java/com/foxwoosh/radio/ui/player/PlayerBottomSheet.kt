@@ -27,6 +27,7 @@ import androidx.compose.ui.unit.dp
 import coil.compose.AsyncImage
 import com.foxwoosh.radio.R
 import com.foxwoosh.radio.domain.models.PreviousTrack
+import com.foxwoosh.radio.domain.models.Track
 import com.foxwoosh.radio.openURL
 import com.foxwoosh.radio.player.models.MusicServicesData
 import com.foxwoosh.radio.ui.currentOffset
@@ -40,12 +41,12 @@ import kotlinx.coroutines.launch
 fun PlayerBottomSheetContent(
     state: BottomSheetScaffoldState,
     statusBarHeight: Dp,
-    navigationBarHeight: Dp,
+//    navigationBarHeight: Dp,
     backgroundColor: Color,
     primaryTextColor: Color,
     secondaryTextColor: Color,
     onPageBecomesVisible: (page: PlayerBottomSheetPage) -> Unit,
-    previousTracks: List<PreviousTrack>,
+    previousTracks: List<Track>,
     lyricsState: LyricsDataState
 ) {
     val pagerState = rememberPagerState()
@@ -149,54 +150,31 @@ fun PlayerBottomSheetContent(
                         previousTracks = previousTracks,
                         primaryTextColor = primaryTextColor,
                         secondaryTextColor = secondaryTextColor,
-                        navigationBarHeight = navigationBarHeight,
                         modifier = Modifier.fillMaxSize()
                     )
                 }
-                PlayerBottomSheetPage.LYRICS.ordinal -> {
-                    LyricsPage(
-                        backgroundColor = backgroundColor,
-                        primaryTextColor = primaryTextColor,
-                        secondaryTextColor = secondaryTextColor,
-                        navigationBarHeight = navigationBarHeight,
-                        lyricsState = lyricsState
-                    )
-                }
+                PlayerBottomSheetPage.LYRICS.ordinal -> LyricsPage(
+                    primaryTextColor = primaryTextColor,
+                    lyricsState = lyricsState
+                )
             }
         }
     }
 }
 
 @Composable
-fun LyricsPage(
-    backgroundColor: Color,
-    primaryTextColor: Color,
-    secondaryTextColor: Color,
-    navigationBarHeight: Dp,
-    lyricsState: LyricsDataState
-) {
-    Scaffold(backgroundColor = backgroundColor) {
+fun LyricsPage(primaryTextColor: Color, lyricsState: LyricsDataState) {
+    Box(
+        modifier = Modifier.fillMaxSize(),
+        contentAlignment = Alignment.Center
+    ) {
         when (lyricsState) {
             is LyricsDataState.NoData,
-            is LyricsDataState.Error -> {
-                Box(
-                    modifier = Modifier.fillMaxSize(),
-                    contentAlignment = Alignment.Center
-                ) {
-                    Text(
-                        text = stringResource(id = R.string.player_page_no_data_lyrics),
-                        color = primaryTextColor
-                    )
-                }
-            }
-            is LyricsDataState.Loading -> Box(
-                modifier = Modifier.fillMaxSize(),
-                contentAlignment = Alignment.Center
-            ) {
-                CircularProgressIndicator(
-                    color = primaryTextColor
-                )
-            }
+            is LyricsDataState.Error -> Text(
+                text = stringResource(id = R.string.player_page_no_data_lyrics),
+                color = primaryTextColor
+            )
+            is LyricsDataState.Loading -> CircularProgressIndicator(color = primaryTextColor)
             is LyricsDataState.Ready -> {
                 val scrollState = rememberScrollState()
 
@@ -204,11 +182,11 @@ fun LyricsPage(
                     Modifier
                         .fillMaxSize()
                         .verticalScroll(scrollState)
+                        .navigationBarsPadding()
                         .padding(
                             start = 16.dp,
                             end = 16.dp,
-                            top = 16.dp,
-                            bottom = navigationBarHeight
+                            top = 16.dp
                         )
                 ) {
                     SelectionContainer {
@@ -247,11 +225,10 @@ fun LyricsPage(
 
 @Composable
 fun PreviousTracksList(
-    previousTracks: List<PreviousTrack>,
+    previousTracks: List<Track>,
     primaryTextColor: Color,
     secondaryTextColor: Color,
-    modifier: Modifier = Modifier,
-    navigationBarHeight: Dp
+    modifier: Modifier = Modifier
 ) {
     val context = LocalContext.current
 
@@ -259,12 +236,9 @@ fun PreviousTracksList(
 
     LazyColumn(
         modifier = modifier,
-        contentPadding = PaddingValues(bottom = navigationBarHeight)
+        contentPadding = WindowInsets.navigationBars.asPaddingValues()
     ) {
-        items(
-            items = previousTracks,
-            key = { it.artist + it.title },
-        ) { track ->
+        items(items = previousTracks) { track ->
             val trackHash = track.hashCode()
             Column(
                 modifier = Modifier

@@ -165,7 +165,6 @@ fun PlayerScreen(
             PlayerBottomSheetContent(
                 state = bottomSheetScaffoldState,
                 statusBarHeight = insets.statusBar,
-                navigationBarHeight = insets.navigationBar,
                 backgroundColor = surfaceColor,
                 primaryTextColor = primaryTextColor,
                 secondaryTextColor = secondaryTextColor,

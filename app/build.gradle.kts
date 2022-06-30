@@ -4,6 +4,7 @@ import java.io.FileInputStream
 import java.util.Properties
 
 val composeVersion: String by project
+val composeCompilerVersion: String by project
 val datastoreVersion: String by project
 val hiltVersion: String by project
 val hiltComposeVersion: String by project
@@ -119,6 +120,7 @@ dependencies {
     implementation("androidx.compose.material:material:$composeVersion")
     implementation("androidx.compose.ui:ui-tooling-preview:$composeVersion")
     implementation("androidx.compose.material:material-icons-extended:$composeVersion")
+//    implementation("androidx.compose.compiler:compiler:$composeCompilerVersion")
     implementation("com.google.accompanist:accompanist-pager:$accompanistVersion")
     implementation("com.google.accompanist:accompanist-pager-indicators:$accompanistVersion")
     implementation("com.google.accompanist:accompanist-navigation-animation:$accompanistVersion")

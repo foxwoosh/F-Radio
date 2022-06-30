@@ -183,12 +183,8 @@ class PlayerService : Service() {
                         )
                         .setActions(
                             when (playerState) {
-                                PlayerState.PLAYING -> {
-                                    PlaybackState.ACTION_PAUSE
-                                }
-                                PlayerState.PAUSED -> {
-                                    PlaybackState.ACTION_PLAY
-                                }
+                                PlayerState.PLAYING -> PlaybackState.ACTION_PAUSE
+                                PlayerState.PAUSED -> PlaybackState.ACTION_PLAY
                                 else -> 0
                             }
                         )
