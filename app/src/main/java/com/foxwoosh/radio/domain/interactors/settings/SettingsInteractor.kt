@@ -1,6 +1,5 @@
 package com.foxwoosh.radio.domain.interactors.settings
 
-import android.util.Log
 import com.foxwoosh.radio.data.storage.local.user.IUserLocalStorage
 import com.foxwoosh.radio.data.storage.remote.user.IUserRemoteStorage
 import com.foxwoosh.radio.domain.interactors.settings.exceptions.AuthDataException
@@ -44,5 +43,10 @@ class SettingsInteractor @Inject constructor(
             userLocalStorage.saveToken(it)
         }
         userLocalStorage.saveCurrentUser(user)
+    }
+
+    override suspend fun logout() {
+        userLocalStorage.removeCurrentUser()
+        userLocalStorage.removeToken()
     }
 }

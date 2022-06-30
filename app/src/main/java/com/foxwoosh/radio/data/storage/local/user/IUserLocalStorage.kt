@@ -8,5 +8,9 @@ interface IUserLocalStorage {
 
     suspend fun saveToken(token: String)
 
+    suspend fun removeToken()
+
     suspend fun saveCurrentUser(user: CurrentUser)
+
+    suspend fun removeCurrentUser()
 }

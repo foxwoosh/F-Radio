@@ -1,9 +1,14 @@
 package com.foxwoosh.radio.ui.theme
 
 import androidx.compose.foundation.isSystemInDarkTheme
+import androidx.compose.material.LocalContentColor
 import androidx.compose.material.MaterialTheme
 import androidx.compose.material.lightColors
+import androidx.compose.material.ripple.LocalRippleTheme
+import androidx.compose.material.ripple.RippleAlpha
+import androidx.compose.material.ripple.RippleTheme
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.CompositionLocalProvider
 import androidx.compose.ui.graphics.Color
 
 private val LightColorPalette = lightColors(
@@ -12,7 +17,7 @@ private val LightColorPalette = lightColors(
     onBackground = Color.White,
     onSurface = Color.White,
     background = CodGray,
-    surface = Color.Black
+    surface = CodGray,
 )
 
 @Composable
@@ -20,7 +25,11 @@ fun FoxyRadioTheme(darkTheme: Boolean = isSystemInDarkTheme(), content: @Composa
     MaterialTheme(
         colors = LightColorPalette,
         typography = Typography,
-        shapes = Shapes,
-        content = content
-    )
+        shapes = Shapes
+    ) {
+        CompositionLocalProvider(
+            LocalContentColor provides Color.White,
+            content = content
+        )
+    }
 }

@@ -12,6 +12,9 @@ interface CurrentUserDao : AppDao<CurrentUserDb> {
     @Query("SELECT * FROM current_user LIMIT 1")
     fun get(): Flow<CurrentUserDb?>
 
+    @Query("DELETE FROM current_user")
+    fun remove()
+
     @Insert(onConflict = OnConflictStrategy.REPLACE)
     suspend fun save(user: CurrentUserDb)
 }

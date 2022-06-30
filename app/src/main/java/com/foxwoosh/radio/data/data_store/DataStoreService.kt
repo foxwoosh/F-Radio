@@ -27,6 +27,10 @@ class DataStoreService @Inject constructor(
         return getValue(stringPreferencesKey(key))
     }
 
+    suspend fun removeString(key: String) {
+        removeValue(stringPreferencesKey(key))
+    }
+
     suspend fun saveLong(key: String, value: Long) {
         saveValue(longPreferencesKey(key), value)
     }
@@ -43,5 +47,11 @@ class DataStoreService @Inject constructor(
 
     private suspend fun <T> getValue(key: Preferences.Key<T>): T? {
         return appContext.dataStore.data.map { data -> data[key] }.firstOrNull()
+    }
+
+    private suspend fun <T> removeValue(key: Preferences.Key<T>) {
+        appContext.dataStore.edit { data ->
+            data.remove(key)
+        }
     }
 }

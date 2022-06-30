@@ -1,6 +1,6 @@
-package com.foxwoosh.radio.ui.settings.model
+package com.foxwoosh.radio.ui.settings.models
 
-data class AuthFieldsState(
+data class AuthFieldsErrorState(
     val loginError: Boolean = false,
     val passwordError: Boolean = false,
     val nameError: Boolean = false,

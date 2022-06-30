@@ -18,10 +18,18 @@ class UserLocalStorage @Inject constructor(
         dataStore.saveString(DataStoreKeys.AUTH_TOKEN, token)
     }
 
+    override suspend fun removeToken() {
+        dataStore.removeString(DataStoreKeys.AUTH_TOKEN)
+    }
+
     override suspend fun saveCurrentUser(user: CurrentUser) {
         database.write {
             currentUser()
                 .save(user.map())
         }
+    }
+
+    override suspend fun removeCurrentUser() {
+        database.write { currentUser().remove() }
     }
 }

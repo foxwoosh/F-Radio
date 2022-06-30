@@ -1,32 +1,39 @@
 package com.foxwoosh.radio.ui.settings
 
 import androidx.compose.animation.AnimatedVisibility
-import androidx.compose.foundation.clickable
+import androidx.compose.foundation.*
 import androidx.compose.foundation.layout.*
-import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.text.KeyboardActions
 import androidx.compose.foundation.text.KeyboardOptions
-import androidx.compose.foundation.verticalScroll
 import androidx.compose.material.*
+import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.filled.ArrowDropUp
+import androidx.compose.material.icons.filled.ArrowUpward
+import androidx.compose.material.icons.filled.KeyboardArrowUp
+import androidx.compose.material.icons.filled.Logout
+import androidx.compose.material.icons.outlined.Visibility
+import androidx.compose.material.icons.outlined.VisibilityOff
 import androidx.compose.runtime.*
 import androidx.compose.runtime.saveable.rememberSaveable
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.graphics.ColorFilter
 import androidx.compose.ui.platform.LocalContext
-import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.input.ImeAction
 import androidx.compose.ui.text.input.KeyboardType
 import androidx.compose.ui.text.input.PasswordVisualTransformation
 import androidx.compose.ui.text.input.VisualTransformation
+import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.hilt.navigation.compose.hiltViewModel
 import com.foxwoosh.radio.R
 import com.foxwoosh.radio.ui.*
-import com.foxwoosh.radio.ui.settings.model.AuthFieldsState
-import com.foxwoosh.radio.ui.settings.model.SettingsEvent
+import com.foxwoosh.radio.ui.settings.models.AuthFieldsErrorState
+import com.foxwoosh.radio.ui.settings.models.AuthFieldsState
+import com.foxwoosh.radio.ui.settings.models.SettingsEvent
 import com.foxwoosh.radio.ui.theme.CodGray
 import com.foxwoosh.radio.ui.theme.dp16
 import com.foxwoosh.radio.ui.theme.dp32
@@ -36,16 +43,18 @@ import kotlinx.coroutines.launch
 
 @Composable
 fun SettingsScreen() {
-    val insets by Insets.collectAsState()
     val scope = rememberCoroutineScope()
     val context = LocalContext.current
 
     val viewModel = hiltViewModel<SettingsViewModel>()
-    val user by viewModel.userState.collectAsState(null)
+    val user by viewModel.userState.collectAsState()
+    val authFieldsErrorState by viewModel.authFieldsErrorState.collectAsState()
     val authFieldsState by viewModel.authFieldsState.collectAsState()
 
     val snackbarHostState = remember { SnackbarHostState() }
+
     var authFormVisible by remember { mutableStateOf(false) }
+    var logoutDialogVisible by remember { mutableStateOf(false) }
 
     viewModel.events.collectAsEffect {
         when (it) {
@@ -61,36 +70,32 @@ fun SettingsScreen() {
         }
     }
 
-    Scaffold(
+    Box(
         modifier = Modifier
-            .fillMaxSize(),
-        backgroundColor = CodGray,
-        snackbarHost = {
-            SnackbarHost(
-                hostState = snackbarHostState,
-                modifier = Modifier.padding(bottom = insets.systemBottom)
-            )
-        }
+            .fillMaxSize()
+            .background(CodGray)
+            .systemBarsPadding()
     ) {
         Column(
             Modifier
                 .fillMaxSize()
-                .padding(
-                    start = dp16,
-                    end = dp16,
-                    top = insets.statusBar,
-                    bottom = insets.systemBottom
-                )
                 .verticalScroll(rememberScrollState())
+                .imePadding()
         ) {
             Text(
                 text = stringResource(id = R.string.settings_hello),
                 color = Color.White,
                 fontSize = 36.sp,
-                fontWeight = FontWeight.Medium
+                fontWeight = FontWeight.Medium,
+                modifier = Modifier.padding(horizontal = dp16)
             )
             Row(
-                modifier = Modifier.clickable { authFormVisible = !authFormVisible },
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .singleCondition(user == null && !authFormVisible) {
+                        clickable { authFormVisible = !authFormVisible }
+                    }
+                    .padding(horizontal = dp16, vertical = 6.dp),
                 verticalAlignment = Alignment.CenterVertically
             ) {
                 Text(
@@ -98,58 +103,93 @@ fun SettingsScreen() {
                         + " \uD83E\uDD8A",
                     color = Color.White,
                     fontSize = 24.sp,
-                    fontWeight = FontWeight.Normal
+                    fontWeight = FontWeight.Normal,
                 )
-                Spacer(modifier = Modifier.width(dp8))
-                Text(
-                    text = stringResource(
-                        if (user == null)
-                            R.string.settings_stranger_description
-                        else
-                            R.string.settings_stranger_description
-                    ),
-                    color = Color.White.copy(alpha = 0.7f),
-                    fontSize = 12.sp
-                )
+                if (user == null && !authFormVisible) {
+                    Spacer(modifier = Modifier.width(dp8))
+                    Text(
+                        text = stringResource(R.string.settings_stranger_description),
+                        color = Color.White.copy(alpha = 0.7f),
+                        fontSize = 12.sp
+                    )
+                }
             }
 
             Spacer(modifier = Modifier.height(dp32))
-
-            var login by rememberSaveable { mutableStateOf("") }
-            var password by rememberSaveable { mutableStateOf("") }
-            var name by rememberSaveable { mutableStateOf("") }
-            var email by rememberSaveable { mutableStateOf("") }
 
             var selectedIndex by rememberSaveable { mutableStateOf(AuthPage.LOGIN.ordinal) }
 
             AnimatedVisibility(visible = authFormVisible) {
                 AuthForm(
                     selectedIndex = selectedIndex,
-                    login = login,
-                    password = password,
-                    name = name,
-                    email = email,
                     onSelectIndex = { selectedIndex = it },
-                    onLoginChange = { login = it },
-                    onPasswordChange = { password = it },
-                    onNameChange = { name = it },
-                    onEmailChange = { email = it },
-                    onLogin = { viewModel.login(login, password) },
-                    onRegister = { viewModel.register(login, password, name, email) },
-                    state = authFieldsState
+                    onLoginChange = { viewModel.setAuthField(AuthFieldsState.Type.LOGIN, it) },
+                    onPasswordChange = {
+                        viewModel.setAuthField(
+                            AuthFieldsState.Type.PASSWORD,
+                            it
+                        )
+                    },
+                    onNameChange = { viewModel.setAuthField(AuthFieldsState.Type.NAME, it) },
+                    onEmailChange = { viewModel.setAuthField(AuthFieldsState.Type.EMAIL, it) },
+                    onLogin = { viewModel.login() },
+                    onRegister = { viewModel.register() },
+                    state = authFieldsState,
+                    errorsState = authFieldsErrorState,
+                    onAuthCloseAction = { authFormVisible = false }
                 )
             }
         }
+
+        if (user != null) {
+            IconButton(
+                onClick = { logoutDialogVisible = true },
+                modifier = Modifier
+                    .align(Alignment.TopEnd)
+                    .statusBarsPadding()
+            ) {
+                Icon(Icons.Filled.Logout, contentDescription = "Logout")
+            }
+        }
+
+        if (logoutDialogVisible) {
+            AlertDialog(
+                onDismissRequest = { logoutDialogVisible = false },
+                text = {
+                    Text(text = "Sure?")
+                },
+                confirmButton = {
+                    TextButton(
+                        onClick = {
+                            logoutDialogVisible = false
+                            viewModel.logout()
+                        }
+                    ) {
+                        Text(text = ("Yep"))
+                    }
+                },
+                dismissButton = {
+                    TextButton(
+                        onClick = { logoutDialogVisible = false }
+                    ) {
+                        Text(text = ("Nope"))
+                    }
+                }
+            )
+        }
+
+        SnackbarHost(
+            hostState = snackbarHostState,
+            modifier = Modifier
+                .align(Alignment.BottomCenter)
+                .imePadding()
+        )
     }
 }
 
 @Composable
 fun AuthForm(
     selectedIndex: Int,
-    login: String,
-    password: String,
-    name: String,
-    email: String,
     onSelectIndex: (Int) -> Unit,
     onLoginChange: (String) -> Unit,
     onPasswordChange: (String) -> Unit,
@@ -157,7 +197,9 @@ fun AuthForm(
     onEmailChange: (String) -> Unit,
     onLogin: () -> Unit,
     onRegister: () -> Unit,
-    state: AuthFieldsState
+    state: AuthFieldsState,
+    errorsState: AuthFieldsErrorState,
+    onAuthCloseAction: () -> Unit
 ) {
     Column(
         modifier = Modifier
@@ -174,21 +216,21 @@ fun AuthForm(
         Spacer(modifier = Modifier.height(dp16))
 
         TextField(
-            value = login,
+            value = state.login,
             label = { Text(text = stringResource(R.string.settings_auth_field_login)) },
             singleLine = true,
             onValueChange = { if (it.length <= 20) onLoginChange(it) },
             keyboardOptions = KeyboardOptions(
                 imeAction = ImeAction.Next
             ),
-            isError = state.loginError
+            isError = errorsState.loginError
         )
 
         Spacer(modifier = Modifier.height(dp16))
 
         var passwordVisible by remember { mutableStateOf(false) }
         TextField(
-            value = password,
+            value = state.password,
             label = { Text(text = stringResource(R.string.settings_auth_field_password)) },
             singleLine = true,
             onValueChange = { if (it.length <= 50) onPasswordChange(it) },
@@ -209,13 +251,11 @@ fun AuthForm(
             trailingIcon = {
                 IconButton(onClick = { passwordVisible = !passwordVisible }) {
                     Icon(
-                        painterResource(
-                            if (passwordVisible) {
-                                R.drawable.ic_eye_opened
-                            } else {
-                                R.drawable.ic_eye_closed
-                            }
-                        ),
+                        if (passwordVisible) {
+                            Icons.Outlined.Visibility
+                        } else {
+                            Icons.Outlined.VisibilityOff
+                        },
                         contentDescription = if (passwordVisible) {
                             "Hide password"
                         } else {
@@ -224,7 +264,7 @@ fun AuthForm(
                     )
                 }
             },
-            isError = state.passwordError
+            isError = errorsState.passwordError
         )
 
         Spacer(modifier = Modifier.height(dp16))
@@ -233,13 +273,13 @@ fun AuthForm(
             visible = selectedIndex == AuthPage.REGISTRATION.ordinal
         ) {
             TextField(
-                value = name,
+                value = state.name,
                 label = { Text(text = stringResource(R.string.settings_auth_field_name)) },
                 singleLine = true,
                 onValueChange = { onNameChange(it) },
                 modifier = Modifier.padding(bottom = dp16),
                 keyboardOptions = KeyboardOptions(imeAction = ImeAction.Next),
-                isError = state.nameError
+                isError = errorsState.nameError
             )
         }
 
@@ -247,14 +287,14 @@ fun AuthForm(
             visible = selectedIndex == AuthPage.REGISTRATION.ordinal
         ) {
             TextField(
-                value = email,
+                value = state.email,
                 label = { Text(text = stringResource(R.string.settings_auth_field_email)) },
                 singleLine = true,
                 onValueChange = { onEmailChange(it) },
                 modifier = Modifier.padding(bottom = dp16),
                 keyboardOptions = KeyboardOptions(imeAction = ImeAction.Done),
                 keyboardActions = KeyboardActions(onDone = { onRegister() }),
-                isError = state.emailError
+                isError = errorsState.emailError
             )
         }
 
@@ -272,6 +312,17 @@ fun AuthForm(
                     else -> throw IllegalArgumentException()
                 }
             )
+        )
+
+        Spacer(modifier = Modifier.height(dp8))
+
+        Image(
+            imageVector = Icons.Filled.KeyboardArrowUp,
+            contentDescription = "Close auth form",
+            colorFilter = ColorFilter.tint(Color.White),
+            modifier = Modifier
+                .fillMaxWidth()
+                .clickable(onClick = onAuthCloseAction)
         )
     }
 }

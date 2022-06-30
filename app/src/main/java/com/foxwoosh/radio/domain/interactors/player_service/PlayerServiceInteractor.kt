@@ -11,7 +11,6 @@ import com.foxwoosh.radio.player.models.*
 import com.foxwoosh.radio.providers.image_provider.ImageProvider
 import dagger.hilt.android.scopes.ServiceScoped
 import kotlinx.coroutines.CoroutineScope
-import kotlinx.coroutines.delay
 import kotlinx.coroutines.flow.launchIn
 import kotlinx.coroutines.flow.onEach
 import kotlinx.coroutines.flow.update
@@ -90,10 +89,6 @@ class PlayerServiceInteractor @Inject constructor(
                             )
                         )
                     }
-                    is SocketState.Disconnected -> {
-                        playerLocalStorage.trackData.emit(TrackDataState.Idle)
-                        previousTrack = null
-                    }
                     else -> { /* nothing to emit */ }
                 }
             }.launchIn(scope)
@@ -108,8 +103,8 @@ class PlayerServiceInteractor @Inject constructor(
 
     override fun stopFetching(station: Station) {
         playerLocalStorage.trackData.value = TrackDataState.Idle
-        playerLocalStorage.previousTracks.value = emptyList()
         playerLocalStorage.playerState.value = PlayerState.IDLE
+        previousTrack = null
 
         when (station) {
             Station.ULTRA,

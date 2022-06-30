@@ -9,4 +9,6 @@ interface ISettingsInteractor {
     suspend fun register(login: String, password: String, name: String, email: String)
 
     suspend fun login(login: String, password: String)
+
+    suspend fun logout()
 }

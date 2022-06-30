@@ -1,13 +1,13 @@
 package com.foxwoosh.radio.ui.settings
 
-import android.util.Log
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.foxwoosh.radio.R
 import com.foxwoosh.radio.domain.interactors.settings.ISettingsInteractor
 import com.foxwoosh.radio.domain.interactors.settings.exceptions.AuthDataException
-import com.foxwoosh.radio.ui.settings.model.AuthFieldsState
-import com.foxwoosh.radio.ui.settings.model.SettingsEvent
+import com.foxwoosh.radio.ui.settings.models.AuthFieldsErrorState
+import com.foxwoosh.radio.ui.settings.models.AuthFieldsState
+import com.foxwoosh.radio.ui.settings.models.SettingsEvent
 import dagger.hilt.android.lifecycle.HiltViewModel
 import kotlinx.coroutines.flow.*
 import kotlinx.coroutines.launch
@@ -21,38 +21,49 @@ class SettingsViewModel @Inject constructor(
     private val mutableEvents = MutableSharedFlow<SettingsEvent>()
     val events = mutableEvents.asSharedFlow()
 
+    private val mutableAuthFieldsErrorState = MutableStateFlow(AuthFieldsErrorState())
+    val authFieldsErrorState = mutableAuthFieldsErrorState.asStateFlow()
+
     private val mutableAuthFieldsState = MutableStateFlow(AuthFieldsState())
     val authFieldsState = mutableAuthFieldsState.asStateFlow()
 
-    val userState = interactor.user
+    val userState = interactor.user.stateIn(
+        scope = viewModelScope,
+        started = SharingStarted.Lazily,
+        initialValue = null
+    )
 
-    fun register(login: String, password: String, name: String, email: String) {
+    fun register() {
         viewModelScope.launch {
             try {
-                mutableAuthFieldsState.update { it.toNone() }
-                interactor.register(login, password, name, email)
+                val fields = authFieldsState.value
+
+                mutableAuthFieldsErrorState.update { it.toNone() }
+                interactor.register(fields.login, fields.password, fields.name, fields.email)
+
+                mutableAuthFieldsState.update { it.clear() }
             } catch (e: Exception) {
                 when (e) {
                     is AuthDataException.Login -> {
-                        mutableAuthFieldsState.update { it.toLogin() }
+                        mutableAuthFieldsErrorState.update { it.toLogin() }
                         mutableEvents.emit(
                             SettingsEvent.Error(R.string.settings_auth_error_login_verification)
                         )
                     }
                     is AuthDataException.Password -> {
-                        mutableAuthFieldsState.update { it.toPassword() }
+                        mutableAuthFieldsErrorState.update { it.toPassword() }
                         mutableEvents.emit(
                             SettingsEvent.Error(R.string.settings_auth_error_password_verification)
                         )
                     }
                     is AuthDataException.Name -> {
-                        mutableAuthFieldsState.update { it.toName() }
+                        mutableAuthFieldsErrorState.update { it.toName() }
                         mutableEvents.emit(
                             SettingsEvent.Error(R.string.settings_auth_error_name_verification)
                         )
                     }
                     is AuthDataException.Email -> {
-                        mutableAuthFieldsState.update { it.toEmail() }
+                        mutableAuthFieldsErrorState.update { it.toEmail() }
                         mutableEvents.emit(
                             SettingsEvent.Error(R.string.settings_auth_error_email_verification)
                         )
@@ -60,7 +71,7 @@ class SettingsViewModel @Inject constructor(
                     is HttpException -> {
                         when (e.code()) {
                             409 -> {
-                                mutableAuthFieldsState.update { it.toLogin() }
+                                mutableAuthFieldsErrorState.update { it.toLogin() }
                                 mutableEvents.emit(
                                     SettingsEvent.Error(R.string.settings_auth_error_login_conflict)
                                 )
@@ -73,20 +84,23 @@ class SettingsViewModel @Inject constructor(
         }
     }
 
-    fun login(login: String, password: String) {
+    fun login() {
         viewModelScope.launch {
             try {
-                interactor.login(login, password)
+                val fields = authFieldsState.value
+                interactor.login(fields.login, fields.password)
+
+                mutableAuthFieldsState.update { it.clear() }
             } catch (e: Exception) {
                 when (e) {
                     is AuthDataException.Login -> {
-                        mutableAuthFieldsState.update { it.toLogin() }
+                        mutableAuthFieldsErrorState.update { it.toLogin() }
                         mutableEvents.emit(
                             SettingsEvent.Error(R.string.settings_auth_error_login_verification)
                         )
                     }
                     is AuthDataException.Password -> {
-                        mutableAuthFieldsState.update { it.toPassword() }
+                        mutableAuthFieldsErrorState.update { it.toPassword() }
                         mutableEvents.emit(
                             SettingsEvent.Error(R.string.settings_auth_error_password_verification)
                         )
@@ -100,6 +114,23 @@ class SettingsViewModel @Inject constructor(
                         }
                     }
                 }
+            }
+        }
+    }
+
+    fun logout() {
+        viewModelScope.launch {
+            interactor.logout()
+        }
+    }
+
+    fun setAuthField(type: AuthFieldsState.Type, data: String) {
+        mutableAuthFieldsState.update {
+            when (type) {
+                AuthFieldsState.Type.LOGIN -> it.copy(login = data)
+                AuthFieldsState.Type.PASSWORD -> it.copy(password = data)
+                AuthFieldsState.Type.NAME -> it.copy(name = data)
+                AuthFieldsState.Type.EMAIL -> it.copy(email = data)
             }
         }
     }

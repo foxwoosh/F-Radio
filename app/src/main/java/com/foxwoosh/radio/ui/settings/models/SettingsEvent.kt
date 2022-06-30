@@ -1,4 +1,4 @@
-package com.foxwoosh.radio.ui.settings.model
+package com.foxwoosh.radio.ui.settings.models
 
 import androidx.annotation.StringRes
 
