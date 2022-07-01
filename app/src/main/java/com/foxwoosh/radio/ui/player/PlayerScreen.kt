@@ -174,6 +174,7 @@ fun PlayerScreen(
                     when (page) {
                         PlayerBottomSheetPage.LYRICS ->
                             viewModel.fetchLyricsForCurrentTrack()
+                        PlayerBottomSheetPage.PREVIOUS_TRACKS -> { /* nothing to call */ }
                     }
                 }
             )

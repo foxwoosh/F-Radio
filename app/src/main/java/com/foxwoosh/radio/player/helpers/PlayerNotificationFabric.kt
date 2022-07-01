@@ -188,6 +188,8 @@ class PlayerNotificationFabric(private val context: Context) {
         when (playerState) {
             PlayerState.PLAYING -> builder.addAction(pauseAction)
             PlayerState.PAUSED -> builder.addAction(playAction)
+            PlayerState.IDLE,
+            PlayerState.BUFFERING -> { /* nothing to add */ }
         }
         builder.addAction(stopAction)
 
