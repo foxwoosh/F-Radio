@@ -36,8 +36,8 @@ android {
         applicationId = "com.foxwoosh.radio"
         minSdk = 21
         targetSdk = 32
-        versionCode = 3
-        versionName = "2022.6.3"
+        versionCode = 4
+        versionName = "2022.7.1"
 
         testInstrumentationRunner = "androidx.test.runner.AndroidJUnitRunner"
         vectorDrawables.useSupportLibrary = false

@@ -27,7 +27,8 @@ fun DoubleSelector(
     firstItemText: String,
     secondItemText: String,
     onSelectAction: (index: Int) -> Unit,
-    background: Color = BlackOverlay_20
+    background: Color = BlackOverlay_20,
+    enabled: Boolean = true
 ) {
     Row(
         modifier
@@ -37,26 +38,33 @@ fun DoubleSelector(
         DoubleSelectorButton(
             text = firstItemText,
             selectedIndex == 0,
-            onClick = { onSelectAction(0) }
+            onClick = { onSelectAction(0) },
+            enabled = enabled
         )
         DoubleSelectorButton(
             text = secondItemText,
             selected = selectedIndex == 1,
-            onClick = { onSelectAction(1) }
+            onClick = { onSelectAction(1) },
+            enabled = enabled
         )
     }
 }
 
 // TODO: animate selection change
 @Composable
-fun DoubleSelectorButton(text: String, selected: Boolean, onClick: () -> Unit) {
+fun DoubleSelectorButton(
+    text: String,
+    selected: Boolean,
+    onClick: () -> Unit,
+    enabled: Boolean
+) {
     Text(
         text = text,
         color = Color.White,
         fontWeight = if (selected) FontWeight.Bold else FontWeight.Normal,
         modifier = Modifier
             .clip(shape)
-            .clickable(onClick = onClick)
+            .clickable(onClick = onClick, enabled = enabled)
             .singleCondition(selected) { background(WhiteOverlay_20) }
             .padding(horizontal = 8.dp, vertical = 6.dp),
         fontSize = 14.sp

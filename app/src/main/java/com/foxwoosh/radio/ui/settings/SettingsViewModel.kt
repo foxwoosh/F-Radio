@@ -9,6 +9,7 @@ import com.foxwoosh.radio.ui.settings.models.AuthFieldsErrorState
 import com.foxwoosh.radio.ui.settings.models.AuthFieldsState
 import com.foxwoosh.radio.ui.settings.models.SettingsEvent
 import dagger.hilt.android.lifecycle.HiltViewModel
+import kotlinx.coroutines.delay
 import kotlinx.coroutines.flow.*
 import kotlinx.coroutines.launch
 import retrofit2.HttpException
@@ -27,6 +28,9 @@ class SettingsViewModel @Inject constructor(
     private val mutableAuthFieldsState = MutableStateFlow(AuthFieldsState())
     val authFieldsState = mutableAuthFieldsState.asStateFlow()
 
+    private val mutableAuthProgress = MutableStateFlow(false)
+    val authProgress = mutableAuthProgress.asStateFlow()
+
     val userState = interactor.user.stateIn(
         scope = viewModelScope,
         started = SharingStarted.Lazily,
@@ -36,8 +40,9 @@ class SettingsViewModel @Inject constructor(
     fun register() {
         viewModelScope.launch {
             try {
-                val fields = authFieldsState.value
+                mutableAuthProgress.value = true
 
+                val fields = authFieldsState.value
                 mutableAuthFieldsErrorState.update { it.toNone() }
                 interactor.register(fields.login, fields.password, fields.name, fields.email)
 
@@ -80,6 +85,8 @@ class SettingsViewModel @Inject constructor(
                         }
                     }
                 }
+            } finally {
+                mutableAuthProgress.value = false
             }
         }
     }
@@ -87,10 +94,13 @@ class SettingsViewModel @Inject constructor(
     fun login() {
         viewModelScope.launch {
             try {
-                val fields = authFieldsState.value
-                interactor.login(fields.login, fields.password)
+                mutableAuthProgress.value = true
 
-                mutableAuthFieldsState.update { it.clear() }
+                delay(2000)
+//                val fields = authFieldsState.value
+//                interactor.login(fields.login, fields.password)
+//
+//                mutableAuthFieldsState.update { it.clear() }
             } catch (e: Exception) {
                 when (e) {
                     is AuthDataException.Login -> {
@@ -114,6 +124,8 @@ class SettingsViewModel @Inject constructor(
                         }
                     }
                 }
+            } finally {
+                mutableAuthProgress.value = false
             }
         }
     }
@@ -132,6 +144,9 @@ class SettingsViewModel @Inject constructor(
                 AuthFieldsState.Type.NAME -> it.copy(name = data)
                 AuthFieldsState.Type.EMAIL -> it.copy(email = data)
             }
+        }
+        if (mutableAuthFieldsErrorState.value.any()) {
+            mutableAuthFieldsErrorState.update { it.toNone() }
         }
     }
 }

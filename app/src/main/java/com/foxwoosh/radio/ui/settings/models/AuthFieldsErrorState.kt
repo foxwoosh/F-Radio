@@ -20,4 +20,6 @@ data class AuthFieldsErrorState(
         nameError = false,
         emailError = false
     )
+
+    fun any() = loginError || passwordError || nameError || emailError
 }

@@ -7,8 +7,6 @@ import androidx.compose.foundation.text.KeyboardActions
 import androidx.compose.foundation.text.KeyboardOptions
 import androidx.compose.material.*
 import androidx.compose.material.icons.Icons
-import androidx.compose.material.icons.filled.ArrowDropUp
-import androidx.compose.material.icons.filled.ArrowUpward
 import androidx.compose.material.icons.filled.KeyboardArrowUp
 import androidx.compose.material.icons.filled.Logout
 import androidx.compose.material.icons.outlined.Visibility
@@ -50,6 +48,7 @@ fun SettingsScreen() {
     val user by viewModel.userState.collectAsState()
     val authFieldsErrorState by viewModel.authFieldsErrorState.collectAsState()
     val authFieldsState by viewModel.authFieldsState.collectAsState()
+    val authProgress by viewModel.authProgress.collectAsState()
 
     val snackbarHostState = remember { SnackbarHostState() }
 
@@ -57,6 +56,8 @@ fun SettingsScreen() {
     var logoutDialogVisible by remember { mutableStateOf(false) }
 
     viewModel.events.collectAsEffect {
+        snackbarHostState.currentSnackbarData?.dismiss()
+
         when (it) {
             is SettingsEvent.Error -> scope.launch {
                 snackbarHostState.showSnackbar(context.getString(it.errorTextResId))
@@ -92,9 +93,10 @@ fun SettingsScreen() {
             Row(
                 modifier = Modifier
                     .fillMaxWidth()
-                    .singleCondition(user == null && !authFormVisible) {
-                        clickable { authFormVisible = !authFormVisible }
-                    }
+                    .clickable(
+                        onClick = { authFormVisible = !authFormVisible },
+                        enabled = user == null && !authFormVisible
+                    )
                     .padding(horizontal = dp16, vertical = 6.dp),
                 verticalAlignment = Alignment.CenterVertically
             ) {
@@ -136,7 +138,8 @@ fun SettingsScreen() {
                     onRegister = { viewModel.register() },
                     state = authFieldsState,
                     errorsState = authFieldsErrorState,
-                    onAuthCloseAction = { authFormVisible = false }
+                    onAuthCloseAction = { authFormVisible = false },
+                    loading = authProgress
                 )
             }
         }
@@ -199,7 +202,8 @@ fun AuthForm(
     onRegister: () -> Unit,
     state: AuthFieldsState,
     errorsState: AuthFieldsErrorState,
-    onAuthCloseAction: () -> Unit
+    onAuthCloseAction: () -> Unit,
+    loading: Boolean
 ) {
     Column(
         modifier = Modifier
@@ -210,13 +214,15 @@ fun AuthForm(
             selectedIndex = selectedIndex,
             firstItemText = stringResource(id = R.string.settings_page_title_login),
             secondItemText = stringResource(id = R.string.settings_page_title_registration),
-            onSelectAction = { onSelectIndex(it) }
+            onSelectAction = { onSelectIndex(it) },
+            enabled = !loading
         )
 
         Spacer(modifier = Modifier.height(dp16))
 
         TextField(
             value = state.login,
+            enabled = !loading,
             label = { Text(text = stringResource(R.string.settings_auth_field_login)) },
             singleLine = true,
             onValueChange = { if (it.length <= 20) onLoginChange(it) },
@@ -228,77 +234,30 @@ fun AuthForm(
 
         Spacer(modifier = Modifier.height(dp16))
 
-        var passwordVisible by remember { mutableStateOf(false) }
-        TextField(
-            value = state.password,
-            label = { Text(text = stringResource(R.string.settings_auth_field_password)) },
-            singleLine = true,
-            onValueChange = { if (it.length <= 50) onPasswordChange(it) },
-            keyboardOptions = KeyboardOptions(
-                keyboardType = KeyboardType.Password,
-                imeAction = if (selectedIndex == AuthPage.REGISTRATION.ordinal) {
-                    ImeAction.Next
-                } else {
-                    ImeAction.Done
-                }
-            ),
-            keyboardActions = KeyboardActions(onDone = { onLogin() }),
-            visualTransformation = if (passwordVisible)
-                VisualTransformation.None
-            else
-                PasswordVisualTransformation(),
-            colors = TextFieldDefaults.textFieldColors(),
-            trailingIcon = {
-                IconButton(onClick = { passwordVisible = !passwordVisible }) {
-                    Icon(
-                        if (passwordVisible) {
-                            Icons.Outlined.Visibility
-                        } else {
-                            Icons.Outlined.VisibilityOff
-                        },
-                        contentDescription = if (passwordVisible) {
-                            "Hide password"
-                        } else {
-                            "Show password"
-                        }
-                    )
-                }
-            },
-            isError = errorsState.passwordError
+        PasswordAuthField(
+            password = state.password,
+            loading = loading,
+            onPasswordChange = onPasswordChange,
+            selectedIndex = selectedIndex,
+            onLogin = onLogin,
+            error = errorsState.passwordError
         )
 
         Spacer(modifier = Modifier.height(dp16))
 
-        AnimatedVisibility(
-            visible = selectedIndex == AuthPage.REGISTRATION.ordinal
-        ) {
-            TextField(
-                value = state.name,
-                label = { Text(text = stringResource(R.string.settings_auth_field_name)) },
-                singleLine = true,
-                onValueChange = { onNameChange(it) },
-                modifier = Modifier.padding(bottom = dp16),
-                keyboardOptions = KeyboardOptions(imeAction = ImeAction.Next),
-                isError = errorsState.nameError
-            )
-        }
+        AdditionalRegistrationFields(
+            selectedIndex = selectedIndex,
+            loading = loading,
+            onNameChange = onNameChange,
+            onEmailChange = onEmailChange,
+            onRegister = onRegister,
+            name = state.name,
+            email = state.email,
+            nameError = errorsState.nameError,
+            emailError = errorsState.emailError
+        )
 
-        AnimatedVisibility(
-            visible = selectedIndex == AuthPage.REGISTRATION.ordinal
-        ) {
-            TextField(
-                value = state.email,
-                label = { Text(text = stringResource(R.string.settings_auth_field_email)) },
-                singleLine = true,
-                onValueChange = { onEmailChange(it) },
-                modifier = Modifier.padding(bottom = dp16),
-                keyboardOptions = KeyboardOptions(imeAction = ImeAction.Done),
-                keyboardActions = KeyboardActions(onDone = { onRegister() }),
-                isError = errorsState.emailError
-            )
-        }
-
-        WideButton(
+        LoadingButton(
             onClick = {
                 when (selectedIndex) {
                     AuthPage.LOGIN.ordinal -> onLogin()
@@ -311,7 +270,8 @@ fun AuthForm(
                     AuthPage.REGISTRATION.ordinal -> R.string.settings_auth_button_register
                     else -> throw IllegalArgumentException()
                 }
-            )
+            ),
+            loading = loading
         )
 
         Spacer(modifier = Modifier.height(dp8))
@@ -322,9 +282,107 @@ fun AuthForm(
             colorFilter = ColorFilter.tint(Color.White),
             modifier = Modifier
                 .fillMaxWidth()
-                .clickable(onClick = onAuthCloseAction)
+                .clickable(
+                    onClick = onAuthCloseAction,
+                    enabled = !loading
+                )
         )
     }
+}
+
+@Composable
+private fun ColumnScope.AdditionalRegistrationFields(
+    selectedIndex: Int,
+    name: String,
+    email: String,
+    loading: Boolean,
+    onNameChange: (String) -> Unit,
+    onEmailChange: (String) -> Unit,
+    onRegister: () -> Unit,
+    nameError: Boolean,
+    emailError: Boolean
+) {
+    AnimatedVisibility(
+        visible = selectedIndex == AuthPage.REGISTRATION.ordinal
+    ) {
+        TextField(
+            value = name,
+            enabled = !loading,
+            label = { Text(text = stringResource(R.string.settings_auth_field_name)) },
+            singleLine = true,
+            onValueChange = { onNameChange(it) },
+            modifier = Modifier.padding(bottom = dp16),
+            keyboardOptions = KeyboardOptions(imeAction = ImeAction.Next),
+            isError = nameError
+        )
+    }
+
+    AnimatedVisibility(
+        visible = selectedIndex == AuthPage.REGISTRATION.ordinal
+    ) {
+        TextField(
+            value = email,
+            enabled = !loading,
+            label = { Text(text = stringResource(R.string.settings_auth_field_email)) },
+            singleLine = true,
+            onValueChange = { onEmailChange(it) },
+            modifier = Modifier.padding(bottom = dp16),
+            keyboardOptions = KeyboardOptions(imeAction = ImeAction.Done),
+            keyboardActions = KeyboardActions(onDone = { onRegister() }),
+            isError = emailError
+        )
+    }
+}
+
+@Composable
+private fun PasswordAuthField(
+    password: String,
+    loading: Boolean,
+    onPasswordChange: (String) -> Unit,
+    selectedIndex: Int,
+    onLogin: () -> Unit,
+    error: Boolean
+) {
+    var passwordVisible by remember { mutableStateOf(false) }
+
+    TextField(
+        value = password,
+        enabled = !loading,
+        label = { Text(text = stringResource(R.string.settings_auth_field_password)) },
+        singleLine = true,
+        onValueChange = { if (it.length <= 50) onPasswordChange(it) },
+        keyboardOptions = KeyboardOptions(
+            keyboardType = KeyboardType.Password,
+            imeAction = if (selectedIndex == AuthPage.REGISTRATION.ordinal) {
+                ImeAction.Next
+            } else {
+                ImeAction.Done
+            }
+        ),
+        keyboardActions = KeyboardActions(onDone = { onLogin() }),
+        visualTransformation = if (passwordVisible)
+            VisualTransformation.None
+        else
+            PasswordVisualTransformation(),
+        colors = TextFieldDefaults.textFieldColors(),
+        trailingIcon = {
+            IconButton(onClick = { passwordVisible = !passwordVisible }) {
+                Icon(
+                    if (passwordVisible) {
+                        Icons.Outlined.Visibility
+                    } else {
+                        Icons.Outlined.VisibilityOff
+                    },
+                    contentDescription = if (passwordVisible) {
+                        "Hide password"
+                    } else {
+                        "Show password"
+                    }
+                )
+            }
+        },
+        isError = error
+    )
 }
 
 private enum class AuthPage {
