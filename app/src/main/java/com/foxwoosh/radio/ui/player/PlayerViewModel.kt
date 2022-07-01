@@ -46,7 +46,11 @@ class PlayerViewModel @Inject constructor(
 
     fun fetchLyricsForCurrentTrack() {
         val trackData = trackDataFlow.value
-        if (trackData is TrackDataState.Ready && lastFetchedLyricsTrackID != trackData.id) {
+
+        if (trackData is TrackDataState.Ready
+            && lastFetchedLyricsTrackID != trackData.id
+            && lyricsStateFlow.value !is LyricsDataState.Loading
+        ) {
             viewModelScope.launch {
                 try {
                     mutableLyricsStateFlow.emit(LyricsDataState.Loading)

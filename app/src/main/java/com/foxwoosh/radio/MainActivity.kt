@@ -76,7 +76,9 @@ class MainActivity : ComponentActivity() {
                             )
                         }
                     ) {
-                        SettingsScreen()
+                        SettingsScreen(
+                            navigateBack = { navController.popBackStack() }
+                        )
                     }
                 }
             }

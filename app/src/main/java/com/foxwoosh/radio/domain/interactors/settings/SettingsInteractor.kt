@@ -24,10 +24,20 @@ class SettingsInteractor @Inject constructor(
             "(?:[\\x01-\\x08\\x0b\\x0c\\x0e-\\x1f\\x21-\\x5a\\x53-\\x7f]|\\\\[\\x01-\\x09\\x0b\\x0c\\x0e-\\x7f])+)])")
 
     override suspend fun register(login: String, password: String, name: String, email: String) {
-        if (login.isEmpty() || login.length < 5 || login.matches(loginRegex).not()) throw AuthDataException.Login
-        if (password.isEmpty() || password.length < 5) throw AuthDataException.Password
+        if (login.isEmpty()
+            || login.length < SettingsConstants.LOGIN_MIN_LENGTH
+            || login.matches(loginRegex).not()
+        ) throw AuthDataException.Login
+
+        if (password.isEmpty()
+            || password.length < SettingsConstants.PASSWORD_MIN_LENGTH
+        ) throw AuthDataException.Password
+
         if (name.isEmpty()) throw AuthDataException.Name
-        if (email.isEmpty() || email.matches(emailRegex).not()) throw AuthDataException.Email
+
+        if (email.isEmpty()
+            || email.matches(emailRegex).not()
+        ) throw AuthDataException.Email
 
         val user = userRemoteStorage.register(login.trim(), password.md5(), name, email) {
             userLocalStorage.saveToken(it)
@@ -36,8 +46,14 @@ class SettingsInteractor @Inject constructor(
     }
 
     override suspend fun login(login: String, password: String) {
-        if (login.isEmpty() || login.length < 5 || login.matches(loginRegex).not()) throw AuthDataException.Login
-        if (password.isEmpty() || password.length < 5) throw AuthDataException.Password
+        if (login.isEmpty()
+            || login.length < SettingsConstants.LOGIN_MIN_LENGTH
+            || login.matches(loginRegex).not()
+        ) throw AuthDataException.Login
+
+        if (password.isEmpty()
+            || password.length < SettingsConstants.PASSWORD_MIN_LENGTH
+        ) throw AuthDataException.Password
 
         val user = userRemoteStorage.login(login.trim(), password.md5()) {
             userLocalStorage.saveToken(it)

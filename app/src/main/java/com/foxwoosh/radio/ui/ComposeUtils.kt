@@ -14,6 +14,7 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.composed
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.hapticfeedback.HapticFeedbackType
+import androidx.compose.ui.platform.LocalDensity
 import androidx.compose.ui.platform.LocalHapticFeedback
 import androidx.compose.ui.unit.Dp
 import kotlinx.coroutines.flow.Flow
@@ -100,3 +101,6 @@ fun <T> Flow<T>.collectAsEffect(
         onEach(block).flowOn(context).launchIn(this)
     }
 }
+
+@Composable
+fun Int.toDp() = with(LocalDensity.current) { this@toDp.toDp() }

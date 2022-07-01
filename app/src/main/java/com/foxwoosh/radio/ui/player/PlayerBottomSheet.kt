@@ -31,6 +31,7 @@ import com.foxwoosh.radio.domain.models.Track
 import com.foxwoosh.radio.openURL
 import com.foxwoosh.radio.player.models.MusicServicesData
 import com.foxwoosh.radio.ui.currentOffset
+import com.foxwoosh.radio.ui.top
 import com.google.accompanist.pager.ExperimentalPagerApi
 import com.google.accompanist.pager.HorizontalPager
 import com.google.accompanist.pager.pagerTabIndicatorOffset
@@ -40,8 +41,6 @@ import kotlinx.coroutines.launch
 @Composable
 fun PlayerBottomSheetContent(
     state: BottomSheetScaffoldState,
-    statusBarHeight: Dp,
-//    navigationBarHeight: Dp,
     backgroundColor: Color,
     primaryTextColor: Color,
     secondaryTextColor: Color,
@@ -52,6 +51,8 @@ fun PlayerBottomSheetContent(
     val pagerState = rememberPagerState()
     val scope = rememberCoroutineScope()
     val offset = state.currentOffset
+
+    val statusBarHeight = WindowInsets.statusBars.top
 
     LaunchedEffect(pagerState.currentPage) {
         if (state.bottomSheetState.isExpanded) {

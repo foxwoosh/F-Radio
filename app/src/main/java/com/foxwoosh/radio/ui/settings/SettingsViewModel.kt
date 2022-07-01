@@ -42,9 +42,10 @@ class SettingsViewModel @Inject constructor(
             try {
                 mutableAuthProgress.value = true
 
-                val fields = authFieldsState.value
                 mutableAuthFieldsErrorState.update { it.toNone() }
-                interactor.register(fields.login, fields.password, fields.name, fields.email)
+                with(authFieldsState.value) {
+                    interactor.register(login, password, name, email)
+                }
 
                 mutableAuthFieldsState.update { it.clear() }
             } catch (e: Exception) {
@@ -96,11 +97,11 @@ class SettingsViewModel @Inject constructor(
             try {
                 mutableAuthProgress.value = true
 
-                delay(2000)
-//                val fields = authFieldsState.value
-//                interactor.login(fields.login, fields.password)
-//
-//                mutableAuthFieldsState.update { it.clear() }
+                with(authFieldsState.value) {
+                    interactor.login(login, password)
+                }
+
+                mutableAuthFieldsState.update { it.clear() }
             } catch (e: Exception) {
                 when (e) {
                     is AuthDataException.Login -> {

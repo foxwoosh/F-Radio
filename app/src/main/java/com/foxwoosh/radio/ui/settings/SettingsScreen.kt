@@ -7,6 +7,8 @@ import androidx.compose.foundation.text.KeyboardActions
 import androidx.compose.foundation.text.KeyboardOptions
 import androidx.compose.material.*
 import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.filled.ArrowBack
+import androidx.compose.material.icons.filled.Close
 import androidx.compose.material.icons.filled.KeyboardArrowUp
 import androidx.compose.material.icons.filled.Logout
 import androidx.compose.material.icons.outlined.Visibility
@@ -28,6 +30,7 @@ import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.hilt.navigation.compose.hiltViewModel
 import com.foxwoosh.radio.R
+import com.foxwoosh.radio.domain.interactors.settings.SettingsConstants
 import com.foxwoosh.radio.ui.*
 import com.foxwoosh.radio.ui.settings.models.AuthFieldsErrorState
 import com.foxwoosh.radio.ui.settings.models.AuthFieldsState
@@ -40,7 +43,9 @@ import com.foxwoosh.radio.ui.widgets.DoubleSelector
 import kotlinx.coroutines.launch
 
 @Composable
-fun SettingsScreen() {
+fun SettingsScreen(
+    navigateBack: () -> Unit
+) {
     val scope = rememberCoroutineScope()
     val context = LocalContext.current
 
@@ -65,7 +70,7 @@ fun SettingsScreen() {
         }
     }
 
-    LaunchedEffect(key1 = user) {
+    LaunchedEffect(user) {
         if (authFormVisible && user != null) {
             authFormVisible = false
         }
@@ -83,6 +88,9 @@ fun SettingsScreen() {
                 .verticalScroll(rememberScrollState())
                 .imePadding()
         ) {
+            IconButton(onClick = navigateBack) {
+                Icon(imageVector = Icons.Filled.ArrowBack, contentDescription = "Close settings")
+            }
             Text(
                 text = stringResource(id = R.string.settings_hello),
                 color = Color.White,
@@ -158,25 +166,19 @@ fun SettingsScreen() {
         if (logoutDialogVisible) {
             AlertDialog(
                 onDismissRequest = { logoutDialogVisible = false },
-                text = {
-                    Text(text = "Sure?")
-                },
+                text = { Text(text = "Sure?") },
                 confirmButton = {
                     TextButton(
                         onClick = {
                             logoutDialogVisible = false
                             viewModel.logout()
                         }
-                    ) {
-                        Text(text = ("Yep"))
-                    }
+                    ) { Text(text = ("Yep")) }
                 },
                 dismissButton = {
                     TextButton(
                         onClick = { logoutDialogVisible = false }
-                    ) {
-                        Text(text = ("Nope"))
-                    }
+                    ) { Text(text = ("Nope")) }
                 }
             )
         }
@@ -225,11 +227,11 @@ fun AuthForm(
             enabled = !loading,
             label = { Text(text = stringResource(R.string.settings_auth_field_login)) },
             singleLine = true,
-            onValueChange = { if (it.length <= 20) onLoginChange(it) },
-            keyboardOptions = KeyboardOptions(
-                imeAction = ImeAction.Next
-            ),
-            isError = errorsState.loginError
+            keyboardOptions = KeyboardOptions(imeAction = ImeAction.Next),
+            isError = errorsState.loginError,
+            onValueChange = {
+                if (it.length <= SettingsConstants.LOGIN_MAX_LENGTH) onLoginChange(it)
+            }
         )
 
         Spacer(modifier = Modifier.height(dp16))
@@ -350,7 +352,11 @@ private fun PasswordAuthField(
         enabled = !loading,
         label = { Text(text = stringResource(R.string.settings_auth_field_password)) },
         singleLine = true,
-        onValueChange = { if (it.length <= 50) onPasswordChange(it) },
+        keyboardActions = KeyboardActions(onDone = { onLogin() }),
+        colors = TextFieldDefaults.textFieldColors(),
+        onValueChange = {
+            if (it.length <= SettingsConstants.PASSWORD_MAX_LENGTH) onPasswordChange(it)
+        },
         keyboardOptions = KeyboardOptions(
             keyboardType = KeyboardType.Password,
             imeAction = if (selectedIndex == AuthPage.REGISTRATION.ordinal) {
@@ -359,12 +365,10 @@ private fun PasswordAuthField(
                 ImeAction.Done
             }
         ),
-        keyboardActions = KeyboardActions(onDone = { onLogin() }),
         visualTransformation = if (passwordVisible)
             VisualTransformation.None
         else
             PasswordVisualTransformation(),
-        colors = TextFieldDefaults.textFieldColors(),
         trailingIcon = {
             IconButton(onClick = { passwordVisible = !passwordVisible }) {
                 Icon(

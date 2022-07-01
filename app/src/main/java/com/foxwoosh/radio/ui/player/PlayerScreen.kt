@@ -48,6 +48,7 @@ import com.foxwoosh.radio.player.models.*
 import com.foxwoosh.radio.ui.*
 import com.foxwoosh.radio.ui.theme.BlackOverlay_20
 import com.foxwoosh.radio.ui.theme.WhiteOverlay_20
+import com.foxwoosh.radio.utils.crossfadeImageLoader
 import kotlinx.coroutines.launch
 import kotlin.math.absoluteValue
 
@@ -70,14 +71,13 @@ fun PlayerScreen(
     val previousTracks by viewModel.previousTracksFlow.collectAsState()
     val lyricsState by viewModel.lyricsStateFlow.collectAsState()
     val station by viewModel.stationFlow.collectAsState()
-    val insets by Insets.collectAsState()
 
     var musicServicesMenuOpened by remember { mutableStateOf(false) }
 
     val bottomSheetScaffoldState = rememberBottomSheetScaffoldState()
 
     val scope = rememberCoroutineScope()
-    val defaultBottomSheetPeekHeight = 80.dp + insets.navigationBar
+    val defaultBottomSheetPeekHeight = 80.dp + WindowInsets.navigationBars.bottom
 
     val colorAnimationSpec: AnimationSpec<Color> = tween(trackChangeDuration)
     val gradientOffsetAnimationSpec: AnimationSpec<Float> = tween(trackChangeDuration)
@@ -164,7 +164,6 @@ fun PlayerScreen(
         sheetContent = {
             PlayerBottomSheetContent(
                 state = bottomSheetScaffoldState,
-                statusBarHeight = insets.statusBar,
                 backgroundColor = surfaceColor,
                 primaryTextColor = primaryTextColor,
                 secondaryTextColor = secondaryTextColor,
@@ -196,10 +195,8 @@ fun PlayerScreen(
             Column(
                 modifier = Modifier
                     .fillMaxSize()
-                    .padding(
-                        top = insets.statusBar,
-                        bottom = defaultBottomSheetPeekHeight
-                    ),
+                    .padding(bottom = defaultBottomSheetPeekHeight)
+                    .statusBarsPadding(),
                 horizontalAlignment = Alignment.CenterHorizontally,
                 verticalArrangement = Arrangement.Center
             ) {
@@ -351,12 +348,9 @@ fun CoverWithServices(
             )
         )
 
-        val crossfadeLoader = ImageLoader.Builder(context)
-            .crossfade(durationMillis = trackChangeDuration)
-            .build()
         AsyncImage(
             model = cover,
-            imageLoader = crossfadeLoader,
+            imageLoader = LocalContext.current.crossfadeImageLoader,
             contentDescription = "Cover",
             modifier = Modifier
                 .fillMaxSize()

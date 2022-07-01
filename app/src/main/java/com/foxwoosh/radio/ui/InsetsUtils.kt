@@ -1,5 +1,6 @@
 package com.foxwoosh.radio.ui
 
+import androidx.compose.foundation.layout.WindowInsets
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.platform.LocalDensity
 import androidx.compose.ui.unit.Dp
@@ -30,4 +31,16 @@ inline val WindowInsetsCompat.systemBottom: Dp
         } else {
             ime
         }.toDp()
+    }
+
+inline val WindowInsets.bottom: Dp
+    @Composable
+    get() = with(LocalDensity.current) {
+        getBottom(this).toDp()
+    }
+
+inline val WindowInsets.top: Dp
+    @Composable
+    get() = with(LocalDensity.current) {
+        getTop(this).toDp()
     }
