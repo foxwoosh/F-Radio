@@ -12,10 +12,8 @@ import androidx.compose.animation.ExperimentalAnimationApi
 import androidx.compose.animation.core.tween
 import androidx.core.animation.doOnEnd
 import androidx.core.splashscreen.SplashScreen.Companion.installSplashScreen
-import androidx.core.view.ViewCompat
 import androidx.core.view.WindowCompat
 import com.foxwoosh.radio.ui.AppDestination
-import com.foxwoosh.radio.ui.Insets
 import com.foxwoosh.radio.ui.login.LoginScreen
 import com.foxwoosh.radio.ui.player.PlayerScreen
 import com.foxwoosh.radio.ui.settings.SettingsScreen
@@ -38,10 +36,6 @@ class MainActivity : ComponentActivity() {
         super.onCreate(savedInstanceState)
 
         WindowCompat.setDecorFitsSystemWindows(window, false)
-
-        ViewCompat.setOnApplyWindowInsetsListener(window.decorView) { _, insets ->
-            insets.also { Insets.value = it }
-        }
 
         setContent {
             FoxyRadioTheme {

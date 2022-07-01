@@ -3,19 +3,18 @@ package com.foxwoosh.radio.ui.player
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.foxwoosh.radio.data.storage.local.player.IPlayerLocalStorage
+import com.foxwoosh.radio.data.storage.local.user.IUserLocalStorage
 import com.foxwoosh.radio.data.storage.remote.lyrics.ILyricsRemoteStorage
 import com.foxwoosh.radio.player.models.TrackDataState
 import dagger.hilt.android.lifecycle.HiltViewModel
-import kotlinx.coroutines.flow.MutableStateFlow
-import kotlinx.coroutines.flow.asStateFlow
-import kotlinx.coroutines.flow.launchIn
-import kotlinx.coroutines.flow.onEach
+import kotlinx.coroutines.flow.*
 import kotlinx.coroutines.launch
 import javax.inject.Inject
 
 @HiltViewModel
 class PlayerViewModel @Inject constructor(
     playerLocalStorage: IPlayerLocalStorage,
+    userLocalStorage: IUserLocalStorage,
     private val lyricsRemoteStorage: ILyricsRemoteStorage
 ) : ViewModel() {
 
@@ -23,6 +22,11 @@ class PlayerViewModel @Inject constructor(
     val previousTracksFlow = playerLocalStorage.previousTracks.asStateFlow()
     val playerStateFlow = playerLocalStorage.playerState.asStateFlow()
     val stationFlow = playerLocalStorage.station.asStateFlow()
+    val userFlow = userLocalStorage.currentUser.stateIn(
+        viewModelScope,
+        SharingStarted.Lazily,
+        null
+    )
 
     private val mutableLyricsStateFlow = MutableStateFlow<LyricsDataState>(LyricsDataState.NoData)
     val lyricsStateFlow = mutableLyricsStateFlow.asStateFlow()

@@ -31,12 +31,10 @@ class NetworkStateProvider @Inject constructor(@ApplicationContext private val c
         val callback = object : ConnectivityManager.NetworkCallback() {
             override fun onAvailable(network: Network) {
                 mutableNetworkState.value = NetworkState.CONNECTED
-                Log.i("DDLOG", "network state connected")
             }
 
             override fun onLost(network: Network) {
                 mutableNetworkState.value = NetworkState.NOT_CONNECTED
-                Log.i("DDLOG", "network state not connected")
             }
         }
 

@@ -6,6 +6,8 @@ import kotlinx.coroutines.flow.Flow
 interface IUserLocalStorage {
     val currentUser: Flow<CurrentUser?>
 
+    suspend fun getToken(): String?
+
     suspend fun saveToken(token: String)
 
     suspend fun removeToken()

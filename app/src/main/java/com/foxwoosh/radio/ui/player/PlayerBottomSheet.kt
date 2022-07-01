@@ -32,10 +32,8 @@ import com.foxwoosh.radio.openURL
 import com.foxwoosh.radio.player.models.MusicServicesData
 import com.foxwoosh.radio.ui.currentOffset
 import com.foxwoosh.radio.ui.top
-import com.google.accompanist.pager.ExperimentalPagerApi
-import com.google.accompanist.pager.HorizontalPager
-import com.google.accompanist.pager.pagerTabIndicatorOffset
-import com.google.accompanist.pager.rememberPagerState
+import com.google.accompanist.pager.*
+import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.launch
 
 @Composable
@@ -46,10 +44,10 @@ fun PlayerBottomSheetContent(
     secondaryTextColor: Color,
     onPageBecomesVisible: (page: PlayerBottomSheetPage) -> Unit,
     previousTracks: List<Track>,
-    lyricsState: LyricsDataState
+    lyricsState: LyricsDataState,
+    userLoggedIn: Boolean
 ) {
     val pagerState = rememberPagerState()
-    val scope = rememberCoroutineScope()
     val offset = state.currentOffset
 
     val statusBarHeight = WindowInsets.statusBars.top
@@ -83,88 +81,141 @@ fun PlayerBottomSheetContent(
             contentDescription = "Bar"
         )
 
-        TabRow(
-            selectedTabIndex = pagerState.currentPage,
-            indicator = { tabPositions ->
-                TabRowDefaults.Indicator(
-                    modifier = Modifier
-                        .pagerTabIndicatorOffset(pagerState, tabPositions),
-                    color = primaryTextColor.copy(alpha = offset)
-                )
-            },
-            modifier = Modifier
-                .fillMaxWidth()
-                .height(56.dp),
-            backgroundColor = backgroundColor
-        ) {
-            PlayerBottomSheetPage.values().forEach {
-                Tab(
-                    text = {
-                        Text(
-                            text = stringResource(
-                                id = when (it) {
-                                    PlayerBottomSheetPage.PREVIOUS_TRACKS ->
-                                        R.string.player_page_title_previous_tracks
-                                    PlayerBottomSheetPage.LYRICS ->
-                                        R.string.player_page_title_lyrics
-                                }
-                            ).uppercase()
-                        )
-                    },
-                    selected = pagerState.currentPage == it.ordinal,
-                    onClick = {
-                        scope.launch {
-                            if (state.bottomSheetState.isCollapsed) {
-                                state.bottomSheetState.expand()
-                            }
-                            if (pagerState.currentPage != it.ordinal) {
-                                pagerState.animateScrollToPage(it.ordinal)
-                            }
-                        }
-                    },
-                    selectedContentColor = primaryTextColor,
-                    unselectedContentColor = secondaryTextColor
-                )
-            }
-        }
+        PlayerBottomSheetTabs(
+            pagerState = pagerState,
+            primaryTextColor = primaryTextColor,
+            offset = offset,
+            backgroundColor = backgroundColor,
+            state = state,
+            secondaryTextColor = secondaryTextColor
+        )
 
-        HorizontalPager(
-            count = PlayerBottomSheetPage.size,
-            state = pagerState,
-            modifier = Modifier
-                .fillMaxSize()
-                .alpha(offset)
-        ) { pageIndex ->
-            when (pageIndex) {
-                PlayerBottomSheetPage.PREVIOUS_TRACKS.ordinal -> if (previousTracks.isEmpty()) {
-                    Box(
-                        modifier = Modifier.fillMaxSize(),
-                        contentAlignment = Alignment.Center
-                    ) {
-                        Text(
-                            text = stringResource(id = R.string.player_page_no_data_previous_tracks),
-                            color = primaryTextColor
-                        )
-                    }
-                } else {
-                    PreviousTracksList(
-                        previousTracks = previousTracks,
-                        primaryTextColor = primaryTextColor,
-                        secondaryTextColor = secondaryTextColor,
-                        modifier = Modifier.fillMaxSize()
+        PlayerBottomSheetPager(
+            pagerState = pagerState,
+            offset = offset,
+            previousTracks = previousTracks,
+            primaryTextColor = primaryTextColor,
+            secondaryTextColor = secondaryTextColor,
+            backgroundColor = backgroundColor,
+            lyricsState = lyricsState,
+            userLoggedIn = userLoggedIn
+        )
+    }
+}
+
+@Composable
+private fun PlayerBottomSheetTabs(
+    pagerState: PagerState,
+    primaryTextColor: Color,
+    offset: Float,
+    backgroundColor: Color,
+    state: BottomSheetScaffoldState,
+    secondaryTextColor: Color
+) {
+    val scope = rememberCoroutineScope()
+
+    TabRow(
+        selectedTabIndex = pagerState.currentPage,
+        indicator = { tabPositions ->
+            TabRowDefaults.Indicator(
+                modifier = Modifier
+                    .pagerTabIndicatorOffset(pagerState, tabPositions),
+                color = primaryTextColor.copy(alpha = offset)
+            )
+        },
+        modifier = Modifier
+            .fillMaxWidth()
+            .height(56.dp),
+        backgroundColor = backgroundColor
+    ) {
+        PlayerBottomSheetPage.values().forEach {
+            Tab(
+                text = {
+                    Text(
+                        text = stringResource(
+                            id = when (it) {
+                                PlayerBottomSheetPage.PREVIOUS_TRACKS ->
+                                    R.string.player_page_title_previous_tracks
+                                PlayerBottomSheetPage.LYRICS ->
+                                    R.string.player_page_title_lyrics
+                            }
+                        ).uppercase()
                     )
-                }
-                PlayerBottomSheetPage.LYRICS.ordinal -> LyricsPage(
-                    primaryTextColor = primaryTextColor,
-                    lyricsState = lyricsState
-                )
-            }
+                },
+                selected = pagerState.currentPage == it.ordinal,
+                onClick = {
+                    scope.launch {
+                        if (state.bottomSheetState.isCollapsed) {
+                            state.bottomSheetState.expand()
+                        }
+                        if (pagerState.currentPage != it.ordinal) {
+                            pagerState.animateScrollToPage(it.ordinal)
+                        }
+                    }
+                },
+                selectedContentColor = primaryTextColor,
+                unselectedContentColor = secondaryTextColor
+            )
         }
     }
 }
 
 @Composable
-fun LyricsPage(primaryTextColor: Color, lyricsState: LyricsDataState) {
+private fun PlayerBottomSheetPager(
+    pagerState: PagerState,
+    offset: Float,
+    previousTracks: List<Track>,
+    primaryTextColor: Color,
+    secondaryTextColor: Color,
+    backgroundColor: Color,
+    lyricsState: LyricsDataState,
+    userLoggedIn: Boolean
+) {
+    HorizontalPager(
+        count = PlayerBottomSheetPage.size,
+        state = pagerState,
+        modifier = Modifier
+            .fillMaxSize()
+            .alpha(offset)
+    ) { pageIndex ->
+        when (pageIndex) {
+            PlayerBottomSheetPage.PREVIOUS_TRACKS.ordinal -> if (previousTracks.isEmpty()) {
+                Box(
+                    modifier = Modifier.fillMaxSize(),
+                    contentAlignment = Alignment.Center
+                ) {
+                    Text(
+                        text = stringResource(id = R.string.player_page_no_data_previous_tracks),
+                        color = primaryTextColor
+                    )
+                }
+            } else {
+                PreviousTracksList(
+                    previousTracks = previousTracks,
+                    primaryTextColor = primaryTextColor,
+                    secondaryTextColor = secondaryTextColor,
+                    modifier = Modifier.fillMaxSize()
+                )
+            }
+            PlayerBottomSheetPage.LYRICS.ordinal -> LyricsPage(
+                primaryTextColor = primaryTextColor,
+                secondaryTextColor = secondaryTextColor,
+                backgroundColor = backgroundColor,
+                lyricsState = lyricsState,
+                userLoggedIn = userLoggedIn
+            )
+        }
+    }
+}
+
+@Composable
+fun LyricsPage(
+    primaryTextColor: Color,
+    secondaryTextColor: Color,
+    backgroundColor: Color,
+    lyricsState: LyricsDataState,
+    userLoggedIn: Boolean
+) {
     Box(
         modifier = Modifier.fillMaxSize(),
         contentAlignment = Alignment.Center
@@ -197,27 +248,29 @@ fun LyricsPage(primaryTextColor: Color, lyricsState: LyricsDataState) {
                             modifier = Modifier.fillMaxSize()
                         )
                     }
-//                    Spacer(modifier = Modifier.height(16.dp))
-//
-//                    Column(
-//                        modifier = Modifier.fillMaxWidth(),
-//                        horizontalAlignment = Alignment.CenterHorizontally
-//                    ) {
-//                        Text(
-//                            text = "Something wrong with lyrics?",
-//                            color = secondaryTextColor,
-//                            fontWeight = FontWeight.Medium
-//                        )
-//                        Button(
-//                            onClick = { /*TODO*/ },
-//                            colors = ButtonDefaults.buttonColors(
-//                                backgroundColor = secondaryTextColor,
-//                                contentColor = backgroundColor
-//                            )
-//                        ) {
-//                            Text(text = "Click here to report!")
-//                        }
-//                    }
+                    if (userLoggedIn) {
+                        Spacer(modifier = Modifier.height(16.dp))
+
+                        Column(
+                            modifier = Modifier.fillMaxWidth(),
+                            horizontalAlignment = Alignment.CenterHorizontally
+                        ) {
+                            Text(
+                                text = "Something wrong with lyrics?",
+                                color = secondaryTextColor,
+                                fontWeight = FontWeight.Medium
+                            )
+                            Button(
+                                onClick = { /*TODO*/ },
+                                colors = ButtonDefaults.buttonColors(
+                                    backgroundColor = secondaryTextColor,
+                                    contentColor = backgroundColor
+                                )
+                            ) {
+                                Text(text = "Click here to report!")
+                            }
+                        }
+                    }
                 }
             }
         }

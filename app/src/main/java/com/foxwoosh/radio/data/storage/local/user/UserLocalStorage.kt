@@ -14,6 +14,10 @@ class UserLocalStorage @Inject constructor(
 ): IUserLocalStorage {
     override val currentUser = database.read { currentUser().get().map { it?.map() } }
 
+    override suspend fun getToken(): String? {
+        return dataStore.getString(DataStoreKeys.AUTH_TOKEN)
+    }
+
     override suspend fun saveToken(token: String) {
         dataStore.saveString(DataStoreKeys.AUTH_TOKEN, token)
     }

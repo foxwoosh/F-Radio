@@ -9,7 +9,6 @@ import com.foxwoosh.radio.ui.settings.models.AuthFieldsErrorState
 import com.foxwoosh.radio.ui.settings.models.AuthFieldsState
 import com.foxwoosh.radio.ui.settings.models.SettingsEvent
 import dagger.hilt.android.lifecycle.HiltViewModel
-import kotlinx.coroutines.delay
 import kotlinx.coroutines.flow.*
 import kotlinx.coroutines.launch
 import retrofit2.HttpException

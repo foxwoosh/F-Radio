@@ -6,8 +6,10 @@ import com.foxwoosh.radio.data.api.foxy.requests.LoginRequest
 import com.foxwoosh.radio.data.api.foxy.requests.RegisterRequest
 import com.foxwoosh.radio.data.api.foxy.responses.AuthResponse
 import com.foxwoosh.radio.data.api.foxy.responses.LyricsResponse
+import com.foxwoosh.radio.data.api.interceptors.AuthInterceptor
 import com.foxwoosh.radio.data.api.musixmatch.LyricsMatchResponse
 import com.jakewharton.retrofit2.converter.kotlinx.serialization.asConverterFactory
+import okhttp3.Interceptor
 import okhttp3.MediaType.Companion.toMediaType
 import okhttp3.OkHttpClient
 import retrofit2.Retrofit
@@ -21,7 +23,7 @@ import javax.inject.Inject
 import javax.inject.Singleton
 
 @Singleton
-class ApiService @Inject constructor() {
+class ApiService @Inject constructor(authInterceptor: AuthInterceptor) {
 
     private val baseUrl = StringBuilder()
         .append(if (BuildConfig.DEBUG) "http://" else "https://")
@@ -33,6 +35,7 @@ class ApiService @Inject constructor() {
         .connectTimeout(10, TimeUnit.SECONDS)
         .readTimeout(30, TimeUnit.SECONDS)
         .writeTimeout(30, TimeUnit.SECONDS)
+        .addInterceptor(authInterceptor)
         .build()
 
     private val converterFactory = AppJson.asConverterFactory("application/json".toMediaType())

@@ -7,8 +7,6 @@ import androidx.compose.ui.unit.Dp
 import androidx.core.view.WindowInsetsCompat
 import kotlinx.coroutines.flow.MutableStateFlow
 
-val Insets = MutableStateFlow(WindowInsetsCompat.CONSUMED)
-
 inline val WindowInsetsCompat.statusBar: Dp
     @Composable
     get() = with(LocalDensity.current) {

@@ -15,9 +15,10 @@ import dagger.Module
 import dagger.hilt.InstallIn
 import dagger.hilt.android.components.ServiceComponent
 import dagger.hilt.android.components.ViewModelComponent
+import dagger.hilt.components.SingletonComponent
 
 @Module
-@InstallIn(ViewModelComponent::class, ServiceComponent::class)
+@InstallIn(ViewModelComponent::class, ServiceComponent::class, SingletonComponent::class)
 abstract class StoragesModule {
     @Binds
     abstract fun bindUltraDataRemoteStorage(
@@ -35,12 +36,12 @@ abstract class StoragesModule {
     ): ILyricsRemoteStorage
 
     @Binds
-    abstract fun bindUserRemoteStorage(
-        storage: UserRemoteStorage
-    ): IUserRemoteStorage
-
-    @Binds
     abstract fun bindUserLocalStorage(
         storage: UserLocalStorage
     ): IUserLocalStorage
+
+    @Binds
+    abstract fun bindUserRemoteStorage(
+        storage: UserRemoteStorage
+    ): IUserRemoteStorage
 }

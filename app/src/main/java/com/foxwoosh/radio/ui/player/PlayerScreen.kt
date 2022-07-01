@@ -36,7 +36,6 @@ import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.*
 import androidx.constraintlayout.compose.ConstraintLayout
 import androidx.hilt.navigation.compose.hiltViewModel
-import coil.ImageLoader
 import coil.compose.AsyncImage
 import com.foxwoosh.radio.MainActivity
 import com.foxwoosh.radio.R
@@ -71,6 +70,7 @@ fun PlayerScreen(
     val previousTracks by viewModel.previousTracksFlow.collectAsState()
     val lyricsState by viewModel.lyricsStateFlow.collectAsState()
     val station by viewModel.stationFlow.collectAsState()
+    val user by viewModel.userFlow.collectAsState()
 
     var musicServicesMenuOpened by remember { mutableStateOf(false) }
 
@@ -171,11 +171,11 @@ fun PlayerScreen(
                 lyricsState = lyricsState,
                 onPageBecomesVisible = { page ->
                     when (page) {
-                        PlayerBottomSheetPage.LYRICS ->
-                            viewModel.fetchLyricsForCurrentTrack()
+                        PlayerBottomSheetPage.LYRICS -> viewModel.fetchLyricsForCurrentTrack()
                         PlayerBottomSheetPage.PREVIOUS_TRACKS -> { /* nothing to call */ }
                     }
-                }
+                },
+                userLoggedIn = user != null
             )
         },
         sheetShape = bottomSheetShape,
