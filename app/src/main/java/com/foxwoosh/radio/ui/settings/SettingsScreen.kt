@@ -163,19 +163,29 @@ fun SettingsScreen(
         if (logoutDialogVisible) {
             AlertDialog(
                 onDismissRequest = { logoutDialogVisible = false },
-                text = { Text(text = "Sure?") },
+                text = {
+                    Text(
+                        text = stringResource(R.string.settings_auth_logout_text),
+                        fontSize = 16.sp
+                    )
+                },
                 confirmButton = {
                     TextButton(
                         onClick = {
                             logoutDialogVisible = false
                             viewModel.logout()
                         }
-                    ) { Text(text = ("Yep")) }
+                    ) { Text(text = stringResource(R.string.settings_auth_logout_positive_button)) }
                 },
                 dismissButton = {
                     TextButton(
                         onClick = { logoutDialogVisible = false }
-                    ) { Text(text = ("Nope")) }
+                    ) {
+                        Text(
+                            text = stringResource(R.string.settings_auth_logout_negative_button),
+                            color = Color.White
+                        )
+                    }
                 }
             )
         }

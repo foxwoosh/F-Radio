@@ -36,4 +36,9 @@
     <string name="settings_auth_field_password">Пароль</string>
     <string name="settings_auth_field_name">Имя или никнейм</string>
     <string name="settings_auth_field_email">Email</string>
+
+    <string name="settings_auth_logout_text">Точно выйти? Я буду скучать 🦊</string>
+    <string name="settings_auth_logout_positive_button">Абсолютно точно</string>
+    <string name="settings_auth_logout_negative_button">Нет, я остаюсь!</string>
+
 </resources>

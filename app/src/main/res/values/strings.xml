@@ -20,8 +20,7 @@
 
     <string name="settings_hello">Hi</string>
     <string name="settings_stranger">Stranger!</string>
-    <string name="settings_stranger_description">(Wanna be friends? Tap here!)</string>
-    <string name="settings_user_logout_description">(Tired of me? Tap to logout)</string>
+    <string name="settings_stranger_description">(Wanna become friends? Tap here!)</string>
     <string name="settings_page_title_login">Login</string>
     <string name="settings_page_title_registration">Registration</string>
     <string name="settings_auth_button_login">Login</string>
@@ -38,4 +37,8 @@
     <string name="settings_auth_field_password">Password</string>
     <string name="settings_auth_field_name">Name or nickname</string>
     <string name="settings_auth_field_email">Email</string>
+
+    <string name="settings_auth_logout_text">Are you sure? You will be missed 🦊</string>
+    <string name="settings_auth_logout_positive_button">Oh yeah</string>
+    <string name="settings_auth_logout_negative_button">Nope, it was a mistake!</string>
 </resources>
