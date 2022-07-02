@@ -13,6 +13,8 @@ import kotlinx.serialization.json.Json
 import java.math.BigInteger
 import java.security.MessageDigest
 
+const val FoxFace = "\uD83E\uDD8A"
+
 fun Context.openURL(url: String) {
     val validUrl = if (!url.startsWith("http", true)) {
         "http://$url"

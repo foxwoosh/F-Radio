@@ -9,6 +9,7 @@ import com.foxwoosh.radio.ui.settings.models.AuthFieldsErrorState
 import com.foxwoosh.radio.ui.settings.models.AuthFieldsState
 import com.foxwoosh.radio.ui.settings.models.SettingsEvent
 import dagger.hilt.android.lifecycle.HiltViewModel
+import kotlinx.coroutines.delay
 import kotlinx.coroutines.flow.*
 import kotlinx.coroutines.launch
 import retrofit2.HttpException
@@ -47,46 +48,12 @@ class SettingsViewModel @Inject constructor(
                 }
 
                 mutableAuthFieldsState.update { it.clear() }
-            } catch (e: Exception) {
-                when (e) {
-                    is AuthDataException.Login -> {
-                        mutableAuthFieldsErrorState.update { it.toLogin() }
-                        mutableEvents.emit(
-                            SettingsEvent.Error(R.string.settings_auth_error_login_verification)
-                        )
-                    }
-                    is AuthDataException.Password -> {
-                        mutableAuthFieldsErrorState.update { it.toPassword() }
-                        mutableEvents.emit(
-                            SettingsEvent.Error(R.string.settings_auth_error_password_verification)
-                        )
-                    }
-                    is AuthDataException.Name -> {
-                        mutableAuthFieldsErrorState.update { it.toName() }
-                        mutableEvents.emit(
-                            SettingsEvent.Error(R.string.settings_auth_error_name_verification)
-                        )
-                    }
-                    is AuthDataException.Email -> {
-                        mutableAuthFieldsErrorState.update { it.toEmail() }
-                        mutableEvents.emit(
-                            SettingsEvent.Error(R.string.settings_auth_error_email_verification)
-                        )
-                    }
-                    is HttpException -> {
-                        when (e.code()) {
-                            409 -> {
-                                mutableAuthFieldsErrorState.update { it.toLogin() }
-                                mutableEvents.emit(
-                                    SettingsEvent.Error(R.string.settings_auth_error_login_conflict)
-                                )
-                            }
-                            else -> mutableEvents.emit(SettingsEvent.Error(R.string.common_error))
-                        }
-                    }
-                }
-            } finally {
+
+                delay(1000)
                 mutableAuthProgress.value = false
+            } catch (e: Exception) {
+                mutableAuthProgress.value = false
+                handleRegistrationError(e)
             }
         }
     }
@@ -101,31 +68,12 @@ class SettingsViewModel @Inject constructor(
                 }
 
                 mutableAuthFieldsState.update { it.clear() }
-            } catch (e: Exception) {
-                when (e) {
-                    is AuthDataException.Login -> {
-                        mutableAuthFieldsErrorState.update { it.toLogin() }
-                        mutableEvents.emit(
-                            SettingsEvent.Error(R.string.settings_auth_error_login_verification)
-                        )
-                    }
-                    is AuthDataException.Password -> {
-                        mutableAuthFieldsErrorState.update { it.toPassword() }
-                        mutableEvents.emit(
-                            SettingsEvent.Error(R.string.settings_auth_error_password_verification)
-                        )
-                    }
-                    is HttpException -> {
-                        when (e.code()) {
-                            403 -> mutableEvents.emit(
-                                SettingsEvent.Error(R.string.settings_auth_error_wrong_credentials)
-                            )
-                            else -> mutableEvents.emit(SettingsEvent.Error(R.string.common_error))
-                        }
-                    }
-                }
-            } finally {
+
+                delay(1000)
                 mutableAuthProgress.value = false
+            } catch (e: Exception) {
+                mutableAuthProgress.value = false
+                handleLoginError(e)
             }
         }
     }
@@ -147,6 +95,73 @@ class SettingsViewModel @Inject constructor(
         }
         if (mutableAuthFieldsErrorState.value.any()) {
             mutableAuthFieldsErrorState.update { it.toNone() }
+        }
+    }
+
+    private suspend fun handleRegistrationError(e: Exception) {
+        when (e) {
+            is AuthDataException.Login -> {
+                mutableAuthFieldsErrorState.update { it.toLogin() }
+                mutableEvents.emit(
+                    SettingsEvent.Error(R.string.settings_auth_error_login_verification)
+                )
+            }
+            is AuthDataException.Password -> {
+                mutableAuthFieldsErrorState.update { it.toPassword() }
+                mutableEvents.emit(
+                    SettingsEvent.Error(R.string.settings_auth_error_password_verification)
+                )
+            }
+            is AuthDataException.Name -> {
+                mutableAuthFieldsErrorState.update { it.toName() }
+                mutableEvents.emit(
+                    SettingsEvent.Error(R.string.settings_auth_error_name_verification)
+                )
+            }
+            is AuthDataException.Email -> {
+                mutableAuthFieldsErrorState.update { it.toEmail() }
+                mutableEvents.emit(
+                    SettingsEvent.Error(R.string.settings_auth_error_email_verification)
+                )
+            }
+            is HttpException -> {
+                when (e.code()) {
+                    409 -> {
+                        mutableAuthFieldsErrorState.update { it.toLogin() }
+                        mutableEvents.emit(
+                            SettingsEvent.Error(R.string.settings_auth_error_login_conflict)
+                        )
+                    }
+                    else -> mutableEvents.emit(SettingsEvent.Error(R.string.common_error))
+                }
+            }
+            else -> mutableEvents.emit(SettingsEvent.Error(R.string.common_error))
+        }
+    }
+
+    private suspend fun handleLoginError(e: Exception) {
+        when (e) {
+            is AuthDataException.Login -> {
+                mutableAuthFieldsErrorState.update { it.toLogin() }
+                mutableEvents.emit(
+                    SettingsEvent.Error(R.string.settings_auth_error_login_verification)
+                )
+            }
+            is AuthDataException.Password -> {
+                mutableAuthFieldsErrorState.update { it.toPassword() }
+                mutableEvents.emit(
+                    SettingsEvent.Error(R.string.settings_auth_error_password_verification)
+                )
+            }
+            is HttpException -> {
+                when (e.code()) {
+                    403 -> mutableEvents.emit(
+                        SettingsEvent.Error(R.string.settings_auth_error_wrong_credentials)
+                    )
+                    else -> mutableEvents.emit(SettingsEvent.Error(R.string.common_error))
+                }
+            }
+            else -> mutableEvents.emit(SettingsEvent.Error(R.string.common_error))
         }
     }
 }

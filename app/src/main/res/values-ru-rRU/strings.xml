@@ -40,5 +40,6 @@
     <string name="settings_auth_logout_text">Точно выйти? Я буду скучать 🦊</string>
     <string name="settings_auth_logout_positive_button">Абсолютно точно</string>
     <string name="settings_auth_logout_negative_button">Нет, я остаюсь!</string>
+    <string name="settings_auth_login_success">Добро пожаловать!</string>
 
 </resources>

@@ -1,3 +1,5 @@
+@file:OptIn(ExperimentalComposeUiApi::class)
+
 package com.foxwoosh.radio.ui.settings
 
 import androidx.compose.animation.AnimatedVisibility
@@ -16,19 +18,23 @@ import androidx.compose.material.icons.outlined.VisibilityOff
 import androidx.compose.runtime.*
 import androidx.compose.runtime.saveable.rememberSaveable
 import androidx.compose.ui.Alignment
+import androidx.compose.ui.ExperimentalComposeUiApi
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.ColorFilter
 import androidx.compose.ui.platform.LocalContext
+import androidx.compose.ui.platform.LocalSoftwareKeyboardController
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.input.*
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.hilt.navigation.compose.hiltViewModel
+import com.foxwoosh.radio.FoxFace
 import com.foxwoosh.radio.R
 import com.foxwoosh.radio.domain.interactors.settings.SettingsConstants
-import com.foxwoosh.radio.ui.*
+import com.foxwoosh.radio.ui.LoadingButton
+import com.foxwoosh.radio.ui.collectAsEffect
 import com.foxwoosh.radio.ui.settings.models.AuthFieldsErrorState
 import com.foxwoosh.radio.ui.settings.models.AuthFieldsState
 import com.foxwoosh.radio.ui.settings.models.SettingsEvent
@@ -45,6 +51,7 @@ fun SettingsScreen(
 ) {
     val scope = rememberCoroutineScope()
     val context = LocalContext.current
+    val keyboardController = LocalSoftwareKeyboardController.current
 
     val viewModel = hiltViewModel<SettingsViewModel>()
     val user by viewModel.userState.collectAsState()
@@ -70,7 +77,12 @@ fun SettingsScreen(
     LaunchedEffect(user) {
         if (authFormVisible && user != null) {
             authFormVisible = false
+            snackbarHostState.showSnackbar(context.getString(R.string.settings_auth_login_success))
         }
+    }
+
+    LaunchedEffect(authFormVisible) {
+        if (!authFormVisible) keyboardController?.hide()
     }
 
     Box(
@@ -86,10 +98,10 @@ fun SettingsScreen(
                 .imePadding()
         ) {
             IconButton(onClick = navigateBack) {
-                Icon(imageVector = Icons.Filled.ArrowBack, contentDescription = "Close settings")
+                Icon(imageVector = Icons.Filled.Close, contentDescription = "Close settings")
             }
             Text(
-                text = stringResource(id = R.string.settings_hello),
+                text = stringResource(R.string.settings_hello),
                 color = Color.White,
                 fontSize = 36.sp,
                 fontWeight = FontWeight.Medium,
@@ -106,8 +118,8 @@ fun SettingsScreen(
                 verticalAlignment = Alignment.CenterVertically
             ) {
                 Text(
-                    text = (user?.name ?: stringResource(id = R.string.settings_stranger))
-                        + " \uD83E\uDD8A",
+                    text = (user?.name ?: stringResource(R.string.settings_stranger))
+                        + " $FoxFace",
                     color = Color.White,
                     fontSize = 24.sp,
                     fontWeight = FontWeight.Normal,

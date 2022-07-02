@@ -7,14 +7,11 @@ import android.os.Bundle
 import android.view.animation.LinearInterpolator
 import androidx.activity.ComponentActivity
 import androidx.activity.compose.setContent
-import androidx.compose.animation.AnimatedContentScope
-import androidx.compose.animation.ExperimentalAnimationApi
-import androidx.compose.animation.core.tween
+import androidx.compose.animation.*
 import androidx.core.animation.doOnEnd
 import androidx.core.splashscreen.SplashScreen.Companion.installSplashScreen
 import androidx.core.view.WindowCompat
 import com.foxwoosh.radio.ui.AppDestination
-import com.foxwoosh.radio.ui.login.LoginScreen
 import com.foxwoosh.radio.ui.player.PlayerScreen
 import com.foxwoosh.radio.ui.settings.SettingsScreen
 import com.foxwoosh.radio.ui.theme.FoxyRadioTheme
@@ -45,12 +42,11 @@ class MainActivity : ComponentActivity() {
                     navController = navController,
                     startDestination = AppDestination.Player.route
                 ) {
-                    composable(route = AppDestination.Login.route) {
-                        LoginScreen(
-                            navigateToPlayer = { navController.navigate(AppDestination.Player) }
-                        )
-                    }
-                    composable(route = AppDestination.Player.route) {
+                    composable(
+                        route = AppDestination.Player.route,
+                        exitTransition = { fadeOut() },
+                        popEnterTransition = { fadeIn() }
+                    ) {
                         PlayerScreen(
                             navigateToSettings = { navController.navigate(AppDestination.Settings) }
                         )
@@ -58,16 +54,10 @@ class MainActivity : ComponentActivity() {
                     composable(
                         route = AppDestination.Settings.route,
                         enterTransition = {
-                            slideIntoContainer(
-                                AnimatedContentScope.SlideDirection.Up,
-                                tween(300)
-                            )
+                            slideInVertically(initialOffsetY = { it })
                         },
-                        popExitTransition = {
-                            slideOutOfContainer(
-                                AnimatedContentScope.SlideDirection.Down,
-                                tween(200)
-                            )
+                        exitTransition = {
+                            slideOutVertically(targetOffsetY = { it })
                         }
                     ) {
                         SettingsScreen(
