@@ -1,12 +1,11 @@
-package com.foxwoosh.radio.data.websocket.messages
+package com.foxwoosh.radio.data.websocket.messages.incoming
 
-import com.foxwoosh.radio.data.websocket.WebSocketResponseType
 import kotlinx.serialization.SerialName
 import kotlinx.serialization.Serializable
 
 @Serializable
-class SongDataWebSocketMessage(
-    @SerialName("type") override val type: WebSocketResponseType,
+class SongDataIncomingMessage(
+    @SerialName("type") override val type: WebSocketIncomingMessage.Type,
     @SerialName("id") val id: String,
     @SerialName("title") val title: String,
     @SerialName("artist") val artist: String,
@@ -22,7 +21,7 @@ class SongDataWebSocketMessage(
     @SerialName("youtube_url") val youtubeUrl: String?,
     @SerialName("ytmusic_url") val youtubeMusicUrl: String?,
     @SerialName("prev_tracks") val previousTracks: List<PreviousTrack>
-) : WebSocketMessage {
+) : WebSocketIncomingMessage {
 
     @Serializable
     data class PreviousTrack(

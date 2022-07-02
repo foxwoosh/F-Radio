@@ -16,4 +16,6 @@ interface IUserRemoteStorage {
         passwordHash: String,
         onTokenReceived: suspend (String) -> Unit
     ): CurrentUser
+
+    suspend fun logout()
 }

@@ -21,7 +21,7 @@ import dagger.hilt.components.SingletonComponent
 @InstallIn(ViewModelComponent::class, ServiceComponent::class, SingletonComponent::class)
 abstract class StoragesModule {
     @Binds
-    abstract fun bindUltraDataRemoteStorage(
+    abstract fun bindPlayerRemoteStorage(
         storage: PlayerRemoteStorage
     ): IPlayerRemoteStorage
 

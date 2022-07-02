@@ -64,5 +64,6 @@ class SettingsInteractor @Inject constructor(
     override suspend fun logout() {
         userLocalStorage.removeCurrentUser()
         userLocalStorage.removeToken()
+        userRemoteStorage.logout()
     }
 }

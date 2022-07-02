@@ -1,19 +1,18 @@
 package com.foxwoosh.radio.data.websocket
 
-import android.os.Build
 import android.util.Log
 import com.foxwoosh.radio.AppJson
 import com.foxwoosh.radio.BuildConfig
-import com.foxwoosh.radio.data.websocket.messages.ParametrizedMessage
-import com.foxwoosh.radio.data.websocket.messages.SongDataWebSocketMessage
-import com.foxwoosh.radio.data.websocket.messages.WebSocketMessage
+import com.foxwoosh.radio.data.storage.local.user.IUserLocalStorage
+import com.foxwoosh.radio.data.websocket.messages.incoming.SongDataIncomingMessage
+import com.foxwoosh.radio.data.websocket.messages.incoming.WebSocketIncomingMessage
+import com.foxwoosh.radio.data.websocket.messages.outgoing.WebSocketOutgoingMessage
 import com.foxwoosh.radio.domain.models.Track
 import com.foxwoosh.radio.providers.network_state_provider.NetworkState
 import com.foxwoosh.radio.providers.network_state_provider.NetworkStateProvider
 import kotlinx.coroutines.*
 import kotlinx.coroutines.flow.*
 import kotlinx.serialization.decodeFromString
-import kotlinx.serialization.encodeToString
 import kotlinx.serialization.json.jsonObject
 import kotlinx.serialization.json.jsonPrimitive
 import okhttp3.*
@@ -25,11 +24,12 @@ import kotlin.time.Duration.Companion.milliseconds
 
 @Singleton
 class WebSocketProvider @Inject constructor(
-    private val networkStateProvider: NetworkStateProvider
+    private val networkStateProvider: NetworkStateProvider,
+    private val userLocalStorage: IUserLocalStorage
 ) : CoroutineScope {
 
     private companion object {
-        const val TAG = "UltraWebSocket"
+        const val TAG = "WebSocketProvider"
     }
 
     private val job = SupervisorJob()
@@ -137,34 +137,51 @@ class WebSocketProvider @Inject constructor(
         webSocket?.close(1000, "Bye")
     }
 
+    suspend fun sendMessage(sendAction: WebSocket.() -> Unit) {
+        withContext(coroutineContext) {
+            webSocket?.let {
+                onConnected { sendAction(it) }
+            } ?: run {
+                Log.e(TAG, "Socket does not exist")
+            }
+        }
+    }
+
     private fun releaseSocket() {
         webSocket?.cancel()
         webSocket = null
     }
 
-    private fun getResponse(text: String): WebSocketMessage? {
-        val type = WebSocketResponseType.fromValue(
+    private fun getResponse(text: String): WebSocketIncomingMessage? {
+        val type = WebSocketIncomingMessage.Type.fromValue(
             AppJson.parseToJsonElement(text).jsonObject["type"]?.jsonPrimitive?.content
         )
 
         return when (type) {
-            WebSocketResponseType.SONG_DATA ->
-                AppJson.decodeFromString<SongDataWebSocketMessage>(text)
+            WebSocketIncomingMessage.Type.SONG_DATA ->
+                AppJson.decodeFromString<SongDataIncomingMessage>(text)
             else -> null
         }
     }
 
-    private suspend fun handleDataSongMessage(message: SongDataWebSocketMessage) {
+    private suspend fun handleDataSongMessage(message: SongDataIncomingMessage) {
         mutableTrackFlow.emit(message.mapToModel())
     }
 
     private val listener = object : WebSocketListener() {
         override fun onOpen(webSocket: WebSocket, response: Response) {
-            Log.i(TAG, "onOpen, ${this@WebSocketProvider.hashCode()}")
+            Log.i(TAG, "onOpen")
 
             mutableSocketConnectionState.value = SocketState.Connected
 
-            webSocket.send(AppJson.encodeToString(getClientInfoMessage()))
+            launch {
+                webSocket.sendClientInfo()
+
+                userLocalStorage
+                    .currentUser
+                    .firstOrNull()
+                    ?.let { webSocket.sendLoggedUserData(it.id) }
+            }
         }
 
         override fun onMessage(webSocket: WebSocket, text: String) {
@@ -172,7 +189,7 @@ class WebSocketProvider @Inject constructor(
 
             launch {
                 when (val response = getResponse(text)) {
-                    is SongDataWebSocketMessage -> {
+                    is SongDataIncomingMessage -> {
                         handleDataSongMessage(response)
                     }
                 }
@@ -199,13 +216,16 @@ class WebSocketProvider @Inject constructor(
         }
     }
 
-    private fun getClientInfoMessage() = ParametrizedMessage(
-        ParametrizedMessage.Type.SUBSCRIBE,
-
-        mapOf(
-            "Device" to "${Build.MANUFACTURER} ${Build.MODEL}",
-            "OS" to "Android ${Build.VERSION.RELEASE} (API ${Build.VERSION.SDK_INT})",
-            "App version" to "${BuildConfig.VERSION_NAME} (${BuildConfig.VERSION_CODE})",
-        )
-    )
+    private suspend fun onConnected(action: suspend () -> Unit) {
+        if (isSocketOpened) {
+            action()
+        } else {
+            socketConnectionState
+                .filter { it is SocketState.Connected }
+                .take(1)
+                .collect {
+                    action()
+                }
+        }
+    }
 }
