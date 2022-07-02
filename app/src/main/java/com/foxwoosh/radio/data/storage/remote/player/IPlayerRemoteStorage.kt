@@ -1,11 +1,11 @@
-package com.foxwoosh.radio.data.storage.remote.ultra
+package com.foxwoosh.radio.data.storage.remote.player
 
 import com.foxwoosh.radio.data.websocket.SocketState
 import com.foxwoosh.radio.domain.models.Track
 import kotlinx.coroutines.flow.SharedFlow
 import kotlinx.coroutines.flow.StateFlow
 
-interface IUltraRemoteStorage {
+interface IPlayerRemoteStorage {
     val dataConnectionState: StateFlow<SocketState>
     val trackData: SharedFlow<Track>
 

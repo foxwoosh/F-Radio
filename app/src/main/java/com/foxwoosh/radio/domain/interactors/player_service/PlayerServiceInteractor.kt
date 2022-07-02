@@ -1,7 +1,7 @@
 package com.foxwoosh.radio.domain.interactors.player_service
 
 import com.foxwoosh.radio.data.storage.local.player.IPlayerLocalStorage
-import com.foxwoosh.radio.data.storage.remote.ultra.IUltraRemoteStorage
+import com.foxwoosh.radio.data.storage.remote.player.IPlayerRemoteStorage
 import com.foxwoosh.radio.data.websocket.SocketError
 import com.foxwoosh.radio.data.websocket.SocketState
 import com.foxwoosh.radio.di.modules.PlayerServiceCoroutineScope
@@ -14,13 +14,12 @@ import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.flow.launchIn
 import kotlinx.coroutines.flow.onEach
 import kotlinx.coroutines.flow.update
-import okhttp3.Interceptor
 import java.net.UnknownHostException
 import javax.inject.Inject
 
 @ServiceScoped
 class PlayerServiceInteractor @Inject constructor(
-    private val ultraRemoteStorage: IUltraRemoteStorage,
+    private val playerRemoteStorage: IPlayerRemoteStorage,
     private val playerLocalStorage: IPlayerLocalStorage,
     private val imageProvider: ImageProvider,
     @PlayerServiceCoroutineScope private val scope: CoroutineScope
@@ -33,7 +32,7 @@ class PlayerServiceInteractor @Inject constructor(
     private var previousTrack: Track? = null
 
     init {
-        ultraRemoteStorage
+        playerRemoteStorage
             .trackData
             .onEach { track ->
                 val image = imageProvider.load(track.coverUrl)
@@ -72,7 +71,7 @@ class PlayerServiceInteractor @Inject constructor(
                 previousTrack = track
             }.launchIn(scope)
 
-        ultraRemoteStorage
+        playerRemoteStorage
             .dataConnectionState
             .onEach { state ->
                 when (state) {
@@ -98,7 +97,7 @@ class PlayerServiceInteractor @Inject constructor(
     override fun startFetching(station: Station) {
         when (station) {
             Station.ULTRA,
-            Station.ULTRA_HD -> ultraRemoteStorage.startFetching()
+            Station.ULTRA_HD -> playerRemoteStorage.startFetching()
         }
     }
 
@@ -109,7 +108,7 @@ class PlayerServiceInteractor @Inject constructor(
 
         when (station) {
             Station.ULTRA,
-            Station.ULTRA_HD -> ultraRemoteStorage.stopFetching()
+            Station.ULTRA_HD -> playerRemoteStorage.stopFetching()
         }
     }
 }

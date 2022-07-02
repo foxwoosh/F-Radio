@@ -6,8 +6,8 @@ import com.foxwoosh.radio.data.storage.local.user.IUserLocalStorage
 import com.foxwoosh.radio.data.storage.local.user.UserLocalStorage
 import com.foxwoosh.radio.data.storage.remote.lyrics.ILyricsRemoteStorage
 import com.foxwoosh.radio.data.storage.remote.lyrics.LyricsRemoteStorage
-import com.foxwoosh.radio.data.storage.remote.ultra.IUltraRemoteStorage
-import com.foxwoosh.radio.data.storage.remote.ultra.UltraRemoteStorage
+import com.foxwoosh.radio.data.storage.remote.player.IPlayerRemoteStorage
+import com.foxwoosh.radio.data.storage.remote.player.PlayerRemoteStorage
 import com.foxwoosh.radio.data.storage.remote.user.IUserRemoteStorage
 import com.foxwoosh.radio.data.storage.remote.user.UserRemoteStorage
 import dagger.Binds
@@ -22,8 +22,8 @@ import dagger.hilt.components.SingletonComponent
 abstract class StoragesModule {
     @Binds
     abstract fun bindUltraDataRemoteStorage(
-        storage: UltraRemoteStorage
-    ): IUltraRemoteStorage
+        storage: PlayerRemoteStorage
+    ): IPlayerRemoteStorage
 
     @Binds
     abstract fun bindPlayerLocalStorage(

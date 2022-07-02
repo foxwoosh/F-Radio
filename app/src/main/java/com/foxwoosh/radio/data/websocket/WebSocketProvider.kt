@@ -5,8 +5,8 @@ import android.util.Log
 import com.foxwoosh.radio.AppJson
 import com.foxwoosh.radio.BuildConfig
 import com.foxwoosh.radio.data.websocket.messages.ParametrizedMessage
-import com.foxwoosh.radio.data.websocket.messages.UltraSongDataWebSocketMessage
-import com.foxwoosh.radio.data.websocket.messages.UltraWebSocketMessage
+import com.foxwoosh.radio.data.websocket.messages.SongDataWebSocketMessage
+import com.foxwoosh.radio.data.websocket.messages.WebSocketMessage
 import com.foxwoosh.radio.domain.models.Track
 import com.foxwoosh.radio.providers.network_state_provider.NetworkState
 import com.foxwoosh.radio.providers.network_state_provider.NetworkStateProvider
@@ -24,7 +24,7 @@ import kotlin.time.Duration
 import kotlin.time.Duration.Companion.milliseconds
 
 @Singleton
-class UltraWebSocketProvider @Inject constructor(
+class WebSocketProvider @Inject constructor(
     private val networkStateProvider: NetworkStateProvider
 ) : CoroutineScope {
 
@@ -140,29 +140,27 @@ class UltraWebSocketProvider @Inject constructor(
     private fun releaseSocket() {
         webSocket?.cancel()
         webSocket = null
-
-//        job.cancelChildren()
     }
 
-    private fun getResponse(text: String): UltraWebSocketMessage? {
-        val type = UltraWebSocketResponseType.fromValue(
+    private fun getResponse(text: String): WebSocketMessage? {
+        val type = WebSocketResponseType.fromValue(
             AppJson.parseToJsonElement(text).jsonObject["type"]?.jsonPrimitive?.content
         )
 
         return when (type) {
-            UltraWebSocketResponseType.SONG_DATA ->
-                AppJson.decodeFromString<UltraSongDataWebSocketMessage>(text)
+            WebSocketResponseType.SONG_DATA ->
+                AppJson.decodeFromString<SongDataWebSocketMessage>(text)
             else -> null
         }
     }
 
-    private suspend fun handleDataSongMessage(message: UltraSongDataWebSocketMessage) {
+    private suspend fun handleDataSongMessage(message: SongDataWebSocketMessage) {
         mutableTrackFlow.emit(message.mapToModel())
     }
 
     private val listener = object : WebSocketListener() {
         override fun onOpen(webSocket: WebSocket, response: Response) {
-            Log.i(TAG, "onOpen, ${this@UltraWebSocketProvider.hashCode()}")
+            Log.i(TAG, "onOpen, ${this@WebSocketProvider.hashCode()}")
 
             mutableSocketConnectionState.value = SocketState.Connected
 
@@ -174,7 +172,7 @@ class UltraWebSocketProvider @Inject constructor(
 
             launch {
                 when (val response = getResponse(text)) {
-                    is UltraSongDataWebSocketMessage -> {
+                    is SongDataWebSocketMessage -> {
                         handleDataSongMessage(response)
                     }
                 }
