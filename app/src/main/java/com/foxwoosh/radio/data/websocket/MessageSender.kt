@@ -14,9 +14,9 @@ fun WebSocket.sendClientInfo() {
     val message = WebSocketOutgoingMessage(
         WebSocketOutgoingMessage.Type.SUBSCRIBE,
         SubscriptionInitialMessageData(
-            "${Build.MANUFACTURER} ${Build.MODEL}",
-            "Android ${Build.VERSION.RELEASE} (API ${Build.VERSION.SDK_INT})",
-            "${BuildConfig.VERSION_NAME} (${BuildConfig.VERSION_CODE})"
+            device = "${Build.MANUFACTURER} ${Build.MODEL}",
+            os = "Android ${Build.VERSION.RELEASE} (API ${Build.VERSION.SDK_INT})",
+            appVersion = "${BuildConfig.VERSION_NAME} (${BuildConfig.VERSION_CODE})"
         )
     )
 

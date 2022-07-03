@@ -4,10 +4,9 @@ import android.util.Log
 import com.foxwoosh.radio.AppJson
 import com.foxwoosh.radio.BuildConfig
 import com.foxwoosh.radio.data.storage.local.user.IUserLocalStorage
+import com.foxwoosh.radio.data.websocket.messages.incoming.LyricsReportUpdateIncomingMessage
 import com.foxwoosh.radio.data.websocket.messages.incoming.SongDataIncomingMessage
 import com.foxwoosh.radio.data.websocket.messages.incoming.WebSocketIncomingMessage
-import com.foxwoosh.radio.data.websocket.messages.outgoing.WebSocketOutgoingMessage
-import com.foxwoosh.radio.domain.models.Track
 import com.foxwoosh.radio.providers.network_state_provider.NetworkState
 import com.foxwoosh.radio.providers.network_state_provider.NetworkStateProvider
 import kotlinx.coroutines.*
@@ -49,8 +48,8 @@ class WebSocketProvider @Inject constructor(
 
     private var webSocket: WebSocket? = null
 
-    private val mutableTrackFlow = MutableSharedFlow<Track>()
-    val trackFlow = mutableTrackFlow.asSharedFlow()
+    private val mutableMessagesFlow = MutableSharedFlow<WebSocketIncomingMessage>()
+    val messagesFlow = mutableMessagesFlow.asSharedFlow()
 
     private val mutableSocketConnectionState =
         MutableStateFlow<SocketState>(SocketState.Initial)
@@ -160,12 +159,11 @@ class WebSocketProvider @Inject constructor(
         return when (type) {
             WebSocketIncomingMessage.Type.SONG_DATA ->
                 AppJson.decodeFromString<SongDataIncomingMessage>(text)
+            WebSocketIncomingMessage.Type.REPORT_UPDATE -> {
+                AppJson.decodeFromString<LyricsReportUpdateIncomingMessage>(text)
+            }
             else -> null
         }
-    }
-
-    private suspend fun handleDataSongMessage(message: SongDataIncomingMessage) {
-        mutableTrackFlow.emit(message.mapToModel())
     }
 
     private val listener = object : WebSocketListener() {
@@ -188,11 +186,7 @@ class WebSocketProvider @Inject constructor(
             Log.i(TAG, "onMessage")
 
             launch {
-                when (val response = getResponse(text)) {
-                    is SongDataIncomingMessage -> {
-                        handleDataSongMessage(response)
-                    }
-                }
+                getResponse(text)?.let { mutableMessagesFlow.emit(it) }
             }
         }
 

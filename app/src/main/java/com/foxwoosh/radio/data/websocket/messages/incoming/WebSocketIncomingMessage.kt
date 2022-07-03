@@ -5,7 +5,8 @@ interface WebSocketIncomingMessage {
 
     enum class Type {
         UNKNOWN,
-        SONG_DATA;
+        SONG_DATA,
+        REPORT_UPDATE;
 
         companion object {
             fun fromValue(value: String?) =
