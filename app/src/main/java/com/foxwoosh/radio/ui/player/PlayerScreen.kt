@@ -47,6 +47,7 @@ import com.foxwoosh.radio.player.models.*
 import com.foxwoosh.radio.ui.*
 import com.foxwoosh.radio.ui.theme.BlackOverlay_20
 import com.foxwoosh.radio.ui.theme.WhiteOverlay_20
+import com.foxwoosh.radio.ui.widgets.DoubleSelector
 import com.foxwoosh.radio.utils.crossfadeImageLoader
 import kotlinx.coroutines.launch
 import kotlin.math.absoluteValue
@@ -269,42 +270,14 @@ fun PlayerScreen(
 fun StationSelector(
     selectedStation: Station?,
     onSelectStationAction: (Station) -> Unit,
-    modifier: Modifier = Modifier
+    modifier: Modifier = Modifier,
 ) {
-    Row(
-        modifier
-            .clip(stationSelectorShape)
-            .background(BlackOverlay_20)
-    ) {
-        StationButton(
-            station = Station.ULTRA,
-            selected = selectedStation == Station.ULTRA,
-            onSelectStationAction = onSelectStationAction
-        )
-        StationButton(
-            station = Station.ULTRA_HD,
-            selected = selectedStation == Station.ULTRA_HD,
-            onSelectStationAction = onSelectStationAction
-        )
-    }
-}
-
-@Composable
-fun StationButton(
-    station: Station,
-    selected: Boolean,
-    onSelectStationAction: (Station) -> Unit
-) {
-    Text(
-        text = station.stationName,
-        color = Color.White,
-        fontWeight = if (selected) FontWeight.Bold else FontWeight.Normal,
-        modifier = Modifier
-            .clip(stationSelectorShape)
-            .clickable { onSelectStationAction(station) }
-            .singleCondition(selected) { background(WhiteOverlay_20) }
-            .padding(horizontal = 8.dp, vertical = 6.dp),
-        fontSize = 14.sp
+    DoubleSelector(
+        modifier = modifier,
+        selectedIndex = selectedStation?.ordinal ?: -1,
+        firstItemText = Station.ULTRA.stationName,
+        secondItemText = Station.ULTRA_HD.stationName,
+        onSelectAction = { onSelectStationAction(Station.values()[it]) }
     )
 }
 
@@ -318,8 +291,6 @@ fun CoverWithServices(
     onCoverClicked: () -> Unit,
     onServiceSelected: (url: String) -> Unit
 ) {
-    val context = LocalContext.current
-
     Box(modifier) {
         val servicesScale by animateFloatAsState(if (servicesOpened) 1f else 0f)
         var coverSize by remember { mutableStateOf(IntSize(0, 0)) }

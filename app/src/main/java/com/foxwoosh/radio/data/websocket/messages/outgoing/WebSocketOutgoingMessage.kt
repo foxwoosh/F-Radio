@@ -8,6 +8,7 @@ data class WebSocketOutgoingMessage<T>(
     enum class Type {
         SUBSCRIBE,
         LOGGED_USER_DATA,
-        USER_LOGOUT
+        USER_LOGOUT,
+        STATION_SELECT
     }
 }

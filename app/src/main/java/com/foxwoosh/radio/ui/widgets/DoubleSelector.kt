@@ -23,7 +23,7 @@ private val shape = RoundedCornerShape(14.dp)
 @Composable
 fun DoubleSelector(
     modifier: Modifier = Modifier,
-    @IntRange(from = 0, to = 1) selectedIndex: Int,
+    @IntRange(from = -1, to = 1) selectedIndex: Int,
     firstItemText: String,
     secondItemText: String,
     onSelectAction: (index: Int) -> Unit,

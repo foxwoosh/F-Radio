@@ -2,9 +2,8 @@ package com.foxwoosh.radio.ui.player
 
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
-import com.foxwoosh.radio.data.storage.local.player.IPlayerLocalStorage
-import com.foxwoosh.radio.data.storage.local.user.IUserLocalStorage
-import com.foxwoosh.radio.data.storage.remote.lyrics.ILyricsRemoteStorage
+import com.foxwoosh.radio.domain.interactors.player_screen.IPlayerScreenInteractor
+import com.foxwoosh.radio.player.models.Station
 import com.foxwoosh.radio.player.models.TrackDataState
 import dagger.hilt.android.lifecycle.HiltViewModel
 import kotlinx.coroutines.flow.*
@@ -13,18 +12,17 @@ import javax.inject.Inject
 
 @HiltViewModel
 class PlayerViewModel @Inject constructor(
-    playerLocalStorage: IPlayerLocalStorage,
-    userLocalStorage: IUserLocalStorage,
-    private val lyricsRemoteStorage: ILyricsRemoteStorage
+    private val playerScreenInteractor: IPlayerScreenInteractor
 ) : ViewModel() {
 
-    val trackDataFlow = playerLocalStorage.trackData.asStateFlow()
-    val previousTracksFlow = playerLocalStorage.previousTracks.asStateFlow()
-    val playerStateFlow = playerLocalStorage.playerState.asStateFlow()
-    val stationFlow = playerLocalStorage.station.asStateFlow()
-    val userFlow = userLocalStorage.currentUser.stateIn(
+    val trackDataFlow = playerScreenInteractor.trackData
+    val previousTracksFlow = playerScreenInteractor.previousTracks
+    val playerStateFlow = playerScreenInteractor.playerState
+    val stationFlow = playerScreenInteractor.station
+
+    val userFlow = playerScreenInteractor.currentUser.stateIn(
         viewModelScope,
-        SharingStarted.Lazily,
+        SharingStarted.Eagerly,
         null
     )
 
@@ -34,8 +32,8 @@ class PlayerViewModel @Inject constructor(
     private var lastFetchedLyricsTrackID: String? = null
 
     init {
-        lyricsRemoteStorage
-            .lyricsFlow
+        playerScreenInteractor
+            .lyrics
             .onEach {
                 mutableLyricsStateFlow.emit(
                     if (it.isEmpty()) {
@@ -59,7 +57,7 @@ class PlayerViewModel @Inject constructor(
                 try {
                     mutableLyricsStateFlow.emit(LyricsDataState.Loading)
 
-                    lyricsRemoteStorage.fetchLyrics(
+                    playerScreenInteractor.fetchLyrics(
                         trackData.title,
                         trackData.artist
                     )
@@ -70,5 +68,9 @@ class PlayerViewModel @Inject constructor(
                 }
             }
         }
+    }
+
+    fun selectStation(station: Station) {
+
     }
 }
