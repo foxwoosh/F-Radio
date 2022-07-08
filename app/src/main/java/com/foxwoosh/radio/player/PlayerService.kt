@@ -17,8 +17,9 @@ import androidx.media3.exoplayer.ExoPlayer
 import androidx.media3.exoplayer.RenderersFactory
 import androidx.media3.exoplayer.audio.MediaCodecAudioRenderer
 import androidx.media3.exoplayer.mediacodec.MediaCodecSelector
+import com.foxwoosh.radio.data.storage.local.player.IPlayerLocalStorage
+import com.foxwoosh.radio.data.storage.remote.player.IPlayerRemoteStorage
 import com.foxwoosh.radio.di.modules.PlayerServiceCoroutineScope
-import com.foxwoosh.radio.domain.interactors.player_service.IPlayerServiceInteractor
 import com.foxwoosh.radio.notifications.NotificationPublisher
 import com.foxwoosh.radio.player.helpers.PlayerNotificationFabric
 import com.foxwoosh.radio.player.models.PlayerState
@@ -29,6 +30,7 @@ import kotlinx.coroutines.cancel
 import kotlinx.coroutines.flow.combine
 import kotlinx.coroutines.flow.debounce
 import kotlinx.coroutines.flow.launchIn
+import kotlinx.coroutines.launch
 import javax.inject.Inject
 
 @AndroidEntryPoint
@@ -62,7 +64,10 @@ class PlayerService : Service() {
     lateinit var playerScope: CoroutineScope
 
     @Inject
-    lateinit var interactor: IPlayerServiceInteractor
+    lateinit var playerRemoteStorage: IPlayerRemoteStorage
+
+    @Inject
+    lateinit var playerLocalStorage: IPlayerLocalStorage
 
     private val notificationFabric by lazy { PlayerNotificationFabric(this) }
 
@@ -81,7 +86,7 @@ class PlayerService : Service() {
         ExoPlayer.Builder(this, audioOnlyRenderersFactory)
             .setAudioAttributes(
                 AudioAttributes.Builder()
-                    .setContentType(C.CONTENT_TYPE_MUSIC)
+                    .setContentType(C.AUDIO_CONTENT_TYPE_MUSIC)
                     .setUsage(C.USAGE_MEDIA)
                     .build(),
                 true
@@ -114,35 +119,32 @@ class PlayerService : Service() {
     override fun onStartCommand(intent: Intent?, flags: Int, startId: Int): Int {
         val station = intent?.getSerializableExtra(KEY_STATION) as? Station
 
-        if (station != null && interactor.station.value != station) {
+        if (station != null && playerLocalStorage.station.value != station) {
             startForeground(
                 PlayerNotificationFabric.notificationID,
                 notificationFabric.getNotification(
-                    interactor.trackData.value,
+                    playerRemoteStorage.track.value,
                     mediaSession,
-                    interactor.playerState.value
+                    playerLocalStorage.playerState.value
                 )
             )
             play(station.url)
-
-            interactor.startFetching(station)
-
-            interactor.station.value = station
         }
 
         return START_NOT_STICKY
     }
 
     override fun onDestroy() {
-        interactor.station.value?.let { interactor.stopFetching(it) }
-        interactor.station.value = null
-
         mediaSession?.isActive = false
+
+        playerScope.launch {
+            playerRemoteStorage.selectStation(null)
+
+            cancel()
+        }
 
         unregisterReceiver(broadcastReceiver)
         player.release()
-
-        playerScope.cancel()
 
         super.onDestroy()
     }
@@ -166,9 +168,9 @@ class PlayerService : Service() {
     }
 
     private fun subscribeStateChanged() {
-        interactor
-            .trackData
-            .combine(interactor.playerState) { trackData, playerState ->
+        playerRemoteStorage
+            .track
+            .combine(playerLocalStorage.playerState) { track, playerState ->
                 mediaSession?.setPlaybackState(
                     PlaybackState.Builder()
                         .setState(
@@ -196,7 +198,7 @@ class PlayerService : Service() {
                         this,
                         PlayerNotificationFabric.notificationID,
                         notificationFabric.getNotification(
-                            trackData,
+                            track,
                             mediaSession,
                             playerState
                         )
@@ -219,7 +221,7 @@ class PlayerService : Service() {
         override fun onReceive(context: Context, intent: Intent) {
             when (intent.action) {
                 PlayerNotificationFabric.ACTION_PLAYER_PLAY ->
-                    interactor.station.value?.let { play(it.url) }
+                    playerLocalStorage.station.value?.let { play(it.url) }
                 PlayerNotificationFabric.ACTION_PLAYER_PAUSE -> pause()
                 PlayerNotificationFabric.ACTION_PLAYER_STOP -> stopSelf()
             }
@@ -228,10 +230,10 @@ class PlayerService : Service() {
 
     private val playerStateListener = object : Player.Listener {
         override fun onPlaybackStateChanged(playbackState: Int) {
-            interactor.playerState.value = when (playbackState) {
+            playerLocalStorage.playerState.value = when (playbackState) {
                 Player.STATE_BUFFERING -> PlayerState.BUFFERING
                 Player.STATE_READY -> PlayerState.PLAYING
-                Player.STATE_IDLE -> if (interactor.station.value == null)
+                Player.STATE_IDLE -> if (playerLocalStorage.station.value == null)
                     PlayerState.IDLE
                 else
                     PlayerState.PAUSED
@@ -253,7 +255,7 @@ class PlayerService : Service() {
 
     private val mediaSessionCallback = object : MediaSession.Callback() {
         override fun onPlay() {
-            interactor.station.value?.let { play(it.url) }
+            playerLocalStorage.station.value?.let { play(it.url) }
         }
 
         override fun onStop() {

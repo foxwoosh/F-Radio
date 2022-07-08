@@ -13,6 +13,8 @@ import androidx.compose.ui.graphics.Color
 import androidx.core.graphics.drawable.toBitmap
 import com.foxwoosh.radio.MainActivity
 import com.foxwoosh.radio.R
+import com.foxwoosh.radio.domain.models.Track
+import com.foxwoosh.radio.player.models.PlayerColors
 import com.foxwoosh.radio.player.models.PlayerState
 import com.foxwoosh.radio.player.models.TrackDataState
 
@@ -100,7 +102,7 @@ class PlayerNotificationFabric(private val context: Context) {
     }.build()
 
     fun getNotification(
-        trackData: TrackDataState,
+        track: Track?,
         mediaSession: MediaSession?,
         playerState: PlayerState
     ): Notification {
@@ -110,40 +112,31 @@ class PlayerNotificationFabric(private val context: Context) {
             Notification.Builder(context)
         }
 
-        val image: Bitmap?
-        val artist: String
-        val title: String
-        val album: String?
-        val color: Color
+        var image: Bitmap? = null
+        var artist = ""
+        var album: String? = null
+        var color = PlayerColors.default.surfaceColor
 
-        when (trackData) {
-            TrackDataState.Idle -> {
-                image = context.getDrawable(R.drawable.ic_no_music_playing)?.toBitmap()
-                artist = ""
+        val title: String
+
+        when (playerState) {
+            PlayerState.IDLE -> {
                 title = context.getString(R.string.player_title_idle)
-                album = null
-                color = Color.Black
             }
-            TrackDataState.Loading -> {
-                image = context.getDrawable(R.drawable.ic_no_music_playing)?.toBitmap()
-                artist = ""
+            PlayerState.BUFFERING -> {
                 title = context.getString(R.string.player_title_loading)
-                album = null
-                color = Color.Black
             }
-            is TrackDataState.Error -> {
-                image = context.getDrawable(R.drawable.ic_no_music_playing)?.toBitmap()
-                artist = ""
-                title = context.getString(R.string.player_title_error_default)
-                album = null
-                color = Color.Black
-            }
-            is TrackDataState.Ready -> {
-                image = trackData.cover
-                artist = trackData.artist
-                title = trackData.title
-                album = trackData.album
-                color = trackData.colors.surfaceColor
+            PlayerState.PAUSED,
+            PlayerState.PLAYING -> {
+                if (track != null) {
+                    image = track.cover
+                    artist = track.artist
+                    title = track.title
+                    album = track.album
+                    color = track.colors.surfaceColor
+                } else {
+                    title = "YA HZ"
+                }
             }
         }
 

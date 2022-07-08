@@ -3,10 +3,8 @@ package com.foxwoosh.radio.data.websocket
 import android.os.Build
 import com.foxwoosh.radio.AppJson
 import com.foxwoosh.radio.BuildConfig
-import com.foxwoosh.radio.data.websocket.messages.outgoing.EmptyOutgoingMessageData
-import com.foxwoosh.radio.data.websocket.messages.outgoing.LoggedUserMessageData
-import com.foxwoosh.radio.data.websocket.messages.outgoing.SubscriptionInitialMessageData
-import com.foxwoosh.radio.data.websocket.messages.outgoing.WebSocketOutgoingMessage
+import com.foxwoosh.radio.data.websocket.messages.outgoing.*
+import com.foxwoosh.radio.player.models.Station
 import kotlinx.serialization.encodeToString
 import okhttp3.WebSocket
 
@@ -38,6 +36,17 @@ fun WebSocket.sendLogout() {
             WebSocketOutgoingMessage(
                 WebSocketOutgoingMessage.Type.USER_LOGOUT,
                 EmptyOutgoingMessageData
+            )
+        )
+    )
+}
+
+fun WebSocket.sendStationsSelect(station: Station?) {
+    send(
+        AppJson.encodeToString(
+            WebSocketOutgoingMessage(
+                WebSocketOutgoingMessage.Type.STATION_SELECT,
+                StationSelectMessageData(station)
             )
         )
     )

@@ -7,6 +7,7 @@
 package com.foxwoosh.radio.ui.player
 
 import android.graphics.Bitmap
+import android.util.Log
 import androidx.activity.compose.BackHandler
 import androidx.annotation.DrawableRes
 import androidx.compose.animation.*
@@ -22,7 +23,6 @@ import androidx.compose.material.icons.filled.Settings
 import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.draw.clip
 import androidx.compose.ui.geometry.Offset
 import androidx.compose.ui.graphics.*
 import androidx.compose.ui.layout.onGloballyPositioned
@@ -40,21 +40,18 @@ import coil.compose.AsyncImage
 import com.foxwoosh.radio.MainActivity
 import com.foxwoosh.radio.R
 import com.foxwoosh.radio.copyToClipboard
-import com.foxwoosh.radio.data.websocket.SocketError
 import com.foxwoosh.radio.openURL
 import com.foxwoosh.radio.player.PlayerService
 import com.foxwoosh.radio.player.models.*
 import com.foxwoosh.radio.ui.*
-import com.foxwoosh.radio.ui.theme.BlackOverlay_20
-import com.foxwoosh.radio.ui.theme.WhiteOverlay_20
 import com.foxwoosh.radio.ui.widgets.DoubleSelector
 import com.foxwoosh.radio.utils.crossfadeImageLoader
 import kotlinx.coroutines.launch
+import java.net.UnknownHostException
 import kotlin.math.absoluteValue
 
 private const val trackChangeDuration = 1_000
 private val bottomSheetShape = RoundedCornerShape(topStart = 12.dp, topEnd = 12.dp)
-private val stationSelectorShape = RoundedCornerShape(14.dp)
 
 @Composable
 fun PlayerScreen(
@@ -104,9 +101,10 @@ fun PlayerScreen(
         }
         is TrackDataState.Error -> {
             title = stringResource(
-                id = when ((trackData as TrackDataState.Error).error) {
-                    SocketError.DEFAULT -> R.string.player_title_error_default
-                    SocketError.NO_INTERNET -> R.string.player_title_error_no_internet
+                id = if ((trackData as TrackDataState.Error).t is UnknownHostException) {
+                    R.string.player_title_error_no_internet
+                } else {
+                    R.string.player_title_error_default
                 }
             )
         }
@@ -263,6 +261,8 @@ fun PlayerScreen(
         if (MainActivity.waitForInitialDrawing) {
             MainActivity.waitForInitialDrawing = false
         }
+
+        Log.i("DDLOG", trackData.toString())
     }
 }
 

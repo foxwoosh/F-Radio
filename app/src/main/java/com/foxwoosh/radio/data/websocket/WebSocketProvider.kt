@@ -84,6 +84,9 @@ class WebSocketProvider @Inject constructor(
             .drop(1) // don't need the first collect
             .onEach { tryConnect() }
             .launchIn(this)
+
+        Log.i("DDLOG", "connection")
+        connect()
     }
 
     private fun needReconnect(): Boolean {
@@ -126,7 +129,7 @@ class WebSocketProvider @Inject constructor(
                 Request.Builder()
                     .url(url)
                     .build(),
-                listener
+                getSocketListener()
             )
         }
     }
@@ -166,7 +169,7 @@ class WebSocketProvider @Inject constructor(
         }
     }
 
-    private val listener = object : WebSocketListener() {
+    private fun getSocketListener() = object : WebSocketListener() {
         override fun onOpen(webSocket: WebSocket, response: Response) {
             Log.i(TAG, "onOpen")
 
@@ -183,10 +186,11 @@ class WebSocketProvider @Inject constructor(
         }
 
         override fun onMessage(webSocket: WebSocket, text: String) {
-            Log.i(TAG, "onMessage")
-
             launch {
-                getResponse(text)?.let { mutableMessagesFlow.emit(it) }
+                getResponse(text)?.let {
+                    Log.i("DDLOG", "onMessage: $it")
+                    mutableMessagesFlow.emit(it)
+                }
             }
         }
 

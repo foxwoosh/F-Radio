@@ -8,7 +8,9 @@ import com.foxwoosh.radio.player.models.PlayerColors
 import com.foxwoosh.radio.ui.theme.Tundora
 
 object CoverColorExtractor {
-    fun extractColors(bitmap: Bitmap): PlayerColors {
+    fun extractColors(bitmap: Bitmap?): PlayerColors {
+        if (bitmap == null) return PlayerColors.default
+
         val palette = Palette.Builder(bitmap).generate()
 
         val swatches = getSwatchesInPriorityOrder(palette)

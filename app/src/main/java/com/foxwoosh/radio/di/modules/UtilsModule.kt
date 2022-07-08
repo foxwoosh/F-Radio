@@ -7,9 +7,10 @@ import dagger.Module
 import dagger.hilt.InstallIn
 import dagger.hilt.android.components.ServiceComponent
 import dagger.hilt.android.components.ViewModelComponent
+import dagger.hilt.components.SingletonComponent
 
 @Module
-@InstallIn(ViewModelComponent::class, ServiceComponent::class)
+@InstallIn(ViewModelComponent::class, ServiceComponent::class, SingletonComponent::class)
 abstract class UtilsModule {
     @Binds
     abstract fun bindImageLoader(imageLoaderImpl: CoilImageProvider): ImageProvider

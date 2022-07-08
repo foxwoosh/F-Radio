@@ -313,7 +313,7 @@ fun PreviousTracksList(
                     verticalAlignment = Alignment.CenterVertically
                 ) {
                     AsyncImage(
-                        model = track.coverUrl,
+                        model = track.cover,
                         contentDescription = "Cover",
                         modifier = Modifier
                             .size(48.dp)
