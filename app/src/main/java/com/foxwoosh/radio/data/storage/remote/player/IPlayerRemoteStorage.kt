@@ -12,7 +12,7 @@ import kotlinx.coroutines.flow.StateFlow
 interface IPlayerRemoteStorage {
     val socketState: StateFlow<SocketState>
     val previousTracks: StateFlow<List<Track>>
-    val track: Flow<Track>
+    val track: StateFlow<Track?>
 
     suspend fun subscribeToStationData(station: Station?)
 }

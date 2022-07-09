@@ -7,9 +7,9 @@ import kotlinx.serialization.SerialName
 class LyricsReportUpdateIncomingMessage(
     @SerialName("type") override val type: WebSocketIncomingMessage.Type,
     @SerialName("report_id") val reportID: String,
-    @SerialName("author_id") val authorID: String,
-    @SerialName("lyrics_id") val lyricsID: String,
-    @SerialName("state") val state: LyricsReportState,
+    @SerialName("author_id") val authorID: Long,
+    @SerialName("lyrics_id") val lyricsID: Int,
+    @SerialName("state") val state: String,
     @SerialName("moderator_id") val moderatorID: Long?,
     @SerialName("moderator_comment") val moderatorComment: String?
 ) : WebSocketIncomingMessage

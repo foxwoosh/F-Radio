@@ -7,7 +7,6 @@
 package com.foxwoosh.radio.ui.player
 
 import android.graphics.Bitmap
-import android.util.Log
 import androidx.activity.compose.BackHandler
 import androidx.annotation.DrawableRes
 import androidx.compose.animation.*
@@ -20,6 +19,7 @@ import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.*
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Settings
+import androidx.compose.material.icons.filled.SyncProblem
 import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
@@ -37,15 +37,14 @@ import androidx.compose.ui.unit.*
 import androidx.constraintlayout.compose.ConstraintLayout
 import androidx.hilt.navigation.compose.hiltViewModel
 import coil.compose.AsyncImage
-import coil.compose.rememberAsyncImagePainter
-import coil.compose.rememberImagePainter
 import com.foxwoosh.radio.MainActivity
 import com.foxwoosh.radio.R
 import com.foxwoosh.radio.copyToClipboard
+import com.foxwoosh.radio.data.websocket.SocketState
 import com.foxwoosh.radio.openURL
-import com.foxwoosh.radio.player.PlayerService
 import com.foxwoosh.radio.player.models.*
 import com.foxwoosh.radio.ui.*
+import com.foxwoosh.radio.ui.player.viewmodels.PlayerViewModel
 import com.foxwoosh.radio.ui.widgets.DoubleSelector
 import com.foxwoosh.radio.utils.crossfadeImageLoader
 import kotlinx.coroutines.launch
@@ -67,10 +66,8 @@ fun PlayerScreen(
 
     val trackData by viewModel.trackDataFlow.collectAsState()
     val playerState by viewModel.playerStateFlow.collectAsState()
-    val previousTracks by viewModel.previousTracksFlow.collectAsState()
-    val lyricsState by viewModel.lyricsStateFlow.collectAsState()
     val station by viewModel.stationFlow.collectAsState()
-    val user by viewModel.userFlow.collectAsState()
+    val socketState by viewModel.socketState.collectAsState()
 
     var musicServicesMenuOpened by remember { mutableStateOf(false) }
 
@@ -168,16 +165,7 @@ fun PlayerScreen(
                 state = bottomSheetScaffoldState,
                 backgroundColor = surfaceColor,
                 primaryTextColor = primaryTextColor,
-                secondaryTextColor = secondaryTextColor,
-                previousTracks = previousTracks,
-                lyricsState = lyricsState,
-                onPageBecomesVisible = { page ->
-                    when (page) {
-                        PlayerBottomSheetPage.LYRICS -> viewModel.fetchLyricsForCurrentTrack()
-                        PlayerBottomSheetPage.PREVIOUS_TRACKS -> { /* nothing to call */ }
-                    }
-                },
-                userLoggedIn = user != null
+                secondaryTextColor = secondaryTextColor
             )
         },
         sheetShape = bottomSheetShape,
@@ -193,16 +181,18 @@ fun PlayerScreen(
                         tileMode = TileMode.Mirror
                     )
                 )
+                .padding(bottom = defaultBottomSheetPeekHeight)
         ) {
             Column(
                 modifier = Modifier
                     .fillMaxSize()
-                    .padding(bottom = defaultBottomSheetPeekHeight)
                     .statusBarsPadding(),
                 horizontalAlignment = Alignment.CenterHorizontally,
                 verticalArrangement = Arrangement.Center
             ) {
                 Box(modifier = Modifier.fillMaxWidth()) {
+                    SyncIcon(socketState = socketState)
+
                     StationSelector(
                         modifier = Modifier
                             .align(Alignment.Center),
@@ -258,15 +248,40 @@ fun PlayerScreen(
     }
 
     LaunchedEffect(trackData) {
-        if (bottomSheetScaffoldState.bottomSheetState.isExpanded
-            && trackData is TrackDataState.Ready
-        ) {
-            viewModel.fetchLyricsForCurrentTrack()
-        }
-
         if (MainActivity.waitForInitialDrawing) {
             MainActivity.waitForInitialDrawing = false
         }
+    }
+}
+
+@Composable
+private fun SyncIcon(socketState: SocketState) {
+    AnimatedVisibility(
+        visible = socketState !is SocketState.Connected
+    ) {
+        val infiniteTransition = rememberInfiniteTransition()
+        val changingAlpha by infiniteTransition.animateFloat(
+            initialValue = 1f,
+            targetValue = 0.5f,
+            animationSpec = infiniteRepeatable(
+                animation = tween(1000, easing = LinearEasing),
+                repeatMode = RepeatMode.Reverse
+            )
+        )
+
+        Icon(
+            imageVector = Icons.Filled.SyncProblem,
+            contentDescription = "Sync",
+            tint = when (socketState) {
+                is SocketState.Connecting -> Color.Yellow
+                is SocketState.Failure,
+                is SocketState.Disconnected -> Color.Red
+                else -> Color.White
+            },
+            modifier = Modifier.graphicsLayer {
+                alpha = changingAlpha
+            }
+        )
     }
 }
 

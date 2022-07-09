@@ -15,8 +15,25 @@
     <string name="player_title_error_no_internet">Нет соединения</string>
     <string name="player_page_no_data_previous_tracks">Нет предыдущих треков</string>
     <string name="player_page_no_data_lyrics">Текст не найден</string>
+    <string name="player_page_error_lyrics">Произошла ошибка</string>
     <string name="player_page_title_previous_tracks">Прошлые треки</string>
-    <string name="player_page_title_lyrics">Текст (beta)</string>
+    <string name="player_page_title_lyrics">Текст</string>
+
+    <string name="lyrics_report_section_title">С текстом что-то не так?</string>
+    <string name="lyrics_report_section_button">Нажми, чтобы сообщить!</string>
+    <string name="lyrics_report_dialog_track_title">Название: %s</string>
+    <string name="lyrics_report_dialog_track_artist">Исполнитель: %s</string>
+    <string name="lyrics_report_dialog_description">Спасибо, что помогаешь нам стать лучше! Каждый отзыв помогает убрать ошибки и заполнить отсутствующие тексты. Если считаешь нужным, опиши, что именно не так с текстом (не обязательно).</string>
+    <string name="lyrics_report_dialog_title">Сообщить об ошибке</string>
+    <string name="lyrics_report_dialog_comment_hint">Описание</string>
+    <string name="lyrics_report_dialog_button_positive">Сообщить!</string>
+    <string name="lyrics_report_dialog_button_negative">Отмена</string>
+    <string name="lyrics_report_state_submitted_title">Спасибо за отзыв!</string>
+    <string name="lyrics_report_state_submitted_description">Мы получили твоё сообщение и обязательно рассмотрим</string>
+    <string name="lyrics_report_state_declined_title">Отзыв отклонён!</string>
+    <string name="lyrics_report_state_declined_description">Видимо твоё предложение было ошибочным или некорректным</string>
+    <string name="lyrics_report_state_solved_title">Отзыв обработан!</string>
+    <string name="lyrics_report_state_solved_description">Спасибо за помощь, исправления внесены :)</string>
 
     <string name="settings_hello">Привет,</string>
     <string name="settings_stranger">незнакомец!</string>
@@ -25,6 +42,7 @@
     <string name="settings_page_title_registration">Регистрация</string>
     <string name="settings_auth_button_login">Войти</string>
     <string name="settings_auth_button_register">Зарегистрироваться</string>
+    <string name="settings_auth_description">Войди или зарегистрируйся чтобы получить доступ к паре небольших, но прикольных фич! (Их станет больше!)</string>
 
     <string name="settings_auth_error_login_verification">Логин должен быть от 5 до 20 символов и состоять только из букв и цифр</string>
     <string name="settings_auth_error_login_conflict">Такой логин уже существует</string>

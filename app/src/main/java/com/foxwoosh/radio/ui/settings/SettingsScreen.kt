@@ -9,7 +9,6 @@ import androidx.compose.foundation.text.KeyboardActions
 import androidx.compose.foundation.text.KeyboardOptions
 import androidx.compose.material.*
 import androidx.compose.material.icons.Icons
-import androidx.compose.material.icons.filled.ArrowBack
 import androidx.compose.material.icons.filled.Close
 import androidx.compose.material.icons.filled.KeyboardArrowUp
 import androidx.compose.material.icons.filled.Logout
@@ -27,6 +26,7 @@ import androidx.compose.ui.platform.LocalSoftwareKeyboardController
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.input.*
+import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.hilt.navigation.compose.hiltViewModel
@@ -38,10 +38,7 @@ import com.foxwoosh.radio.ui.collectAsEffect
 import com.foxwoosh.radio.ui.settings.models.AuthFieldsErrorState
 import com.foxwoosh.radio.ui.settings.models.AuthFieldsState
 import com.foxwoosh.radio.ui.settings.models.SettingsEvent
-import com.foxwoosh.radio.ui.theme.CodGray
-import com.foxwoosh.radio.ui.theme.dp16
-import com.foxwoosh.radio.ui.theme.dp32
-import com.foxwoosh.radio.ui.theme.dp8
+import com.foxwoosh.radio.ui.theme.*
 import com.foxwoosh.radio.ui.widgets.DoubleSelector
 import kotlinx.coroutines.launch
 
@@ -128,7 +125,7 @@ fun SettingsScreen(
                     Spacer(modifier = Modifier.width(dp8))
                     Text(
                         text = stringResource(R.string.settings_stranger_description),
-                        color = Color.White.copy(alpha = 0.7f),
+                        color = White_70,
                         fontSize = 12.sp
                     )
                 }
@@ -173,32 +170,9 @@ fun SettingsScreen(
         }
 
         if (logoutDialogVisible) {
-            AlertDialog(
-                onDismissRequest = { logoutDialogVisible = false },
-                text = {
-                    Text(
-                        text = stringResource(R.string.settings_auth_logout_text),
-                        fontSize = 16.sp
-                    )
-                },
-                confirmButton = {
-                    TextButton(
-                        onClick = {
-                            logoutDialogVisible = false
-                            viewModel.logout()
-                        }
-                    ) { Text(text = stringResource(R.string.settings_auth_logout_positive_button)) }
-                },
-                dismissButton = {
-                    TextButton(
-                        onClick = { logoutDialogVisible = false }
-                    ) {
-                        Text(
-                            text = stringResource(R.string.settings_auth_logout_negative_button),
-                            color = Color.White
-                        )
-                    }
-                }
+            LogoutDialog(
+                dismissAction = { logoutDialogVisible = false },
+                logoutAction = { viewModel.logout() }
             )
         }
 
@@ -209,6 +183,38 @@ fun SettingsScreen(
                 .imePadding()
         )
     }
+}
+
+@Composable
+private fun LogoutDialog(
+    dismissAction: () -> Unit,
+    logoutAction: () -> Unit
+) {
+    AlertDialog(
+        onDismissRequest = dismissAction,
+        text = {
+            Text(
+                text = stringResource(R.string.settings_auth_logout_text),
+                fontSize = 16.sp
+            )
+        },
+        confirmButton = {
+            TextButton(
+                onClick = {
+                    dismissAction()
+                    logoutAction()
+                }
+            ) { Text(text = stringResource(R.string.settings_auth_logout_positive_button)) }
+        },
+        dismissButton = {
+            TextButton(onClick = dismissAction) {
+                Text(
+                    text = stringResource(R.string.settings_auth_logout_negative_button),
+                    color = Color.White
+                )
+            }
+        }
+    )
 }
 
 @Composable
@@ -307,6 +313,14 @@ fun AuthForm(
                     onClick = onAuthCloseAction,
                     enabled = !loading
                 )
+                .padding(vertical = 4.dp)
+        )
+        
+        Text(
+            text = stringResource(R.string.settings_auth_description),
+            textAlign = TextAlign.Center,
+            color = White_70,
+            fontSize = 12.sp
         )
     }
 }

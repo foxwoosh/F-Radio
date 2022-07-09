@@ -16,8 +16,25 @@
     <string name="player_title_error_no_internet">No internet connection</string>
     <string name="player_page_no_data_previous_tracks">No previous tracks</string>
     <string name="player_page_no_data_lyrics">No lyrics found</string>
+    <string name="player_page_error_lyrics">Something went wrong</string>
     <string name="player_page_title_previous_tracks">Previous tracks</string>
     <string name="player_page_title_lyrics">Lyrics (beta)</string>
+
+    <string name="lyrics_report_section_title">Something wrong with lyrics?</string>
+    <string name="lyrics_report_section_button">Click here to report!</string>
+    <string name="lyrics_report_dialog_track_title">Title: %s</string>
+    <string name="lyrics_report_dialog_track_artist">Artist: %s</string>
+    <string name="lyrics_report_dialog_description">Thank you for helping us to become better! Each report helps to fix mistakes and add missing lyrics. If you think this is necessary, you can explain what exactly wrong with this lyrics (don\'t have to). </string>
+    <string name="lyrics_report_dialog_title">Report</string>
+    <string name="lyrics_report_dialog_comment_hint">Description</string>
+    <string name="lyrics_report_dialog_button_positive">Report!</string>
+    <string name="lyrics_report_dialog_button_negative">Cancel</string>
+    <string name="lyrics_report_state_submitted_title">Thank you for report!</string>
+    <string name="lyrics_report_state_submitted_description">We\'ve received your report and will handle it as soon as possible</string>
+    <string name="lyrics_report_state_declined_title">Report declined!</string>
+    <string name="lyrics_report_state_declined_description">Looks like your report was wrong or incorrect</string>
+    <string name="lyrics_report_state_solved_title">Report approved!</string>
+    <string name="lyrics_report_state_solved_description">Thanks for your help, corrections are done :)</string>
 
     <string name="settings_hello">Hi</string>
     <string name="settings_stranger">Stranger!</string>
@@ -26,6 +43,7 @@
     <string name="settings_page_title_registration">Registration</string>
     <string name="settings_auth_button_login">Login</string>
     <string name="settings_auth_button_register">Register</string>
+    <string name="settings_auth_description">Login or register to get access to few small but cool features! (More to come!)</string>
 
     <string name="settings_auth_error_login_verification">Login should have 5–20 symbols (letters and numbers only)</string>
     <string name="settings_auth_error_login_conflict">Login already exists</string>

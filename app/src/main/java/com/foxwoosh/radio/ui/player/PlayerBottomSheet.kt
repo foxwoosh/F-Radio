@@ -2,14 +2,21 @@
 
 package com.foxwoosh.radio.ui.player
 
+import androidx.compose.animation.AnimatedVisibility
 import androidx.compose.animation.animateContentSize
 import androidx.compose.foundation.*
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
 import androidx.compose.foundation.shape.RoundedCornerShape
+import androidx.compose.foundation.text.KeyboardOptions
 import androidx.compose.foundation.text.selection.SelectionContainer
 import androidx.compose.material.*
+import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.filled.CheckCircleOutline
+import androidx.compose.material.icons.filled.Close
+import androidx.compose.material.icons.filled.Done
+import androidx.compose.material.icons.filled.DoneAll
 import androidx.compose.runtime.*
 import androidx.compose.runtime.saveable.rememberSaveable
 import androidx.compose.ui.Alignment
@@ -22,18 +29,25 @@ import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.font.FontWeight
-import androidx.compose.ui.unit.Dp
+import androidx.compose.ui.text.input.KeyboardCapitalization
 import androidx.compose.ui.unit.dp
+import androidx.compose.ui.unit.sp
+import androidx.compose.ui.window.Dialog
+import androidx.compose.ui.window.DialogProperties
+import androidx.hilt.navigation.compose.hiltViewModel
 import coil.compose.AsyncImage
 import com.foxwoosh.radio.R
-import com.foxwoosh.radio.domain.models.PreviousTrack
+import com.foxwoosh.radio.domain.models.LyricsReportState
 import com.foxwoosh.radio.domain.models.Track
 import com.foxwoosh.radio.openURL
 import com.foxwoosh.radio.player.models.MusicServicesData
+import com.foxwoosh.radio.ui.collectAsEffect
 import com.foxwoosh.radio.ui.currentOffset
+import com.foxwoosh.radio.ui.player.models.InProgressReportUiState
+import com.foxwoosh.radio.ui.player.viewmodels.PlayerBottomSheetViewModel
+import com.foxwoosh.radio.ui.theme.*
 import com.foxwoosh.radio.ui.top
 import com.google.accompanist.pager.*
-import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.launch
 
 @Composable
@@ -41,32 +55,32 @@ fun PlayerBottomSheetContent(
     state: BottomSheetScaffoldState,
     backgroundColor: Color,
     primaryTextColor: Color,
-    secondaryTextColor: Color,
-    onPageBecomesVisible: (page: PlayerBottomSheetPage) -> Unit,
-    previousTracks: List<Track>,
-    lyricsState: LyricsDataState,
-    userLoggedIn: Boolean
+    secondaryTextColor: Color
 ) {
+    val viewModel = hiltViewModel<PlayerBottomSheetViewModel>()
     val pagerState = rememberPagerState()
     val offset = state.currentOffset
 
     val statusBarHeight = WindowInsets.statusBars.top
 
-    LaunchedEffect(pagerState.currentPage) {
-        if (state.bottomSheetState.isExpanded) {
-            onPageBecomesVisible(
-                PlayerBottomSheetPage[pagerState.currentPage]
-            )
+    LaunchedEffect(pagerState.currentPage, state.bottomSheetState.isExpanded) {
+        if (state.bottomSheetState.isExpanded
+            && pagerState.currentPage == PlayerBottomSheetPage.LYRICS.ordinal
+        ) {
+            viewModel.fetchLyricsForCurrentTrack()
+        }
+    }
+    viewModel.events.collectAsEffect {
+        if (state.bottomSheetState.isExpanded
+            && pagerState.currentPage == PlayerBottomSheetPage.LYRICS.ordinal
+        ) {
+            viewModel.fetchLyricsForCurrentTrack()
         }
     }
 
-    LaunchedEffect(state.bottomSheetState.isExpanded) {
-        if (state.bottomSheetState.isExpanded) {
-            onPageBecomesVisible(
-                PlayerBottomSheetPage[pagerState.currentPage]
-            )
-        }
-    }
+    val previousTracks by viewModel.previousTracksFlow.collectAsState()
+    val lyricsState by viewModel.lyricsStateFlow.collectAsState()
+    val currentUser by viewModel.userFlow.collectAsState()
 
     Column(
         Modifier
@@ -98,8 +112,9 @@ fun PlayerBottomSheetContent(
             secondaryTextColor = secondaryTextColor,
             backgroundColor = backgroundColor,
             lyricsState = lyricsState,
-            userLoggedIn = userLoggedIn
-        )
+            userLoggedIn = currentUser != null,
+
+            )
     }
 }
 
@@ -209,7 +224,7 @@ private fun PlayerBottomSheetPager(
 }
 
 @Composable
-fun LyricsPage(
+private fun LyricsPage(
     primaryTextColor: Color,
     secondaryTextColor: Color,
     backgroundColor: Color,
@@ -221,9 +236,28 @@ fun LyricsPage(
         contentAlignment = Alignment.Center
     ) {
         when (lyricsState) {
-            is LyricsDataState.NoData,
+            is LyricsDataState.NoData -> {
+                Column(
+                    horizontalAlignment = Alignment.CenterHorizontally
+                ) {
+                    Text(
+                        text = stringResource(id = R.string.player_page_no_data_lyrics),
+                        color = primaryTextColor
+                    )
+
+                    Spacer(modifier = Modifier.height(dp16))
+
+                    if (userLoggedIn) {
+                        LyricsReportSection(
+                            secondaryTextColor = secondaryTextColor,
+                            backgroundColor = backgroundColor,
+                            titleVisible = false
+                        )
+                    }
+                }
+            }
             is LyricsDataState.Error -> Text(
-                text = stringResource(id = R.string.player_page_no_data_lyrics),
+                text = stringResource(id = R.string.player_page_error_lyrics),
                 color = primaryTextColor
             )
             is LyricsDataState.Loading -> CircularProgressIndicator(color = primaryTextColor)
@@ -249,26 +283,240 @@ fun LyricsPage(
                         )
                     }
                     if (userLoggedIn) {
-                        Spacer(modifier = Modifier.height(16.dp))
+                        LyricsReportSection(
+                            secondaryTextColor = secondaryTextColor,
+                            backgroundColor = backgroundColor,
+                            titleVisible = true
+                        )
+                    }
+                }
+            }
+        }
+    }
+}
 
-                        Column(
-                            modifier = Modifier.fillMaxWidth(),
-                            horizontalAlignment = Alignment.CenterHorizontally
+@Composable
+private fun LyricsReportSection(
+    secondaryTextColor: Color,
+    backgroundColor: Color,
+    titleVisible: Boolean
+) {
+    val viewModel = hiltViewModel<PlayerBottomSheetViewModel>()
+
+    val currentReportState by viewModel.currentLyricsReportState.collectAsState()
+    val inProgressReportState by viewModel.inProgressReportState.collectAsState()
+    val sendingReportProgress by viewModel.sendingReportProgress.collectAsState()
+
+    Spacer(modifier = Modifier.height(16.dp))
+
+    Column(
+        modifier = Modifier.fillMaxWidth(),
+        horizontalAlignment = Alignment.CenterHorizontally
+    ) {
+        var descriptionOpened by remember { mutableStateOf(false) }
+        when (currentReportState.state) {
+            LyricsReportState.SUBMITTED -> {
+                Column(
+                    modifier = Modifier.clickable { descriptionOpened = !descriptionOpened },
+                    horizontalAlignment = Alignment.CenterHorizontally
+                ) {
+                    Icon(
+                        imageVector = Icons.Filled.Done,
+                        contentDescription = "Submitted",
+                        tint = secondaryTextColor
+                    )
+                    Text(
+                        text = stringResource(R.string.lyrics_report_state_submitted_title),
+                        color = secondaryTextColor,
+                        fontWeight = FontWeight.Black
+                    )
+                }
+                AnimatedVisibility(visible = descriptionOpened) {
+                    Text(
+                        text = stringResource(R.string.lyrics_report_state_submitted_description),
+                        color = secondaryTextColor
+                    )
+                }
+            }
+            LyricsReportState.DECLINED -> {
+                Column(
+                    modifier = Modifier.clickable { descriptionOpened = !descriptionOpened },
+                    horizontalAlignment = Alignment.CenterHorizontally
+                ) {
+                    Icon(
+                        imageVector = Icons.Filled.Close,
+                        contentDescription = "Declined",
+                        tint = secondaryTextColor
+                    )
+                    Text(
+                        text = stringResource(R.string.lyrics_report_state_declined_title),
+                        color = secondaryTextColor,
+                        fontWeight = FontWeight.Black
+                    )
+                }
+                AnimatedVisibility(visible = descriptionOpened) {
+                    Text(
+                        text = stringResource(R.string.lyrics_report_state_declined_description),
+                        color = secondaryTextColor
+                    )
+                    currentReportState.moderatorComment?.let {
+                        Text(
+                            text = it,
+                            color = secondaryTextColor
+                        )
+                    }
+                }
+            }
+            LyricsReportState.SOLVED -> {
+                Column(
+                    modifier = Modifier.clickable { descriptionOpened = !descriptionOpened },
+                    horizontalAlignment = Alignment.CenterHorizontally
+                ) {
+                    Icon(
+                        imageVector = Icons.Filled.DoneAll,
+                        contentDescription = "Solved",
+                        tint = secondaryTextColor
+                    )
+                    Text(
+                        text = stringResource(R.string.lyrics_report_state_solved_title),
+                        color = secondaryTextColor,
+                        fontWeight = FontWeight.Black
+                    )
+                }
+                AnimatedVisibility(visible = descriptionOpened) {
+                    Text(
+                        text = stringResource(R.string.lyrics_report_state_solved_description),
+                        color = secondaryTextColor
+                    )
+                    currentReportState.moderatorComment?.let {
+                        Text(
+                            text = it,
+                            color = secondaryTextColor
+                        )
+                    }
+                }
+            }
+            null -> {
+                if (titleVisible) {
+                    Text(
+                        text = stringResource(R.string.lyrics_report_section_title),
+                        color = secondaryTextColor,
+                        fontWeight = FontWeight.Medium
+                    )
+                }
+                Button(
+                    onClick = { viewModel.initReport() },
+                    colors = ButtonDefaults.buttonColors(
+                        backgroundColor = secondaryTextColor,
+                        contentColor = backgroundColor
+                    )
+                ) {
+                    Text(text = stringResource(R.string.lyrics_report_section_button))
+                }
+            }
+        }
+    }
+
+    inProgressReportState?.let { report ->
+        LyricsReportDialog(
+            report = report,
+            sendingReportProgress = sendingReportProgress,
+            dismissReport = { viewModel.dismissReport() },
+            sendReport = { viewModel.sendReport() },
+            setReportComment = { viewModel.setReportComment(it) }
+        )
+    }
+}
+
+@Composable
+private fun LyricsReportDialog(
+    report: InProgressReportUiState,
+    sendingReportProgress: Boolean,
+    dismissReport: () -> Unit,
+    sendReport: () -> Unit,
+    setReportComment: (String) -> Unit
+) {
+    Dialog(
+        onDismissRequest = dismissReport,
+        properties = DialogProperties(
+            dismissOnBackPress = false,
+            dismissOnClickOutside = false
+        )
+    ) {
+        Surface(
+            modifier = Modifier.fillMaxWidth(),
+            shape = MaterialTheme.shapes.large
+        ) {
+            Column(Modifier.verticalScroll(rememberScrollState())) {
+                Column(
+                    Modifier
+                        .fillMaxWidth()
+                        .padding(dp16)
+                ) {
+                    Text(
+                        text = stringResource(R.string.lyrics_report_dialog_title),
+                        fontSize = 18.sp,
+                        fontWeight = FontWeight.Black
+                    )
+                    Spacer(modifier = Modifier.height(dp8))
+                    Text(
+                        text = stringResource(
+                            R.string.lyrics_report_dialog_track_title,
+                            report.title
+                        ),
+                        fontWeight = FontWeight.Black
+                    )
+                    Text(
+                        text = stringResource(
+                            R.string.lyrics_report_dialog_track_artist,
+                            report.artist
+                        ),
+                        fontWeight = FontWeight.Black
+                    )
+                    Spacer(modifier = Modifier.height(dp8))
+                    Text(
+                        text = stringResource(R.string.lyrics_report_dialog_description),
+                        color = White_70
+                    )
+                    Spacer(modifier = Modifier.height(dp8))
+                    OutlinedTextField(
+                        value = report.comment,
+                        label = { Text(text = stringResource(R.string.lyrics_report_dialog_comment_hint)) },
+                        enabled = !sendingReportProgress,
+                        maxLines = 3,
+                        keyboardOptions = KeyboardOptions(KeyboardCapitalization.Sentences),
+                        onValueChange = { if (it.length <= 200) setReportComment(it) }
+                    )
+                }
+
+                Row(
+                    modifier = Modifier
+                        .padding(horizontal = dp8)
+                        .align(Alignment.End),
+                    horizontalArrangement = Arrangement.spacedBy(dp4),
+                ) {
+                    if (!sendingReportProgress) {
+                        TextButton(
+                            onClick = dismissReport
                         ) {
                             Text(
-                                text = "Something wrong with lyrics?",
-                                color = secondaryTextColor,
-                                fontWeight = FontWeight.Medium
+                                text = stringResource(R.string.lyrics_report_dialog_button_negative),
+                                color = Color.White
                             )
-                            Button(
-                                onClick = { /*TODO*/ },
-                                colors = ButtonDefaults.buttonColors(
-                                    backgroundColor = secondaryTextColor,
-                                    contentColor = backgroundColor
-                                )
-                            ) {
-                                Text(text = "Click here to report!")
-                            }
+                        }
+                    }
+
+                    TextButton(
+                        onClick = sendReport,
+                        enabled = !sendingReportProgress
+                    ) {
+                        if (sendingReportProgress) {
+                            CircularProgressIndicator(
+                                modifier = Modifier.size(dp16),
+                                strokeWidth = dp2
+                            )
+                        } else {
+                            Text(text = stringResource(R.string.lyrics_report_dialog_button_positive))
                         }
                     }
                 }
@@ -278,7 +526,7 @@ fun LyricsPage(
 }
 
 @Composable
-fun PreviousTracksList(
+private fun PreviousTracksList(
     previousTracks: List<Track>,
     primaryTextColor: Color,
     secondaryTextColor: Color,
@@ -303,7 +551,7 @@ fun PreviousTracksList(
                             trackHash
                         }
                     }
-                    .padding(horizontal = 16.dp, vertical = 10.dp)
+                    .padding(horizontal = dp16, vertical = 10.dp)
                     .fillMaxWidth()
                     .animateContentSize(),
             ) {
@@ -317,10 +565,10 @@ fun PreviousTracksList(
                         contentDescription = "Cover",
                         modifier = Modifier
                             .size(48.dp)
-                            .clip(RoundedCornerShape(8.dp))
+                            .clip(RoundedCornerShape(dp8))
                     )
 
-                    Spacer(modifier = Modifier.width(12.dp))
+                    Spacer(modifier = Modifier.width(dp12))
 
                     Column(
                         Modifier.fillMaxWidth()

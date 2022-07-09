@@ -15,8 +15,8 @@ import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import com.foxwoosh.radio.ui.singleCondition
-import com.foxwoosh.radio.ui.theme.BlackOverlay_20
-import com.foxwoosh.radio.ui.theme.WhiteOverlay_20
+import com.foxwoosh.radio.ui.theme.Black_20
+import com.foxwoosh.radio.ui.theme.White_20
 
 private val shape = RoundedCornerShape(14.dp)
 
@@ -27,7 +27,7 @@ fun DoubleSelector(
     firstItemText: String,
     secondItemText: String,
     onSelectAction: (index: Int) -> Unit,
-    background: Color = BlackOverlay_20,
+    background: Color = Black_20,
     enabled: Boolean = true
 ) {
     Row(
@@ -65,7 +65,7 @@ fun DoubleSelectorButton(
         modifier = Modifier
             .clip(shape)
             .clickable(onClick = onClick, enabled = enabled)
-            .singleCondition(selected) { background(WhiteOverlay_20) }
+            .singleCondition(selected) { background(White_20) }
             .padding(horizontal = 8.dp, vertical = 6.dp),
         fontSize = 14.sp
     )

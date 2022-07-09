@@ -49,6 +49,7 @@ class PlayerRemoteStorage @Inject constructor(
                 yandexMusicUrl = songDataMessage.yandexMusicUrl
             )
         }
+        .stateIn(scope, SharingStarted.Eagerly, null)
 
     private var previousTrack: Track? = null
 
