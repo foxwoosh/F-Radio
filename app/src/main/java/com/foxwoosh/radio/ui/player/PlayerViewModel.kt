@@ -27,7 +27,7 @@ class PlayerViewModel @Inject constructor(
     private val mutableTrackDataFlow = MutableStateFlow<TrackDataState>(TrackDataState.Idle)
     val trackDataFlow = mutableTrackDataFlow.asStateFlow()
 
-    val previousTracksFlow = playerLocalStorage.previousTracks
+    val previousTracksFlow = playerRemoteStorage.previousTracks
     val playerStateFlow = playerLocalStorage.playerState
     val stationFlow = playerLocalStorage.station
     val socketState = playerRemoteStorage.socketState
@@ -61,10 +61,10 @@ class PlayerViewModel @Inject constructor(
             .track
             .combine(playerLocalStorage.station) { track, station ->
                 mutableTrackDataFlow.emit(
-                    when {
-                        station != null && track != null -> track.toReadyState()
-                        station != null && track == null -> TrackDataState.Loading
-                        else -> TrackDataState.Idle
+                    if (station != null) {
+                        track.toReadyState()
+                    } else {
+                        TrackDataState.Idle
                     }
                 )
             }

@@ -106,7 +106,6 @@ class PlayerNotificationFabric(private val context: Context) {
         mediaSession: MediaSession?,
         playerState: PlayerState
     ): Notification {
-        Log.i("DDLOG", "getNotification")
         val builder = if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
             Notification.Builder(context, notificationChannelID)
         } else {

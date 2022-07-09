@@ -37,6 +37,8 @@ import androidx.compose.ui.unit.*
 import androidx.constraintlayout.compose.ConstraintLayout
 import androidx.hilt.navigation.compose.hiltViewModel
 import coil.compose.AsyncImage
+import coil.compose.rememberAsyncImagePainter
+import coil.compose.rememberImagePainter
 import com.foxwoosh.radio.MainActivity
 import com.foxwoosh.radio.R
 import com.foxwoosh.radio.copyToClipboard
@@ -117,9 +119,10 @@ fun PlayerScreen(
             colors = data.colors
             musicServices = data.musicServices
 
-            gradientOffsetValueX = data.hashCode().absoluteValue %
+            val gradientKey = data.title + data.artist + data.album
+            gradientOffsetValueX = gradientKey.hashCode().absoluteValue %
                 with(density) { config.screenWidthDp.dp.toPx() }
-            gradientOffsetValueY = data.hashCode().absoluteValue %
+            gradientOffsetValueY = gradientKey.hashCode().absoluteValue %
                 with(density) { config.screenHeightDp.dp.toPx() }
 
             actualBottomSheetPeekHeight = defaultBottomSheetPeekHeight

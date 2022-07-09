@@ -122,7 +122,7 @@ class PlayerService : Service() {
             startForeground(
                 playerNotificationID,
                 notificationFabric.getNotification(
-                    playerRemoteStorage.track.value,
+                    null,
                     mediaSession,
                     playerLocalStorage.playerState.value
                 )
