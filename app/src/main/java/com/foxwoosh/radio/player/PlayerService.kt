@@ -25,13 +25,12 @@ import com.foxwoosh.radio.player.helpers.PlayerNotificationFabric
 import com.foxwoosh.radio.player.models.PlayerState
 import com.foxwoosh.radio.player.models.Station
 import dagger.hilt.android.AndroidEntryPoint
-import kotlinx.coroutines.CoroutineScope
-import kotlinx.coroutines.cancel
+import kotlinx.coroutines.*
 import kotlinx.coroutines.flow.combine
 import kotlinx.coroutines.flow.debounce
 import kotlinx.coroutines.flow.launchIn
-import kotlinx.coroutines.launch
 import javax.inject.Inject
+import kotlin.coroutines.CoroutineContext
 
 @AndroidEntryPoint
 class PlayerService : Service() {
@@ -59,9 +58,7 @@ class PlayerService : Service() {
         }
     }
 
-    @PlayerServiceCoroutineScope
-    @Inject
-    lateinit var playerScope: CoroutineScope
+    private val playerScope = CoroutineScope(SupervisorJob() + Dispatchers.IO)
 
     @Inject
     lateinit var playerRemoteStorage: IPlayerRemoteStorage
@@ -70,6 +67,8 @@ class PlayerService : Service() {
     lateinit var playerLocalStorage: IPlayerLocalStorage
 
     private val notificationFabric by lazy { PlayerNotificationFabric(this) }
+
+    private val playerNotificationID = hashCode()
 
     private val player by lazy {
         val audioOnlyRenderersFactory = RenderersFactory { handler, _, audioListener, _, _ ->
@@ -108,7 +107,7 @@ class PlayerService : Service() {
             broadcastReceiver.filter
         )
 
-        mediaSession = MediaSession(this, packageName)
+        mediaSession = MediaSession(this, packageName + playerNotificationID)
             .apply {
                 setCallback(mediaSessionCallback)
             }
@@ -119,9 +118,9 @@ class PlayerService : Service() {
     override fun onStartCommand(intent: Intent?, flags: Int, startId: Int): Int {
         val station = intent?.getSerializableExtra(KEY_STATION) as? Station
 
-        if (station != null && playerLocalStorage.station.value != station) {
+        if (station != null) {
             startForeground(
-                PlayerNotificationFabric.notificationID,
+                playerNotificationID,
                 notificationFabric.getNotification(
                     playerRemoteStorage.track.value,
                     mediaSession,
@@ -135,16 +134,28 @@ class PlayerService : Service() {
     }
 
     override fun onDestroy() {
-        mediaSession?.isActive = false
-
         playerScope.launch {
-            playerRemoteStorage.selectStation(null)
+            playerLocalStorage.station.emit(null)
+            playerRemoteStorage.subscribeToStationData(null)
 
-            cancel()
+            playerScope.cancel()
+        }
+
+        stopForeground(true)
+
+        mediaSession?.let {
+            it.isActive = false
+            it.setCallback(null)
+            it.release()
+        }
+
+        with(player) {
+            stop()
+            clearMediaItems()
+            release()
         }
 
         unregisterReceiver(broadcastReceiver)
-        player.release()
 
         super.onDestroy()
     }
@@ -196,7 +207,7 @@ class PlayerService : Service() {
                 if (playerState != PlayerState.IDLE) {
                     NotificationPublisher.notify(
                         this,
-                        PlayerNotificationFabric.notificationID,
+                        playerNotificationID,
                         notificationFabric.getNotification(
                             track,
                             mediaSession,
@@ -205,7 +216,6 @@ class PlayerService : Service() {
                     )
                 }
             }
-            .debounce(100)
             .launchIn(playerScope)
     }
 

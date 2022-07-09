@@ -51,7 +51,7 @@ class PlayerRemoteStorage @Inject constructor(
         }
         .stateIn(scope, SharingStarted.Eagerly, null)
 
-    override suspend fun selectStation(station: Station?) {
+    override suspend fun subscribeToStationData(station: Station?) {
         webSocketProvider.sendMessage { sendStationsSelect(station = station) }
     }
 }

@@ -9,5 +9,5 @@ interface IPlayerRemoteStorage {
     val socketState: StateFlow<SocketState>
     val track: StateFlow<Track?>
 
-    suspend fun selectStation(station: Station?)
+    suspend fun subscribeToStationData(station: Station?)
 }

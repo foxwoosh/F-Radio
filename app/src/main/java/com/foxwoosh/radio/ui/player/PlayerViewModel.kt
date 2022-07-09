@@ -1,6 +1,7 @@
 package com.foxwoosh.radio.ui.player
 
 import android.content.Context
+import android.util.Log
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.foxwoosh.radio.data.storage.local.player.IPlayerLocalStorage
@@ -18,8 +19,8 @@ import javax.inject.Inject
 @HiltViewModel
 class PlayerViewModel @Inject constructor(
     userLocalStorage: IUserLocalStorage,
-    playerLocalStorage: IPlayerLocalStorage,
-    playerRemoteStorage: IPlayerRemoteStorage,
+    private val playerLocalStorage: IPlayerLocalStorage,
+    private val playerRemoteStorage: IPlayerRemoteStorage,
     private val lyricsRemoteStorage: ILyricsRemoteStorage
 ) : ViewModel() {
 
@@ -29,6 +30,7 @@ class PlayerViewModel @Inject constructor(
     val previousTracksFlow = playerLocalStorage.previousTracks
     val playerStateFlow = playerLocalStorage.playerState
     val stationFlow = playerLocalStorage.station
+    val socketState = playerRemoteStorage.socketState
 
     val userFlow = userLocalStorage.currentUser.stateIn(
         viewModelScope,
@@ -57,14 +59,12 @@ class PlayerViewModel @Inject constructor(
 
         playerRemoteStorage
             .track
-            .combine(playerRemoteStorage.socketState) { track, state ->
+            .combine(playerLocalStorage.station) { track, station ->
                 mutableTrackDataFlow.emit(
-                    when (state) {
-                        is SocketState.Initial,
-                        is SocketState.Disconnected -> TrackDataState.Idle
-                        is SocketState.Connecting -> TrackDataState.Loading
-                        is SocketState.Failure -> TrackDataState.Error(state.throwable)
-                        is SocketState.Connected -> track?.toReadyState() ?: TrackDataState.Loading
+                    when {
+                        station != null && track != null -> track.toReadyState()
+                        station != null && track == null -> TrackDataState.Loading
+                        else -> TrackDataState.Idle
                     }
                 )
             }
@@ -96,6 +96,24 @@ class PlayerViewModel @Inject constructor(
     }
 
     fun selectStation(context: Context, station: Station) {
-        PlayerService.selectSource(context, station)
+        if (playerLocalStorage.station.value == station) return
+
+        viewModelScope.launch {
+            PlayerService.selectSource(context, station)
+            playerLocalStorage.station.emit(station)
+            playerRemoteStorage.subscribeToStationData(station)
+        }
+    }
+
+    fun pause(context: Context) {
+        PlayerService.pause(context)
+    }
+
+    fun play(context: Context) {
+        PlayerService.play(context)
+    }
+
+    fun stop(context: Context) {
+        PlayerService.stop(context)
     }
 }

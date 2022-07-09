@@ -85,7 +85,6 @@ class WebSocketProvider @Inject constructor(
             .onEach { tryConnect() }
             .launchIn(this)
 
-        Log.i("DDLOG", "connection")
         connect()
     }
 

@@ -10,6 +10,7 @@
 
     <string name="player_title_idle">Станция не выбрана</string>
     <string name="player_title_loading">Загрузка…</string>
+    <string name="player_title_playing">Воспроизведение</string>
     <string name="player_title_error_default">Ошибка при загрузке информации</string>
     <string name="player_title_error_no_internet">Нет соединения</string>
     <string name="player_page_no_data_previous_tracks">Нет предыдущих треков</string>

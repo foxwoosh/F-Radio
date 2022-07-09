@@ -11,6 +11,7 @@
 
     <string name="player_title_idle">No station selected</string>
     <string name="player_title_loading">Loading…</string>
+    <string name="player_title_playing">Playing</string>
     <string name="player_title_error_default">Couldn\'t load track data</string>
     <string name="player_title_error_no_internet">No internet connection</string>
     <string name="player_page_no_data_previous_tracks">No previous tracks</string>

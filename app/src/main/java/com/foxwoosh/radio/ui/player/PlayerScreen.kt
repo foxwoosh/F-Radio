@@ -203,7 +203,7 @@ fun PlayerScreen(
                     StationSelector(
                         modifier = Modifier
                             .align(Alignment.Center),
-                        onSelectStationAction = { PlayerService.selectSource(context, it) },
+                        onSelectStationAction = { viewModel.selectStation(context, it) },
                         selectedStation = station
                     )
 
@@ -243,6 +243,9 @@ fun PlayerScreen(
                 PlaybackController(
                     color = primaryTextColor,
                     playerState = playerState,
+                    onPlay = { viewModel.play(context) },
+                    onPause = { viewModel.pause(context) },
+                    onStop = { viewModel.stop(context) },
                     modifier = Modifier
                         .fillMaxWidth()
                         .weight(0.15f)
@@ -261,8 +264,6 @@ fun PlayerScreen(
         if (MainActivity.waitForInitialDrawing) {
             MainActivity.waitForInitialDrawing = false
         }
-
-        Log.i("DDLOG", trackData.toString())
     }
 }
 
@@ -466,10 +467,11 @@ fun PlayerMusicServices(
 fun PlaybackController(
     color: Color,
     playerState: PlayerState,
+    onPlay: () -> Unit,
+    onPause: () -> Unit,
+    onStop: () -> Unit,
     modifier: Modifier = Modifier
 ) {
-    val context = LocalContext.current
-
     ConstraintLayout(
         modifier = modifier
             .height(72.dp)
@@ -494,7 +496,7 @@ fun PlaybackController(
                     picRes = R.drawable.ic_player_pause_filled,
                     contentDescription = "Pause",
                     color = color,
-                    onClick = { PlayerService.pause(context) }
+                    onClick = onPause
                 )
             }
 
@@ -507,7 +509,7 @@ fun PlaybackController(
                     picRes = R.drawable.ic_player_play_filled,
                     contentDescription = "Play",
                     color = color,
-                    onClick = { PlayerService.play(context) }
+                    onClick = onPlay
                 )
             }
 
@@ -543,7 +545,7 @@ fun PlaybackController(
                 modifier = Modifier
                     .padding(12.dp)
                     .size(42.dp)
-                    .borderlessClickable(onClick = { PlayerService.stop(context) })
+                    .borderlessClickable(onClick = onStop)
             )
         }
 

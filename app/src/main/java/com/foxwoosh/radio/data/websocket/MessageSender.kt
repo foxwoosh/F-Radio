@@ -46,7 +46,7 @@ fun WebSocket.sendStationsSelect(station: Station?) {
         AppJson.encodeToString(
             WebSocketOutgoingMessage(
                 WebSocketOutgoingMessage.Type.STATION_SELECT,
-                StationSelectMessageData(station)
+                StationSelectMessageData(station?.code ?: -1)
             )
         )
     )

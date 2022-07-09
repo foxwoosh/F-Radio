@@ -9,6 +9,7 @@ import android.graphics.drawable.Icon
 import android.media.MediaMetadata
 import android.media.session.MediaSession
 import android.os.Build
+import android.util.Log
 import androidx.compose.ui.graphics.Color
 import androidx.core.graphics.drawable.toBitmap
 import com.foxwoosh.radio.MainActivity
@@ -21,7 +22,6 @@ import com.foxwoosh.radio.player.models.TrackDataState
 class PlayerNotificationFabric(private val context: Context) {
 
     companion object {
-        const val notificationID = 777
         const val notificationChannelID = "player_channel_id"
 
         const val ACTION_PLAYER_PLAY = "b100252a-5bc4-4232-825b-634e36725423"
@@ -106,6 +106,7 @@ class PlayerNotificationFabric(private val context: Context) {
         mediaSession: MediaSession?,
         playerState: PlayerState
     ): Notification {
+        Log.i("DDLOG", "getNotification")
         val builder = if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
             Notification.Builder(context, notificationChannelID)
         } else {
@@ -135,7 +136,7 @@ class PlayerNotificationFabric(private val context: Context) {
                     album = track.album
                     color = track.colors.surfaceColor
                 } else {
-                    title = "YA HZ"
+                    title = context.getString(R.string.player_title_playing)
                 }
             }
         }
