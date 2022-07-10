@@ -26,9 +26,14 @@ class LyricsRemoteStorage @Inject constructor(
             LyricsReport(
                 it.reportID,
                 it.lyricsID,
+                it.title,
+                it.artist,
+                it.comment,
                 LyricsReportState.get(it.state),
                 it.moderatorID,
-                it.moderatorComment
+                it.moderatorComment,
+                it.createdAt,
+                it.updatedAt
             )
         }
 
@@ -53,5 +58,25 @@ class LyricsRemoteStorage @Inject constructor(
             .reportLyrics(
                 LyricsReportRequest(lyricsID, comment)
             )
+    }
+
+    override suspend fun getUserReports(): List<LyricsReport> {
+        return apiService
+            .foxy
+            .getUserReports()
+            .map {
+                LyricsReport(
+                    it.id,
+                    it.lyricsID,
+                    it.title,
+                    it.artist,
+                    it.userComment,
+                    LyricsReportState.get(it.state),
+                    it.moderatorID,
+                    it.moderatorComment,
+                    it.createdAt,
+                    it.updatedAt
+                )
+            }
     }
 }

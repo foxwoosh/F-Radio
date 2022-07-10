@@ -12,4 +12,6 @@ interface ILyricsRemoteStorage {
     suspend fun fetchLyrics(title: String, artist: String)
 
     suspend fun reportLyrics(lyricsID: Int, comment: String)
+
+    suspend fun getUserReports(): List<LyricsReport>
 }

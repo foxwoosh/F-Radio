@@ -1,6 +1,6 @@
 package com.foxwoosh.radio.ui.settings.models
 
-data class AuthFieldsState(
+data class AuthFieldsUiState(
     val login: String = "",
     val password: String = "",
     val name: String = "",

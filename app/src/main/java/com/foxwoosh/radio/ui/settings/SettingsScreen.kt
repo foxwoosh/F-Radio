@@ -2,6 +2,7 @@
 
 package com.foxwoosh.radio.ui.settings
 
+import android.annotation.SuppressLint
 import androidx.annotation.StringRes
 import androidx.compose.animation.AnimatedVisibility
 import androidx.compose.foundation.*
@@ -37,8 +38,8 @@ import com.foxwoosh.radio.adjustBrightness
 import com.foxwoosh.radio.domain.interactors.settings.SettingsConstants
 import com.foxwoosh.radio.ui.LoadingButton
 import com.foxwoosh.radio.ui.collectAsEffect
-import com.foxwoosh.radio.ui.settings.models.AuthFieldsErrorState
-import com.foxwoosh.radio.ui.settings.models.AuthFieldsState
+import com.foxwoosh.radio.ui.settings.models.AuthFieldsErrorUiState
+import com.foxwoosh.radio.ui.settings.models.AuthFieldsUiState
 import com.foxwoosh.radio.ui.settings.models.SettingsEvent
 import com.foxwoosh.radio.ui.settings.viewmodels.SettingsViewModel
 import com.foxwoosh.radio.ui.theme.*
@@ -47,6 +48,7 @@ import kotlinx.coroutines.launch
 
 private val SettingTopShape = RoundedCornerShape(topStart = dp12, topEnd = dp12)
 
+@SuppressLint("UnusedMaterialScaffoldPaddingParameter")
 @Composable
 fun SettingsScreen(
     navigateBack: () -> Unit,
@@ -62,17 +64,17 @@ fun SettingsScreen(
     val authFieldsState by viewModel.authFieldsState.collectAsState()
     val authProgress by viewModel.authProgress.collectAsState()
 
-    val snackbarHostState = remember { SnackbarHostState() }
+    val scaffoldState = rememberScaffoldState()
 
     var authFormVisible by remember { mutableStateOf(false) }
     var logoutDialogVisible by remember { mutableStateOf(false) }
 
     viewModel.events.collectAsEffect {
-        snackbarHostState.currentSnackbarData?.dismiss()
+        scaffoldState.snackbarHostState.currentSnackbarData?.dismiss()
 
         when (it) {
             is SettingsEvent.Error -> scope.launch {
-                snackbarHostState.showSnackbar(context.getString(it.errorTextResId))
+                scaffoldState.snackbarHostState.showSnackbar(context.getString(it.errorTextResId))
             }
         }
     }
@@ -80,7 +82,7 @@ fun SettingsScreen(
     LaunchedEffect(user) {
         if (authFormVisible && user != null) {
             authFormVisible = false
-            snackbarHostState.showSnackbar(context.getString(R.string.settings_auth_login_success))
+            scaffoldState.snackbarHostState.showSnackbar(context.getString(R.string.settings_auth_login_success))
         }
     }
 
@@ -88,124 +90,127 @@ fun SettingsScreen(
         if (!authFormVisible) keyboardController?.hide()
     }
 
-    Box(
-        modifier = Modifier
-            .fillMaxSize()
-            .background(CodGray)
-            .systemBarsPadding()
-    ) {
-        Column(
-            Modifier
-                .fillMaxSize()
-                .padding(top = 56.dp)
-                .verticalScroll(rememberScrollState())
+    Surface(color = CodGray) {
+        Scaffold(
+            scaffoldState = scaffoldState,
+            topBar = {
+                TopAppBar(
+                    title = {},
+                    navigationIcon = {
+                        IconButton(onClick = navigateBack) {
+                            Icon(
+                                imageVector = Icons.Filled.Close,
+                                contentDescription = "Back"
+                            )
+                        }
+                    },
+                    backgroundColor = Color.Transparent,
+                    elevation = 0.dp,
+                    actions = {
+                        if (user != null) {
+                            IconButton(onClick = { logoutDialogVisible = true }) {
+                                Icon(
+                                    imageVector = Icons.Filled.Logout,
+                                    contentDescription = "Logout"
+                                )
+                            }
+                        }
+                    }
+                )
+            },
+            modifier = Modifier
+                .systemBarsPadding()
                 .imePadding()
         ) {
-            Text(
-                text = stringResource(R.string.settings_hello),
-                color = Color.White,
-                fontSize = 36.sp,
-                fontWeight = FontWeight.Medium,
-                modifier = Modifier.padding(horizontal = dp16)
-            )
-            Row(
-                modifier = Modifier
-                    .fillMaxWidth()
-                    .clickable(
-                        onClick = { authFormVisible = !authFormVisible },
-                        enabled = user == null && !authFormVisible
-                    )
-                    .padding(horizontal = dp16, vertical = 6.dp),
-                verticalAlignment = Alignment.CenterVertically
+            Column(
+                Modifier
+                    .fillMaxSize()
+                    .verticalScroll(rememberScrollState())
             ) {
                 Text(
-                    text = (user?.name ?: stringResource(R.string.settings_stranger))
-                        + " $FoxFace",
+                    text = stringResource(R.string.settings_hello),
                     color = Color.White,
-                    fontSize = 24.sp,
-                    fontWeight = FontWeight.Normal,
+                    fontSize = 36.sp,
+                    fontWeight = FontWeight.Medium,
+                    modifier = Modifier.padding(horizontal = dp16)
                 )
-                if (user == null && !authFormVisible) {
-                    Spacer(modifier = Modifier.width(dp8))
-                    Text(
-                        text = stringResource(R.string.settings_stranger_description),
-                        color = White_70,
-                        fontSize = 12.sp
-                    )
-                }
-            }
-
-            Spacer(modifier = Modifier.height(dp32))
-
-            var selectedIndex by rememberSaveable { mutableStateOf(AuthPage.LOGIN.ordinal) }
-
-            AnimatedVisibility(visible = authFormVisible) {
-                AuthForm(
-                    selectedIndex = selectedIndex,
-                    onSelectIndex = { selectedIndex = it },
-                    onLoginChange = { viewModel.setAuthField(AuthFieldsState.Type.LOGIN, it) },
-                    onPasswordChange = {
-                        viewModel.setAuthField(
-                            AuthFieldsState.Type.PASSWORD,
-                            it
+                Row(
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .clickable(
+                            onClick = { authFormVisible = !authFormVisible },
+                            enabled = user == null && !authFormVisible
                         )
-                    },
-                    onNameChange = { viewModel.setAuthField(AuthFieldsState.Type.NAME, it) },
-                    onEmailChange = { viewModel.setAuthField(AuthFieldsState.Type.EMAIL, it) },
-                    onLogin = { viewModel.login() },
-                    onRegister = { viewModel.register() },
-                    state = authFieldsState,
-                    errorsState = authFieldsErrorState,
-                    onAuthCloseAction = { authFormVisible = false },
-                    loading = authProgress
-                )
-            }
-
-            AnimatedVisibility(visible = user != null) {
-                Surface(
-                    shape = SettingTopShape,
-                    color = CodGray.adjustBrightness(1.5f),
-                    modifier = Modifier.fillMaxSize()
+                        .padding(horizontal = dp16, vertical = 6.dp),
+                    verticalAlignment = Alignment.CenterVertically
                 ) {
-                    Column {
-                        SettingsItem(
-                            icon = Icons.Filled.Checklist,
-                            textRes = R.string.settings_item_user_reports,
-                            action = navigateToUserReports
+                    Text(
+                        text = (user?.name ?: stringResource(R.string.settings_stranger))
+                            + " $FoxFace",
+                        color = Color.White,
+                        fontSize = 24.sp,
+                        fontWeight = FontWeight.Normal,
+                    )
+                    if (user == null && !authFormVisible) {
+                        Spacer(modifier = Modifier.width(dp8))
+                        Text(
+                            text = stringResource(R.string.settings_stranger_description),
+                            color = White_70,
+                            fontSize = 12.sp
                         )
                     }
                 }
+
+                Spacer(modifier = Modifier.height(dp32))
+
+                var selectedIndex by rememberSaveable { mutableStateOf(AuthPage.LOGIN.ordinal) }
+
+                AnimatedVisibility(visible = authFormVisible) {
+                    AuthForm(
+                        selectedIndex = selectedIndex,
+                        onSelectIndex = { selectedIndex = it },
+                        onLoginChange = { viewModel.setAuthField(AuthFieldsUiState.Type.LOGIN, it) },
+                        onPasswordChange = {
+                            viewModel.setAuthField(
+                                AuthFieldsUiState.Type.PASSWORD,
+                                it
+                            )
+                        },
+                        onNameChange = { viewModel.setAuthField(AuthFieldsUiState.Type.NAME, it) },
+                        onEmailChange = { viewModel.setAuthField(AuthFieldsUiState.Type.EMAIL, it) },
+                        onLogin = { viewModel.login() },
+                        onRegister = { viewModel.register() },
+                        state = authFieldsState,
+                        errorsState = authFieldsErrorState,
+                        onAuthCloseAction = { authFormVisible = false },
+                        loading = authProgress
+                    )
+                }
+
+                AnimatedVisibility(visible = user != null) {
+                    Surface(
+                        shape = SettingTopShape,
+                        color = CodGray.adjustBrightness(1.5f),
+                        modifier = Modifier.fillMaxSize()
+                    ) {
+                        Column {
+                            SettingsItem(
+                                icon = Icons.Filled.Checklist,
+                                textRes = R.string.settings_item_user_reports,
+                                action = navigateToUserReports
+                            )
+                        }
+                    }
+                }
+            }
+
+            if (logoutDialogVisible) {
+                LogoutDialog(
+                    dismissAction = { logoutDialogVisible = false },
+                    logoutAction = { viewModel.logout() }
+                )
             }
         }
-
-        IconButton(onClick = navigateBack) {
-            Icon(imageVector = Icons.Filled.Close, contentDescription = "Close settings")
-        }
-
-        if (user != null) {
-            IconButton(
-                onClick = { logoutDialogVisible = true },
-                modifier = Modifier
-                    .align(Alignment.TopEnd)
-                    .statusBarsPadding()
-            ) {
-                Icon(Icons.Filled.Logout, contentDescription = "Logout")
-            }
-        }
-
-        if (logoutDialogVisible) {
-            LogoutDialog(
-                dismissAction = { logoutDialogVisible = false },
-                logoutAction = { viewModel.logout() }
-            )
-        }
-
-        SnackbarHost(
-            hostState = snackbarHostState,
-            modifier = Modifier
-                .align(Alignment.BottomCenter)
-                .imePadding()
-        )
     }
 }
 
@@ -270,8 +275,8 @@ fun AuthForm(
     onEmailChange: (String) -> Unit,
     onLogin: () -> Unit,
     onRegister: () -> Unit,
-    state: AuthFieldsState,
-    errorsState: AuthFieldsErrorState,
+    state: AuthFieldsUiState,
+    errorsState: AuthFieldsErrorUiState,
     onAuthCloseAction: () -> Unit,
     loading: Boolean
 ) {

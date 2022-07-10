@@ -5,8 +5,8 @@ import androidx.lifecycle.viewModelScope
 import com.foxwoosh.radio.R
 import com.foxwoosh.radio.domain.interactors.settings.ISettingsInteractor
 import com.foxwoosh.radio.domain.interactors.settings.exceptions.AuthDataException
-import com.foxwoosh.radio.ui.settings.models.AuthFieldsErrorState
-import com.foxwoosh.radio.ui.settings.models.AuthFieldsState
+import com.foxwoosh.radio.ui.settings.models.AuthFieldsErrorUiState
+import com.foxwoosh.radio.ui.settings.models.AuthFieldsUiState
 import com.foxwoosh.radio.ui.settings.models.SettingsEvent
 import dagger.hilt.android.lifecycle.HiltViewModel
 import kotlinx.coroutines.delay
@@ -22,10 +22,10 @@ class SettingsViewModel @Inject constructor(
     private val mutableEvents = MutableSharedFlow<SettingsEvent>()
     val events = mutableEvents.asSharedFlow()
 
-    private val mutableAuthFieldsErrorState = MutableStateFlow(AuthFieldsErrorState())
+    private val mutableAuthFieldsErrorState = MutableStateFlow(AuthFieldsErrorUiState())
     val authFieldsErrorState = mutableAuthFieldsErrorState.asStateFlow()
 
-    private val mutableAuthFieldsState = MutableStateFlow(AuthFieldsState())
+    private val mutableAuthFieldsState = MutableStateFlow(AuthFieldsUiState())
     val authFieldsState = mutableAuthFieldsState.asStateFlow()
 
     private val mutableAuthProgress = MutableStateFlow(false)
@@ -47,9 +47,8 @@ class SettingsViewModel @Inject constructor(
                     interactor.register(login, password, name, email)
                 }
 
-                mutableAuthFieldsState.update { it.clear() }
-
                 delay(1000)
+                mutableAuthFieldsState.update { it.clear() }
                 mutableAuthProgress.value = false
             } catch (e: Exception) {
                 mutableAuthProgress.value = false
@@ -67,9 +66,8 @@ class SettingsViewModel @Inject constructor(
                     interactor.login(login, password)
                 }
 
-                mutableAuthFieldsState.update { it.clear() }
-
                 delay(1000)
+                mutableAuthFieldsState.update { it.clear() }
                 mutableAuthProgress.value = false
             } catch (e: Exception) {
                 mutableAuthProgress.value = false
@@ -84,13 +82,13 @@ class SettingsViewModel @Inject constructor(
         }
     }
 
-    fun setAuthField(type: AuthFieldsState.Type, data: String) {
+    fun setAuthField(type: AuthFieldsUiState.Type, data: String) {
         mutableAuthFieldsState.update {
             when (type) {
-                AuthFieldsState.Type.LOGIN -> it.copy(login = data)
-                AuthFieldsState.Type.PASSWORD -> it.copy(password = data)
-                AuthFieldsState.Type.NAME -> it.copy(name = data)
-                AuthFieldsState.Type.EMAIL -> it.copy(email = data)
+                AuthFieldsUiState.Type.LOGIN -> it.copy(login = data)
+                AuthFieldsUiState.Type.PASSWORD -> it.copy(password = data)
+                AuthFieldsUiState.Type.NAME -> it.copy(name = data)
+                AuthFieldsUiState.Type.EMAIL -> it.copy(email = data)
             }
         }
         if (mutableAuthFieldsErrorState.value.any()) {

@@ -1,6 +1,8 @@
-package com.foxwoosh.radio.domain.models
+package com.foxwoosh.radio.ui.settings.models
 
-data class LyricsReport(
+import com.foxwoosh.radio.domain.models.LyricsReportState
+
+data class LyricsReportUiModel(
     val reportID: String,
     val lyricsID: Int,
     val title: String,
