@@ -2,8 +2,7 @@ package com.foxwoosh.radio.data.storage.remote.player
 
 import com.foxwoosh.radio.data.websocket.WebSocketProvider
 import com.foxwoosh.radio.data.websocket.messages.incoming.SongDataIncomingMessage
-import com.foxwoosh.radio.data.websocket.sendStationsSelect
-import com.foxwoosh.radio.domain.models.PreviousTrack
+import com.foxwoosh.radio.data.websocket.sendStationSelect
 import com.foxwoosh.radio.domain.models.Track
 import com.foxwoosh.radio.player.helpers.CoverColorExtractor
 import com.foxwoosh.radio.player.models.Station
@@ -78,6 +77,6 @@ class PlayerRemoteStorage @Inject constructor(
         if (station == null) {
             previousTrack = null
         }
-        webSocketProvider.sendMessage { sendStationsSelect(station = station) }
+        webSocketProvider.sendMessage { sendStationSelect(station = station) }
     }
 }

@@ -12,13 +12,12 @@
     <string name="player_title_idle">No station selected</string>
     <string name="player_title_loading">Loading…</string>
     <string name="player_title_playing">Playing</string>
-    <string name="player_title_error_default">Couldn\'t load track data</string>
-    <string name="player_title_error_no_internet">No internet connection</string>
     <string name="player_page_no_data_previous_tracks">No previous tracks</string>
     <string name="player_page_no_data_lyrics">No lyrics found</string>
     <string name="player_page_error_lyrics">Something went wrong</string>
     <string name="player_page_title_previous_tracks">Previous tracks</string>
-    <string name="player_page_title_lyrics">Lyrics (beta)</string>
+    <string name="player_page_title_lyrics">Lyrics</string>
+    <string name="player_sync_issue_warning">Connection is unstable</string>
 
     <string name="lyrics_report_section_title">Something wrong with lyrics?</string>
     <string name="lyrics_report_section_button">Click here to report!</string>
@@ -35,6 +34,7 @@
     <string name="lyrics_report_state_declined_description">Looks like your report was wrong or incorrect</string>
     <string name="lyrics_report_state_solved_title">Report approved!</string>
     <string name="lyrics_report_state_solved_description">Thanks for your help, corrections are done :)</string>
+    <string name="lyrics_report_state_moderator_comment">Moderator comment: %s</string>
 
     <string name="settings_hello">Hi</string>
     <string name="settings_stranger">Stranger!</string>
@@ -61,4 +61,6 @@
     <string name="settings_auth_logout_positive_button">Oh yeah</string>
     <string name="settings_auth_logout_negative_button">Nope, it was a mistake!</string>
     <string name="settings_auth_login_success">Welcome!</string>
+
+    <string name="settings_item_user_reports">Reports</string>
 </resources>

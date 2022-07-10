@@ -41,7 +41,7 @@ fun WebSocket.sendLogout() {
     )
 }
 
-fun WebSocket.sendStationsSelect(station: Station?) {
+fun WebSocket.sendStationSelect(station: Station?) {
     send(
         AppJson.encodeToString(
             WebSocketOutgoingMessage(

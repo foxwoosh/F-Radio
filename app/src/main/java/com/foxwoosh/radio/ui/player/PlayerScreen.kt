@@ -7,6 +7,7 @@
 package com.foxwoosh.radio.ui.player
 
 import android.graphics.Bitmap
+import android.widget.Toast
 import androidx.activity.compose.BackHandler
 import androidx.annotation.DrawableRes
 import androidx.compose.animation.*
@@ -97,15 +98,6 @@ fun PlayerScreen(
         }
         TrackDataState.Loading -> {
             title = stringResource(R.string.player_title_loading)
-        }
-        is TrackDataState.Error -> {
-            title = stringResource(
-                id = if ((trackData as TrackDataState.Error).t is UnknownHostException) {
-                    R.string.player_title_error_no_internet
-                } else {
-                    R.string.player_title_error_default
-                }
-            )
         }
         is TrackDataState.Ready -> {
             val data = trackData as TrackDataState.Ready
@@ -256,6 +248,8 @@ fun PlayerScreen(
 
 @Composable
 private fun SyncIcon(socketState: SocketState) {
+    val context = LocalContext.current
+
     AnimatedVisibility(
         visible = socketState !is SocketState.Connected
     ) {
@@ -264,24 +258,34 @@ private fun SyncIcon(socketState: SocketState) {
             initialValue = 1f,
             targetValue = 0.5f,
             animationSpec = infiniteRepeatable(
-                animation = tween(1000, easing = LinearEasing),
+                animation = tween(500, easing = FastOutSlowInEasing),
                 repeatMode = RepeatMode.Reverse
             )
         )
 
-        Icon(
-            imageVector = Icons.Filled.SyncProblem,
-            contentDescription = "Sync",
-            tint = when (socketState) {
-                is SocketState.Connecting -> Color.Yellow
-                is SocketState.Failure,
-                is SocketState.Disconnected -> Color.Red
-                else -> Color.White
-            },
-            modifier = Modifier.graphicsLayer {
-                alpha = changingAlpha
+        IconButton(
+            onClick = {
+                Toast.makeText(
+                    context,
+                    R.string.player_sync_issue_warning,
+                    Toast.LENGTH_SHORT
+                ).show()
             }
-        )
+        ) {
+            Icon(
+                imageVector = Icons.Filled.SyncProblem,
+                contentDescription = "Sync",
+                tint = when (socketState) {
+                    is SocketState.Connecting -> Color.Yellow
+                    is SocketState.Failure,
+                    is SocketState.Disconnected -> Color.Red
+                    else -> Color.White
+                },
+                modifier = Modifier.graphicsLayer {
+                    alpha = changingAlpha
+                }
+            )
+        }
     }
 }
 

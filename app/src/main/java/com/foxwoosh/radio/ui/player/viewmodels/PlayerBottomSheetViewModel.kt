@@ -161,7 +161,6 @@ class PlayerBottomSheetViewModel @Inject constructor(
         viewModelScope.launch {
             try {
                 mutableSendingReportProgress.emit(true)
-                delay(2000)
 
                 lyricsRemoteStorage.reportLyrics(
                     report.lyricsID,

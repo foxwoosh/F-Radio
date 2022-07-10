@@ -56,9 +56,10 @@ class ApiService @Inject constructor(authInterceptor: AuthInterceptor) {
         ): LyricsResponse
 
         @PUT("$V1/lyrics/report")
-        suspend fun reportLyrics(
-            @Body body: LyricsReportRequest
-        )
+        suspend fun reportLyrics(@Body body: LyricsReportRequest)
+
+        @GET("$V1/lyrics/reports")
+        suspend fun getUserReports(): List<LyricsReportResponse>
 
         @POST("$V1/register")
         suspend fun register(@Body body: RegisterRequest): AuthResponse

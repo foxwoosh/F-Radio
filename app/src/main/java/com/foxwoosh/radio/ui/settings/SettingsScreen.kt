@@ -2,16 +2,16 @@
 
 package com.foxwoosh.radio.ui.settings
 
+import androidx.annotation.StringRes
 import androidx.compose.animation.AnimatedVisibility
 import androidx.compose.foundation.*
 import androidx.compose.foundation.layout.*
+import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.text.KeyboardActions
 import androidx.compose.foundation.text.KeyboardOptions
 import androidx.compose.material.*
 import androidx.compose.material.icons.Icons
-import androidx.compose.material.icons.filled.Close
-import androidx.compose.material.icons.filled.KeyboardArrowUp
-import androidx.compose.material.icons.filled.Logout
+import androidx.compose.material.icons.filled.*
 import androidx.compose.material.icons.outlined.Visibility
 import androidx.compose.material.icons.outlined.VisibilityOff
 import androidx.compose.runtime.*
@@ -21,6 +21,7 @@ import androidx.compose.ui.ExperimentalComposeUiApi
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.ColorFilter
+import androidx.compose.ui.graphics.vector.ImageVector
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.platform.LocalSoftwareKeyboardController
 import androidx.compose.ui.res.stringResource
@@ -32,19 +33,24 @@ import androidx.compose.ui.unit.sp
 import androidx.hilt.navigation.compose.hiltViewModel
 import com.foxwoosh.radio.FoxFace
 import com.foxwoosh.radio.R
+import com.foxwoosh.radio.adjustBrightness
 import com.foxwoosh.radio.domain.interactors.settings.SettingsConstants
 import com.foxwoosh.radio.ui.LoadingButton
 import com.foxwoosh.radio.ui.collectAsEffect
 import com.foxwoosh.radio.ui.settings.models.AuthFieldsErrorState
 import com.foxwoosh.radio.ui.settings.models.AuthFieldsState
 import com.foxwoosh.radio.ui.settings.models.SettingsEvent
+import com.foxwoosh.radio.ui.settings.viewmodels.SettingsViewModel
 import com.foxwoosh.radio.ui.theme.*
 import com.foxwoosh.radio.ui.widgets.DoubleSelector
 import kotlinx.coroutines.launch
 
+private val SettingTopShape = RoundedCornerShape(topStart = dp12, topEnd = dp12)
+
 @Composable
 fun SettingsScreen(
-    navigateBack: () -> Unit
+    navigateBack: () -> Unit,
+    navigateToUserReports: () -> Unit
 ) {
     val scope = rememberCoroutineScope()
     val context = LocalContext.current
@@ -91,12 +97,10 @@ fun SettingsScreen(
         Column(
             Modifier
                 .fillMaxSize()
+                .padding(top = 56.dp)
                 .verticalScroll(rememberScrollState())
                 .imePadding()
         ) {
-            IconButton(onClick = navigateBack) {
-                Icon(imageVector = Icons.Filled.Close, contentDescription = "Close settings")
-            }
             Text(
                 text = stringResource(R.string.settings_hello),
                 color = Color.White,
@@ -156,6 +160,26 @@ fun SettingsScreen(
                     loading = authProgress
                 )
             }
+
+            AnimatedVisibility(visible = user != null) {
+                Surface(
+                    shape = SettingTopShape,
+                    color = CodGray.adjustBrightness(1.5f),
+                    modifier = Modifier.fillMaxSize()
+                ) {
+                    Column {
+                        SettingsItem(
+                            icon = Icons.Filled.Checklist,
+                            textRes = R.string.settings_item_user_reports,
+                            action = navigateToUserReports
+                        )
+                    }
+                }
+            }
+        }
+
+        IconButton(onClick = navigateBack) {
+            Icon(imageVector = Icons.Filled.Close, contentDescription = "Close settings")
         }
 
         if (user != null) {
@@ -182,6 +206,25 @@ fun SettingsScreen(
                 .align(Alignment.BottomCenter)
                 .imePadding()
         )
+    }
+}
+
+@Composable
+private fun SettingsItem(
+    icon: ImageVector,
+    @StringRes textRes: Int,
+    action: () -> Unit,
+) {
+    Row(
+        modifier = Modifier
+            .fillMaxWidth()
+            .clickable(onClick = action)
+            .padding(horizontal = dp16, vertical = dp12),
+        verticalAlignment = Alignment.CenterVertically,
+        horizontalArrangement = Arrangement.spacedBy(dp16)
+    ) {
+        Icon(imageVector = icon, contentDescription = null)
+        Text(text = stringResource(textRes))
     }
 }
 
@@ -315,7 +358,7 @@ fun AuthForm(
                 )
                 .padding(vertical = 4.dp)
         )
-        
+
         Text(
             text = stringResource(R.string.settings_auth_description),
             textAlign = TextAlign.Center,

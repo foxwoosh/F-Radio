@@ -11,13 +11,12 @@
     <string name="player_title_idle">Станция не выбрана</string>
     <string name="player_title_loading">Загрузка…</string>
     <string name="player_title_playing">Воспроизведение</string>
-    <string name="player_title_error_default">Ошибка при загрузке информации</string>
-    <string name="player_title_error_no_internet">Нет соединения</string>
     <string name="player_page_no_data_previous_tracks">Нет предыдущих треков</string>
     <string name="player_page_no_data_lyrics">Текст не найден</string>
     <string name="player_page_error_lyrics">Произошла ошибка</string>
     <string name="player_page_title_previous_tracks">Прошлые треки</string>
     <string name="player_page_title_lyrics">Текст</string>
+    <string name="player_sync_issue_warning">Соединение нестабильно</string>
 
     <string name="lyrics_report_section_title">С текстом что-то не так?</string>
     <string name="lyrics_report_section_button">Нажми, чтобы сообщить!</string>
@@ -34,6 +33,7 @@
     <string name="lyrics_report_state_declined_description">Видимо твоё предложение было ошибочным или некорректным</string>
     <string name="lyrics_report_state_solved_title">Отзыв обработан!</string>
     <string name="lyrics_report_state_solved_description">Спасибо за помощь, исправления внесены :)</string>
+    <string name="lyrics_report_state_moderator_comment">Заключение модератора: %s</string>
 
     <string name="settings_hello">Привет,</string>
     <string name="settings_stranger">незнакомец!</string>
@@ -60,5 +60,7 @@
     <string name="settings_auth_logout_positive_button">Абсолютно точно</string>
     <string name="settings_auth_logout_negative_button">Нет, я остаюсь!</string>
     <string name="settings_auth_login_success">Добро пожаловать!</string>
+
+    <string name="settings_item_user_reports">Сообщения об ошибках</string>
 
 </resources>

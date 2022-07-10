@@ -1,4 +1,4 @@
-package com.foxwoosh.radio.ui.settings
+package com.foxwoosh.radio.ui.settings.viewmodels
 
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
