@@ -5,14 +5,12 @@ import androidx.lifecycle.viewModelScope
 import com.foxwoosh.radio.data.storage.local.user.IUserLocalStorage
 import com.foxwoosh.radio.data.storage.remote.lyrics.ILyricsRemoteStorage
 import com.foxwoosh.radio.data.storage.remote.player.IPlayerRemoteStorage
-import com.foxwoosh.radio.domain.models.LyricsReportState
 import com.foxwoosh.radio.ui.player.LyricsDataState
+import com.foxwoosh.radio.ui.player.models.CurrentLyricsReportUiState
+import com.foxwoosh.radio.ui.player.models.InProgressReportUiState
 import com.foxwoosh.radio.ui.player.models.PlayerBottomSheetEvent
 import com.foxwoosh.radio.ui.player.models.TrackForLyricFetchUiModel
-import com.foxwoosh.radio.ui.player.models.InProgressReportUiState
-import com.foxwoosh.radio.ui.player.models.CurrentLyricsReportUiState
 import dagger.hilt.android.lifecycle.HiltViewModel
-import kotlinx.coroutines.delay
 import kotlinx.coroutines.flow.*
 import kotlinx.coroutines.launch
 import javax.inject.Inject

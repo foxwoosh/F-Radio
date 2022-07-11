@@ -9,15 +9,11 @@ import android.graphics.drawable.Icon
 import android.media.MediaMetadata
 import android.media.session.MediaSession
 import android.os.Build
-import android.util.Log
-import androidx.compose.ui.graphics.Color
-import androidx.core.graphics.drawable.toBitmap
 import com.foxwoosh.radio.MainActivity
 import com.foxwoosh.radio.R
 import com.foxwoosh.radio.domain.models.Track
 import com.foxwoosh.radio.player.models.PlayerColors
 import com.foxwoosh.radio.player.models.PlayerState
-import com.foxwoosh.radio.player.models.TrackDataState
 
 class PlayerNotificationFabric(private val context: Context) {
 

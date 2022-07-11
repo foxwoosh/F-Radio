@@ -19,7 +19,6 @@ import androidx.media3.exoplayer.audio.MediaCodecAudioRenderer
 import androidx.media3.exoplayer.mediacodec.MediaCodecSelector
 import com.foxwoosh.radio.data.storage.local.player.IPlayerLocalStorage
 import com.foxwoosh.radio.data.storage.remote.player.IPlayerRemoteStorage
-import com.foxwoosh.radio.di.modules.PlayerServiceCoroutineScope
 import com.foxwoosh.radio.notifications.NotificationPublisher
 import com.foxwoosh.radio.player.helpers.PlayerNotificationFabric
 import com.foxwoosh.radio.player.models.PlayerState
@@ -27,10 +26,8 @@ import com.foxwoosh.radio.player.models.Station
 import dagger.hilt.android.AndroidEntryPoint
 import kotlinx.coroutines.*
 import kotlinx.coroutines.flow.combine
-import kotlinx.coroutines.flow.debounce
 import kotlinx.coroutines.flow.launchIn
 import javax.inject.Inject
-import kotlin.coroutines.CoroutineContext
 
 @AndroidEntryPoint
 class PlayerService : Service() {

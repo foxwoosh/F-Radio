@@ -4,8 +4,6 @@ import com.foxwoosh.radio.data.api.ApiService
 import com.foxwoosh.radio.data.api.foxy.requests.LoginRequest
 import com.foxwoosh.radio.data.api.foxy.requests.RegisterRequest
 import com.foxwoosh.radio.data.websocket.WebSocketProvider
-import com.foxwoosh.radio.data.websocket.messages.outgoing.LoggedUserMessageData
-import com.foxwoosh.radio.data.websocket.messages.outgoing.WebSocketOutgoingMessage
 import com.foxwoosh.radio.data.websocket.sendLoggedUserData
 import com.foxwoosh.radio.data.websocket.sendLogout
 import com.foxwoosh.radio.domain.models.CurrentUser

@@ -7,7 +7,6 @@ import com.foxwoosh.radio.domain.models.LyricsReport
 import com.foxwoosh.radio.ui.settings.models.UserReportsUiState
 import com.foxwoosh.radio.ui.settings.models.mapToUiModel
 import dagger.hilt.android.lifecycle.HiltViewModel
-import kotlinx.coroutines.delay
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.flow.launchIn

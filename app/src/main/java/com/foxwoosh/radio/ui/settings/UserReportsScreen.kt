@@ -1,7 +1,6 @@
 package com.foxwoosh.radio.ui.settings
 
 import android.annotation.SuppressLint
-import android.util.Log
 import androidx.compose.animation.animateContentSize
 import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
@@ -34,8 +33,6 @@ import com.foxwoosh.radio.ui.singleCondition
 import com.foxwoosh.radio.ui.theme.*
 import java.lang.Integer.max
 import java.text.SimpleDateFormat
-import java.time.format.DateTimeFormatter
-import java.util.Date
 
 private val DetailsItemBackground = CodGray.adjustBrightness(1.5f)
 

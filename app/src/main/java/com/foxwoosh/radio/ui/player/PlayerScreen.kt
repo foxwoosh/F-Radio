@@ -44,12 +44,13 @@ import com.foxwoosh.radio.copyToClipboard
 import com.foxwoosh.radio.data.websocket.SocketState
 import com.foxwoosh.radio.openURL
 import com.foxwoosh.radio.player.models.*
-import com.foxwoosh.radio.ui.*
+import com.foxwoosh.radio.ui.borderlessClickable
+import com.foxwoosh.radio.ui.bottom
 import com.foxwoosh.radio.ui.player.viewmodels.PlayerViewModel
+import com.foxwoosh.radio.ui.singleCondition
 import com.foxwoosh.radio.ui.widgets.DoubleSelector
 import com.foxwoosh.radio.utils.crossfadeImageLoader
 import kotlinx.coroutines.launch
-import java.net.UnknownHostException
 import kotlin.math.absoluteValue
 
 private const val trackChangeDuration = 1_000

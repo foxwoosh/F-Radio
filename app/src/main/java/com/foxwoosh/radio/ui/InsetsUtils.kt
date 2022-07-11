@@ -5,7 +5,6 @@ import androidx.compose.runtime.Composable
 import androidx.compose.ui.platform.LocalDensity
 import androidx.compose.ui.unit.Dp
 import androidx.core.view.WindowInsetsCompat
-import kotlinx.coroutines.flow.MutableStateFlow
 
 inline val WindowInsetsCompat.statusBar: Dp
     @Composable

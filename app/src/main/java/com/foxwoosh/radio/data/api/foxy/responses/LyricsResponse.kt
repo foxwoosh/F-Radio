@@ -1,6 +1,5 @@
 package com.foxwoosh.radio.data.api.foxy.responses
 
-import com.foxwoosh.radio.domain.models.LyricsReportState
 import kotlinx.serialization.SerialName
 import kotlinx.serialization.Serializable
 
