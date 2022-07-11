@@ -16,10 +16,15 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.layout.onSizeChanged
+import androidx.compose.ui.platform.LocalConfiguration
 import androidx.compose.ui.platform.LocalDensity
+import androidx.compose.ui.res.stringResource
+import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
+import androidx.compose.ui.unit.sp
 import androidx.hilt.navigation.compose.hiltViewModel
+import com.foxwoosh.radio.R
 import com.foxwoosh.radio.adjustBrightness
 import com.foxwoosh.radio.domain.models.LyricsReportState
 import com.foxwoosh.radio.ui.settings.models.LyricsReportUiModel
@@ -47,7 +52,7 @@ fun UserReportsScreen(
         Scaffold(
             topBar = {
                 TopAppBar(
-                    title = { Text(text = "Reports") },
+                    title = { Text(text = stringResource(R.string.settings_item_user_reports)) },
                     navigationIcon = {
                         IconButton(onClick = navigateBack) {
                             Icon(
@@ -77,10 +82,23 @@ fun ReportsContent(state: UserReportsUiState) {
                 modifier = Modifier.align(Alignment.Center)
             )
         }
-        is UserReportsUiState.Empty -> Box(Modifier.fillMaxSize()) {
+        is UserReportsUiState.Empty -> Column(
+            verticalArrangement = Arrangement.Center,
+            horizontalAlignment = Alignment.CenterHorizontally,
+            modifier = Modifier
+                .fillMaxSize()
+                .padding(dp32)
+        ) {
             Text(
-                text = "Еще нихуя нет",
-                modifier = Modifier.align(Alignment.Center)
+                text = stringResource(R.string.settings_user_reports_empty_title),
+                fontWeight = FontWeight.Black,
+                fontSize = 18.sp
+            )
+            Spacer(modifier = Modifier.height(dp8))
+            Text(
+                text = stringResource(R.string.settings_user_reports_empty_description),
+                color = White_70,
+                textAlign = TextAlign.Center
             )
         }
         is UserReportsUiState.Ready -> {
@@ -132,16 +150,48 @@ fun ReportItem(
                     LyricsReportState.DECLINED -> Icons.Filled.Close
                     null -> Icons.Filled.ErrorOutline
                 },
-                contentDescription = null
+                contentDescription = "Report item icon"
             )
             Text(text = "${report.title} - ${report.artist}")
         }
 
         if (opened) {
+            val locale = LocalConfiguration.current.locale
+            val sdf = remember(locale) {
+                SimpleDateFormat(
+                    "dd.MM.yyyy HH:mm",
+                    locale
+                )
+            }
+
+            report.state?.let { state ->
+                ReportDetailsRow(
+                    key = stringResource(R.string.settings_user_reports_details_key_state),
+                    value = stringResource(
+                        when (state) {
+                            LyricsReportState.SUBMITTED -> R.string.settings_user_reports_details_key_state_submitted
+                            LyricsReportState.SOLVED -> R.string.settings_user_reports_details_key_state_solved
+                            LyricsReportState.DECLINED -> R.string.settings_user_reports_details_key_state_declined
+                        }
+                    )
+                )
+            }
+            if (report.comment.isNotEmpty()) {
+                ReportDetailsRow(
+                    key = stringResource(R.string.settings_user_reports_details_key_comment),
+                    value = report.comment
+                )
+            }
             ReportDetailsRow(
-                "Test Key",
-                "ajdsakjdlaskdjsal jdklasj alsfjasl fjaslkf jasflk asjflka sjfla jflaksfj aslkfj aslf jaslf jaslfj aslf jaslf jaslkfjaslfjaslfjaslfasklfjalfjaf l"
+                key = stringResource(R.string.settings_user_reports_details_key_created),
+                value = sdf.format(report.createdAt)
             )
+            report.updatedAt?.let {
+                ReportDetailsRow(
+                    key = stringResource(R.string.settings_user_reports_details_key_updated),
+                    value = sdf.format(it)
+                )
+            }
         }
     }
 }

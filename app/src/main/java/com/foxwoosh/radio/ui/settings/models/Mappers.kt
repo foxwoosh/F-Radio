@@ -1,6 +1,7 @@
 package com.foxwoosh.radio.ui.settings.models
 
 import com.foxwoosh.radio.domain.models.LyricsReport
+import java.util.*
 
 fun LyricsReport.mapToUiModel() = LyricsReportUiModel(
     reportID,
@@ -11,6 +12,6 @@ fun LyricsReport.mapToUiModel() = LyricsReportUiModel(
     state,
     moderatorID,
     moderatorComment,
-    createdAt,
-    updatedAt
+    Date(createdAt),
+    updatedAt?.let { Date(it) }
 )

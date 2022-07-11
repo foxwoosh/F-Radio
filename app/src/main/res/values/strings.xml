@@ -63,4 +63,17 @@
     <string name="settings_auth_login_success">Welcome!</string>
 
     <string name="settings_item_user_reports">Reports</string>
+    <string name="settings_user_reports_title">Reports</string>
+    <string name="settings_user_reports_empty_title">Nothing here :(</string>
+    <string name="settings_user_reports_empty_description">You can help us to become better! Just click «Report» button at the bottom of «Lyrics» tab in the player if you see a mistake</string>
+    <string name="settings_user_reports_details_key_state">State</string>
+    <string name="settings_user_reports_details_key_state_submitted">Submitted</string>
+    <string name="settings_user_reports_details_key_state_declined">Declined</string>
+    <string name="settings_user_reports_details_key_state_solved">Solved</string>
+    <string name="settings_user_reports_details_key_created">Created at</string>
+    <string name="settings_user_reports_details_key_updated">Updated at</string>
+    <string name="settings_user_reports_details_key_comment">Comment</string>
+    <string name="settings_user_reports_details_key_moderator_comment">Moderator\'s note</string>
+
+
 </resources>

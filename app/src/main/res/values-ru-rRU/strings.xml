@@ -62,5 +62,17 @@
     <string name="settings_auth_login_success">Добро пожаловать!</string>
 
     <string name="settings_item_user_reports">Сообщения об ошибках</string>
+    <string name="settings_user_reports_title">Сообщения об ошибках</string>
+    <string name="settings_user_reports_empty_title">Здесь ничего нет :(</string>
+    <string name="settings_user_reports_empty_description">Ты можешь помочь нам стать лучше! Для этого если увидишь ошибку в тексте, просто нажми кнопку «Сообщить» в самом низу вкладки «Текст» в плеере</string>
+    <string name="settings_user_reports_details_key_state">Статус</string>
+    <string name="settings_user_reports_details_key_state_submitted">Отправлено</string>
+    <string name="settings_user_reports_details_key_state_declined">Отклонено</string>
+    <string name="settings_user_reports_details_key_state_solved">Исправлено</string>
+    <string name="settings_user_reports_details_key_created">Создано</string>
+    <string name="settings_user_reports_details_key_updated">Обновлено</string>
+    <string name="settings_user_reports_details_key_comment">Комментарий</string>
+    <string name="settings_user_reports_details_key_moderator_comment">Ответ модератора</string>
+
 
 </resources>

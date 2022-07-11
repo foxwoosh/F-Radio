@@ -51,7 +51,7 @@ android {
         buildConfigField("String", "MUSIXMATCH_KEY", p.getProperty("musixmatchKey"))
         buildConfigField("String", "FOXY_KEY", p.getProperty("foxyKey"))
 
-        resourceConfigurations += arrayOf("en", "ru")
+        resourceConfigurations += arrayOf("ru-rRU")
     }
 
     signingConfigs {

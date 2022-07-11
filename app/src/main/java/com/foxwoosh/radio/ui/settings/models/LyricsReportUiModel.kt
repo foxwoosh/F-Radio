@@ -1,6 +1,7 @@
 package com.foxwoosh.radio.ui.settings.models
 
 import com.foxwoosh.radio.domain.models.LyricsReportState
+import java.util.Date
 
 data class LyricsReportUiModel(
     val reportID: String,
@@ -11,6 +12,6 @@ data class LyricsReportUiModel(
     val state: LyricsReportState?,
     val moderatorID: Long?,
     val moderatorComment: String?,
-    val createdAt: Long,
-    val updatedAt: Long?
+    val createdAt: Date,
+    val updatedAt: Date?
 )

@@ -39,7 +39,7 @@ class UserReportsViewModel @Inject constructor(
                     else -> UserReportsUiState.Ready(
                         reports
                             .map { it.mapToUiModel() }
-                            .sortedBy { it.createdAt }
+                            .sortedByDescending { it.createdAt }
                     )
                 }
             )
